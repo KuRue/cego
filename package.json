@@ -1,0 +1,15 @@
+{
+  "name": "arf",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "dev": "npm --prefix apps/arf-web run dev",
+    "build": "npm --prefix apps/arf-web run build",
+    "start": "npm --prefix apps/arf-web run start",
+    "lint": "npm --prefix apps/arf-web run lint",
+    "typecheck": "npm --prefix apps/arf-web run typecheck",
+    "docker:dev": "docker compose --env-file .env -f infra/docker/compose.dev.yml up"
+  }
+}
+

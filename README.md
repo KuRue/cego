@@ -6,7 +6,28 @@ This repository starts as a documentation-first project. The implementation targ
 
 ## Status
 
-Planning and architecture documentation. No application code has been implemented yet.
+Planning and technical scaffold. The repository now includes the documentation pack, a Next.js TypeScript ARF app shell, and early Docker development infrastructure for ARF-owned services.
+
+## Development
+
+Install ARF web app dependencies:
+
+```sh
+npm --prefix apps/arf-web install
+```
+
+Run the web app:
+
+```sh
+npm run dev
+```
+
+Run checks:
+
+```sh
+npm run lint
+npm run typecheck
+```
 
 ## Core Decisions
 
@@ -47,4 +68,3 @@ Planning and architecture documentation. No application code has been implemente
 - [Telegram Mini Apps](https://docs.telegram-mini-apps.com/)
 - [EspoCRM](https://github.com/espocrm/espocrm)
 - [Cloudflare Tunnel](https://developers.cloudflare.com/tunnel/)
-
