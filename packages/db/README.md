@@ -1,6 +1,6 @@
 # ARF Database Package
 
-This package is reserved for the ARF data model, migrations, and typed database helpers.
+This package contains the ARF-owned Postgres schema, migrations, and typed database helpers.
 
 Planned entities:
 
@@ -12,5 +12,15 @@ Planned entities:
 - `notifications`
 - `crm_sync_log`
 
-The implementation should follow `docs/04-data-model.md`.
+The implementation follows `docs/04-data-model.md`.
+
+## Scripts
+
+```sh
+npm --prefix packages/db run typecheck
+npm --prefix packages/db run db:generate
+npm --prefix packages/db run db:migrate
+```
+
+`db:migrate` requires `DATABASE_URL`.
 
