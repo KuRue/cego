@@ -32,15 +32,21 @@ export async function createTelegramSession({
 }): Promise<TelegramSessionResult> {
   if (isDevMockEnabled(useDevMock)) {
     const verifiedInitData = getDevTelegramInitData();
+    const member = await upsertTelegramMember({
+      verifiedInitData,
+      groupStatus: "member",
+    });
 
     return {
       status: "dev_mock",
       member: {
-        telegramId: String(verifiedInitData.user.id),
-        telegramUsername: verifiedInitData.user.username,
-        telegramDisplayName: "ARF Developer",
-        telegramPhotoUrl: verifiedInitData.user.photo_url,
-        groupStatus: "member",
+        id: member.id,
+        telegramId: member.telegramId,
+        telegramUsername: member.telegramUsername,
+        telegramDisplayName: member.telegramDisplayName,
+        telegramPhotoUrl: member.telegramPhotoUrl,
+        groupStatus: member.groupStatus,
+        isAdmin: member.isAdmin,
       },
     };
   }
@@ -101,4 +107,3 @@ async function resolveTelegramGroupStatus(
     throw error;
   }
 }
-

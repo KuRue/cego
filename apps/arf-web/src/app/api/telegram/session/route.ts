@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { TelegramInitDataError } from "@arf/telegram";
 import { createTelegramSession } from "@/lib/telegram-session";
+import { setSessionCookie } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -23,7 +24,16 @@ export async function POST(request: Request) {
 
   try {
     const session = await createTelegramSession(body);
-    return NextResponse.json(session);
+    const response = NextResponse.json(session);
+
+    if (session.member.id) {
+      setSessionCookie(response, {
+        id: session.member.id,
+        telegramId: session.member.telegramId,
+      });
+    }
+
+    return response;
   } catch (error) {
     if (error instanceof TelegramInitDataError) {
       return NextResponse.json({ error: error.message }, { status: 401 });
@@ -35,4 +45,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

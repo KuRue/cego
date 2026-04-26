@@ -1,6 +1,7 @@
 import { getDb, members, type Member } from "@arf/db";
 import type { VerifiedTelegramInitData } from "@arf/telegram";
 import { getTelegramDisplayName } from "@arf/telegram";
+import { isAdminTelegramId } from "@/lib/session";
 
 export interface UpsertTelegramMemberInput {
   verifiedInitData: VerifiedTelegramInitData;
@@ -13,23 +14,26 @@ export async function upsertTelegramMember({
 }: UpsertTelegramMemberInput): Promise<Member> {
   const db = getDb();
   const telegramId = String(verifiedInitData.user.id);
+  const isAdmin = isAdminTelegramId(telegramId);
+  const profileValues = {
+    telegramId,
+    telegramUsername: verifiedInitData.user.username,
+    telegramDisplayName: getTelegramDisplayName(verifiedInitData.user),
+    telegramPhotoUrl: verifiedInitData.user.photo_url,
+    groupStatus,
+  };
 
   const inserted = await db
     .insert(members)
     .values({
-      telegramId,
-      telegramUsername: verifiedInitData.user.username,
-      telegramDisplayName: getTelegramDisplayName(verifiedInitData.user),
-      telegramPhotoUrl: verifiedInitData.user.photo_url,
-      groupStatus,
+      ...profileValues,
+      isAdmin,
     })
     .onConflictDoUpdate({
       target: members.telegramId,
       set: {
-        telegramUsername: verifiedInitData.user.username,
-        telegramDisplayName: getTelegramDisplayName(verifiedInitData.user),
-        telegramPhotoUrl: verifiedInitData.user.photo_url,
-        groupStatus,
+        ...profileValues,
+        ...(isAdmin ? { isAdmin: true } : {}),
         updatedAt: new Date(),
       },
     })

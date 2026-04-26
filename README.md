@@ -33,6 +33,7 @@ npm run typecheck
 
 - Telegram is the primary identity provider.
 - ARF does not create a separate password account.
+- ARF stores a signed session cookie after Telegram Mini App verification.
 - Telegram group membership gates event access.
 - Events accept group-member RSVPs until the capacity cap is reached.
 - After capacity, new requests go to a manual waitlist.
