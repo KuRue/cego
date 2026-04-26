@@ -7,9 +7,8 @@ export default defineConfig({
   dbCredentials: {
     url:
       process.env.DATABASE_URL ??
-      "postgres://arf:arf_dev_password@localhost:5432/arf",
+      "postgres://arf:arf_dev_password@localhost:15432/arf",
   },
   strict: true,
   verbose: true,
 });
-
