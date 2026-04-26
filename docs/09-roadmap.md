@@ -39,7 +39,7 @@
 - Add member survey response UI.
 - Attach responses to member and event.
 - Add organizer survey completion view.
-- Sync relevant preference summaries to EspoCRM.
+- Surface relevant preference summaries in ARF admin.
 
 ## Phase 5: Hi.Events Integration
 
@@ -51,13 +51,14 @@
 - Link order/attendee IDs to ARF RSVP.
 - Mark completed annual retreat registrations `paid_registered`.
 
-## Phase 6: EspoCRM Integration
+## Phase 6: Internal CRM Admin
 
-- Deploy EspoCRM under `crm.arf.kurue.com`.
-- Protect CRM with Cloudflare Access.
-- Create/update CRM contacts from ARF members.
-- Sync RSVP summary fields and attendance tags.
-- Log sync failures and retry background jobs.
+- Add searchable member directory.
+- Add member profile detail pages for Telegram identity, email, RSVP history, and survey completion.
+- Add organizer-only member notes.
+- Add organizer-managed member tags.
+- Add simple filters for group status, event status, tags, and survey completion.
+- Defer external CRM integration unless ARF admin becomes insufficient.
 
 ## Phase 7: Beta Readiness
 
@@ -76,4 +77,3 @@
 - Confirm check-in approach.
 - Confirm organizer escalation and safety process.
 - Run a production rehearsal before opening paid registration.
-

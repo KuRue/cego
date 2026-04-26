@@ -27,5 +27,4 @@ Mini retreats are smaller local meets organized through the same member system. 
 - Open source: ARF-specific code should be AGPLv3.
 - Practical operations: the system should reduce organizer work rather than create ceremonial process.
 - Privacy-aware: collect only information needed to run events safely and respectfully.
-- Extensible: the system should support yearly retreats, recurring local meets, surveys, CRM history, and later automation.
-
+- Extensible: the system should support yearly retreats, recurring local meets, surveys, member history, and later automation.

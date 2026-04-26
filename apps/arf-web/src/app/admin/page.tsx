@@ -6,7 +6,8 @@ const adminAreas = [
   "Annual retreat payment approvals",
   "Survey publishing",
   "Telegram notification audit",
-  "Hi.Events and EspoCRM sync status",
+  "Member notes and tags",
+  "Hi.Events webhook status",
 ];
 
 export const metadata = {
@@ -48,4 +49,3 @@ export default function AdminPage() {
     </main>
   );
 }
-

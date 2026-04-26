@@ -33,7 +33,6 @@ The notice should name the major processors:
 - Telegram for chat, identity, and bot notifications.
 - Hi.Events for annual retreat tickets and checkout.
 - Stripe through Hi.Events for payment processing.
-- EspoCRM for organizer CRM records.
 - Cloudflare for DNS, tunnel ingress, access controls, and security.
 
 ## Payment And Refund Policy Placeholder
@@ -56,4 +55,3 @@ Mini retreats may be lower-formality local meets, but ARF should still publish:
 - Cancellation etiquette.
 - Location privacy expectations.
 - Organizer contact path.
-

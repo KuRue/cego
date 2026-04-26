@@ -8,7 +8,7 @@
 - Identity: Telegram Mini App signed init data.
 - Notifications: Telegram bot.
 - Ticketing/payment: Hi.Events with Stripe.
-- CRM: EspoCRM.
+- CRM-lite: ARF-owned member notes, tags, and attendance history.
 - Deployment: Docker Compose on a single VPS.
 - Public ingress: cloudflared.
 - Admin perimeter: Cloudflare Access.
@@ -21,14 +21,12 @@ flowchart LR
   BOT --> APP["ARF Mini App / Web"]
   APP --> API["ARF API"]
   API --> DB["ARF Postgres"]
-  API --> CRM["EspoCRM"]
   API --> HE["Hi.Events"]
   HE --> STRIPE["Stripe"]
   HE --> API
   CF["cloudflared"] --> APP
   CF --> API
   CF --> HE
-  CF --> CRM
 ```
 
 ## Ownership Boundaries
@@ -41,9 +39,9 @@ ARF owns identity linking, group-membership checks, member profiles, event disco
 
 Hi.Events owns annual retreat checkout after ARF approval, ticket inventory, Stripe payment, attendee/order records, QR check-in, refunds, and ticketing-related emails.
 
-### EspoCRM
+### ARF CRM-lite
 
-EspoCRM owns long-term contact records, organizer notes, CRM fields, attendance history summaries, and follow-up views. EspoCRM is not the system of record for event RSVP state.
+ARF owns member notes, organizer tags, attendance history summaries, and follow-up views in the same Postgres database as event data. External CRM integration is deferred until the built-in admin workflows are insufficient.
 
 ### Telegram
 
@@ -58,21 +56,17 @@ Cloudflare owns DNS, tunnel ingress, TLS termination, WAF-level protection, and 
 - `arf.kurue.com`: public site, Telegram Mini App, member dashboard, organizer admin.
 - `api.arf.kurue.com`: ARF backend routes and webhooks, unless folded into the Next.js app.
 - `events.arf.kurue.com`: Hi.Events.
-- `crm.arf.kurue.com`: EspoCRM behind Cloudflare Access.
 
 ## Runtime Shape
 
 The v1 Compose stack should run:
 
 - `arf-web`: Next.js app and API routes.
-- `arf-worker`: background jobs, webhook retries, CRM sync, Telegram notification queue.
+- `arf-worker`: background jobs, webhook retries, CRM-lite reminders/rollups, Telegram notification queue.
 - `arf-postgres`: ARF database.
 - `arf-redis`: queues and short-lived cache if required by the app.
 - `hi-events`: Hi.Events application services.
 - `hievents-db`: Hi.Events database.
 - `hievents-redis`: Hi.Events queue/cache if required by upstream.
-- `espocrm`: EspoCRM application.
-- `espocrm-db`: EspoCRM database.
 - `cloudflared`: tunnel connector.
 - `backup`: scheduled database and upload backup job.
-

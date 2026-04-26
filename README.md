@@ -2,7 +2,7 @@
 
 Anthro Retreat Florida, or ARF, is a Telegram-first event and member system for an annual Florida short-term-rental retreat and smaller local mini retreats.
 
-This repository starts as a documentation-first project. The implementation target is an open source, self-hosted stack built around a custom ARF app, Telegram Mini App authentication, Hi.Events for ticketing/payment, EspoCRM for CRM records, Docker Compose, cloudflared, and Cloudflare Access.
+This repository starts as a documentation-first project. The implementation target is an open source, self-hosted stack built around a custom ARF app, Telegram Mini App authentication, built-in member CRM-lite tools, Hi.Events for ticketing/payment, Docker Compose, cloudflared, and Cloudflare Access.
 
 ## Status
 
@@ -59,12 +59,10 @@ npm run typecheck
 - `arf.kurue.com`: public site, Telegram Mini App, member dashboard, organizer admin
 - `api.arf.kurue.com`: ARF backend routes and webhooks, unless folded into the Next.js app
 - `events.arf.kurue.com`: Hi.Events
-- `crm.arf.kurue.com`: EspoCRM, protected by Cloudflare Access
 
 ## Primary References
 
 - [Hi.Events](https://github.com/HiEventsDev/hi.events)
 - [Hi.Events webhooks](https://hi.events/docs/help-center/customization-and-settings/webhooks)
 - [Telegram Mini Apps](https://docs.telegram-mini-apps.com/)
-- [EspoCRM](https://github.com/espocrm/espocrm)
 - [Cloudflare Tunnel](https://developers.cloudflare.com/tunnel/)

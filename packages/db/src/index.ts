@@ -1,4 +1,4 @@
-export * from "./client.js";
-export * from "./schema.js";
-export * from "./types.js";
+export * from "./client";
+export * from "./schema";
+export * from "./types";
 

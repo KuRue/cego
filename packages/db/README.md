@@ -10,7 +10,9 @@ Planned entities:
 - `surveys`
 - `survey_responses`
 - `notifications`
-- `crm_sync_log`
+- `member_tags`
+- `member_tag_assignments`
+- `member_notes`
 
 The implementation follows `docs/04-data-model.md`.
 
@@ -23,4 +25,3 @@ npm --prefix packages/db run db:migrate
 ```
 
 `db:migrate` requires `DATABASE_URL`.
-

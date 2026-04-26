@@ -27,7 +27,3 @@ export type SurveyStatus = (typeof surveyStatuses)[number];
 
 export const notificationStatuses = ["queued", "sent", "failed"] as const;
 export type NotificationStatus = (typeof notificationStatuses)[number];
-
-export const crmSyncStatuses = ["pending", "success", "failed"] as const;
-export type CrmSyncStatus = (typeof crmSyncStatuses)[number];
-

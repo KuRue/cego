@@ -53,17 +53,17 @@ Stripe is integrated through Hi.Events, not directly through ARF in v1.
 
 ARF should not store payment method data. ARF stores only ticketing/payment state received from Hi.Events.
 
-## EspoCRM
+## Internal CRM-lite
 
-EspoCRM stores CRM contact records and organizer notes.
+ARF stores CRM-lite organizer context directly in its own database. This keeps v1 self-hosted, simpler, and aligned with Telegram-backed member profiles.
 
-Required sync behavior:
+Required behavior:
 
-- Create an EspoCRM contact when a member profile is created.
-- Update the contact when Telegram username, display name, email, or event status changes.
-- Add attendance/status tags or equivalent fields for annual retreats and mini retreats.
-- Log sync failures in `crm_sync_log`.
-- Keep ARF as the source of truth for event state.
+- Show member profile, RSVP history, survey completion, notes, and tags in ARF admin.
+- Let organizers add and remove member tags.
+- Let organizers add member notes.
+- Keep attendance history derived from `rsvps`.
+- Defer external CRM API sync until the built-in admin tools are not enough.
 
 ## Cloudflare Tunnel
 
@@ -74,7 +74,5 @@ Required published applications:
 - `arf.kurue.com` to ARF web app.
 - `api.arf.kurue.com` to ARF API if separate.
 - `events.arf.kurue.com` to Hi.Events.
-- `crm.arf.kurue.com` to EspoCRM.
 
 Admin surfaces should be protected by Cloudflare Access.
-

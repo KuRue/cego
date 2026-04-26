@@ -5,20 +5,20 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import {
-  crmSyncStatuses,
   eventStatuses,
   eventTypes,
   memberGroupStatuses,
   notificationStatuses,
   rsvpStatuses,
   surveyStatuses,
-} from "./types.js";
+} from "./types";
 
 const lifecycleColumns = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -41,7 +41,6 @@ export const notificationStatusEnum = pgEnum(
   "notification_status",
   notificationStatuses,
 );
-export const crmSyncStatusEnum = pgEnum("crm_sync_status", crmSyncStatuses);
 
 export const members = pgTable(
   "members",
@@ -56,13 +55,9 @@ export const members = pgTable(
       .default("unknown")
       .notNull(),
     isAdmin: boolean("is_admin").default(false).notNull(),
-    crmContactId: text("crm_contact_id"),
     ...lifecycleColumns,
   },
-  (table) => [
-    uniqueIndex("members_telegram_id_idx").on(table.telegramId),
-    index("members_crm_contact_id_idx").on(table.crmContactId),
-  ],
+  (table) => [uniqueIndex("members_telegram_id_idx").on(table.telegramId)],
 );
 
 export const events = pgTable(
@@ -190,26 +185,56 @@ export const notifications = pgTable(
   ],
 );
 
-export const crmSyncLog = pgTable(
-  "crm_sync_log",
+export const memberTags = pgTable(
+  "member_tags",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    memberId: uuid("member_id").references(() => members.id, {
+    name: text("name").notNull(),
+    color: text("color").default("gray").notNull(),
+    ...lifecycleColumns,
+  },
+  (table) => [uniqueIndex("member_tags_name_idx").on(table.name)],
+);
+
+export const memberTagAssignments = pgTable(
+  "member_tag_assignments",
+  {
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => memberTags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.memberId, table.tagId],
+      name: "member_tag_assignments_pk",
+    }),
+    index("member_tag_assignments_member_id_idx").on(table.memberId),
+    index("member_tag_assignments_tag_id_idx").on(table.tagId),
+  ],
+);
+
+export const memberNotes = pgTable(
+  "member_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    authorMemberId: uuid("author_member_id").references(() => members.id, {
       onDelete: "set null",
     }),
-    eventId: uuid("event_id").references(() => events.id, {
-      onDelete: "set null",
-    }),
-    operation: text("operation").notNull(),
-    status: crmSyncStatusEnum("status").default("pending").notNull(),
-    remoteId: text("remote_id"),
-    errorMessage: text("error_message"),
+    body: text("body").notNull(),
     ...lifecycleColumns,
   },
   (table) => [
-    index("crm_sync_log_member_id_idx").on(table.memberId),
-    index("crm_sync_log_event_id_idx").on(table.eventId),
-    index("crm_sync_log_status_idx").on(table.status),
+    index("member_notes_member_id_idx").on(table.memberId),
+    index("member_notes_author_member_id_idx").on(table.authorMemberId),
   ],
 );
 
@@ -225,6 +250,9 @@ export type SurveyResponse = typeof surveyResponses.$inferSelect;
 export type NewSurveyResponse = typeof surveyResponses.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
-export type CrmSyncLog = typeof crmSyncLog.$inferSelect;
-export type NewCrmSyncLog = typeof crmSyncLog.$inferInsert;
-
+export type MemberTag = typeof memberTags.$inferSelect;
+export type NewMemberTag = typeof memberTags.$inferInsert;
+export type MemberTagAssignment = typeof memberTagAssignments.$inferSelect;
+export type NewMemberTagAssignment = typeof memberTagAssignments.$inferInsert;
+export type MemberNote = typeof memberNotes.$inferSelect;
+export type NewMemberNote = typeof memberNotes.$inferInsert;

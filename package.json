@@ -8,7 +8,7 @@
     "build": "npm --prefix apps/arf-web run build",
     "start": "npm --prefix apps/arf-web run start",
     "lint": "npm --prefix apps/arf-web run lint",
-    "typecheck": "npm --prefix packages/db run typecheck && npm --prefix apps/arf-web run typecheck",
+    "typecheck": "npm --prefix packages/telegram run typecheck && npm --prefix packages/db run typecheck && npm --prefix apps/arf-web run typecheck",
     "docker:dev": "docker compose --env-file .env -f infra/docker/compose.dev.yml up"
   }
 }

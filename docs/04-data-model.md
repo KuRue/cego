@@ -16,7 +16,6 @@ Required fields:
 - `email`
 - `group_status`: `member`, `not_member`, `unknown`
 - `is_admin`
-- `crm_contact_id`
 - `created_at`
 - `updated_at`
 
@@ -133,35 +132,53 @@ Required fields:
 - `created_at`
 - `sent_at`
 
-## `crm_sync_log`
+## `member_tags`
 
-Tracks sync attempts to EspoCRM.
+Defines organizer-managed tags for lightweight CRM filtering.
+
+Required fields:
+
+- `id`
+- `name`
+- `color`
+- `created_at`
+- `updated_at`
+
+Rules:
+
+- Tag names should be unique.
+- Tags are internal organizer metadata, not member-facing profile data by default.
+
+## `member_tag_assignments`
+
+Links tags to members.
+
+Required fields:
+
+- `member_id`
+- `tag_id`
+- `created_at`
+
+Rules:
+
+- A member can receive a tag only once.
+- Removing a member or tag removes the assignment.
+
+## `member_notes`
+
+Stores organizer notes for member follow-up and event planning context.
 
 Required fields:
 
 - `id`
 - `member_id`
-- `event_id`
-- `operation`
-- `status`: `pending`, `success`, `failed`
-- `remote_id`
-- `error_message`
+- `author_member_id`
+- `body`
 - `created_at`
 - `updated_at`
 
-## CRM Field Mapping
+Rules:
 
-Minimum EspoCRM contact fields:
-
-- Telegram ID
-- Telegram username
-- Display name
-- Email
-- Group status
-- Latest RSVP event
-- Latest RSVP status
-- Event attendance tags
-- Organizer notes
-
-ARF remains the source of truth for live RSVP status. EspoCRM stores searchable CRM context and organizer notes.
-
+- Notes are visible only to organizers.
+- Notes should not store payment method data or unnecessary legal identity information.
+- Attendance history is derived from `rsvps`; notes and tags provide organizer context.

@@ -5,7 +5,7 @@
 - Member: a Telegram group member who can access ARF event flows.
 - Waitlisted member: a group member who requested an event after capacity was reached.
 - Organizer: a trusted admin who can manage events, waitlists, surveys, approvals, and member state.
-- System: ARF backend, Telegram bot, Hi.Events, EspoCRM, and background sync jobs.
+- System: ARF backend, Telegram bot, Hi.Events, internal CRM-lite records, and background jobs.
 
 ## Member Flow
 
@@ -32,7 +32,7 @@ The annual retreat starts with RSVP and organizer-controlled payment eligibility
 7. Hi.Events sends a webhook to ARF.
 8. ARF links the Hi.Events order and attendee to the member RSVP.
 9. ARF updates RSVP status to `paid_registered`.
-10. ARF syncs key state to EspoCRM.
+10. ARF records the paid registration state on the member/event history.
 
 ## Mini Retreat Flow
 
@@ -55,7 +55,8 @@ Organizers use ARF Admin to:
 - Create and publish surveys.
 - Review survey completion status.
 - Trigger Telegram notifications.
-- Monitor webhook and CRM sync status.
+- Add member notes and tags for organizer follow-up.
+- Monitor webhook and notification status.
 
 ## RSVP Statuses
 
@@ -75,7 +76,6 @@ Organizers use ARF Admin to:
 - Hi.Events completed order webhook links attendee/order to the correct ARF member.
 - Mini retreat RSVP works without Hi.Events checkout.
 - Survey response attaches to member and event.
-- EspoCRM contact sync creates or updates the member record.
-- ARF admin and CRM are protected by Cloudflare Access plus app-level roles.
+- Organizer can add member notes and tags from ARF admin.
+- ARF admin is protected by Cloudflare Access plus app-level roles.
 - Docker Compose exposes only intended services through cloudflared.
-

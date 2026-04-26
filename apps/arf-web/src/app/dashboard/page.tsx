@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const statuses = [
-  { label: "Telegram", value: "Pending integration" },
-  { label: "Group gate", value: "Required for RSVP" },
+  { label: "Telegram", value: "Session route ready" },
+  { label: "Group gate", value: "Bot API check" },
   { label: "Annual retreat", value: "RSVP first" },
   { label: "Mini retreats", value: "Free RSVP" },
 ];
@@ -48,12 +48,11 @@ export default function DashboardPage() {
         <div className="mt-8 border border-[#d7e3df] bg-[#f3f8f6] p-6">
           <h2 className="text-2xl font-semibold">Next implementation slice</h2>
           <p className="mt-3 max-w-2xl leading-7 text-[#4e5b57]">
-            Wire Telegram verification to this surface, create the member
-            profile, check group membership, then show real event RSVP actions.
+            Add real event records, render active annual and mini retreats, and
+            turn confirmed group members into capacity-aware RSVPs.
           </p>
         </div>
       </section>
     </main>
   );
 }
-

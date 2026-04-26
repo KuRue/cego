@@ -16,8 +16,8 @@ ARF is a private community operations system. Security should assume that event 
 
 Admin access uses two layers:
 
-1. Cloudflare Access for ARF admin routes and `crm.arf.kurue.com`.
-2. App-level organizer roles inside ARF and EspoCRM.
+1. Cloudflare Access for ARF admin routes.
+2. App-level organizer roles inside ARF.
 
 Cloudflare Access protects the perimeter. App roles protect actions and records after login.
 
@@ -30,7 +30,7 @@ Collect only data needed to run events:
 - RSVP status.
 - Rooming, dietary, accessibility, travel, and privacy preferences.
 - Survey responses.
-- Organizer notes in EspoCRM.
+- Organizer notes in ARF.
 
 Avoid collecting unnecessary legal identity, address, or payment information in ARF. Payment method information belongs only in Stripe/Hi.Events.
 
@@ -68,4 +68,3 @@ Before inviting real attendees, publish a plain-language privacy policy explaini
 - Who can see organizer-only information.
 - How members can request correction or deletion.
 - What data is retained after events.
-

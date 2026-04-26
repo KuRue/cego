@@ -6,7 +6,8 @@ ARF is currently a planning-first project. Early contributions should keep imple
 
 - Keep Telegram as the primary identity provider.
 - Keep ARF as the source of truth for member, RSVP, waitlist, survey, and integration state.
-- Keep Hi.Events and EspoCRM mostly stock and integrate through APIs and webhooks.
+- Keep Hi.Events mostly stock and integrate through APIs and webhooks.
+- Keep v1 CRM behavior inside ARF unless an external CRM need is reintroduced.
 - Prefer small vertical slices that can be verified end to end.
 - Do not commit secrets, production data, attendee private information, or `.env` files.
 
@@ -34,4 +35,3 @@ npm run typecheck
 ## Documentation
 
 Update the relevant `docs/` page when changing product behavior, integration contracts, deployment expectations, or security assumptions.
-
