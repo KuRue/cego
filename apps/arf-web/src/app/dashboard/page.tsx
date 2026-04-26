@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
+import { submitSurveyResponseAction } from "@/lib/survey-actions";
+import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
 
 export const dynamic = "force-dynamic";
 
@@ -36,20 +38,30 @@ export default async function DashboardPage() {
     );
   }
 
-  const eventStates = await getDashboardEvents(member.id);
+  const [eventStates, surveyStates] = await Promise.all([
+    getDashboardEvents(member.id),
+    getDashboardSurveys(member.id),
+  ]);
   const confirmedCount = eventStates.filter(
     ({ rsvp }) => rsvp?.status === "confirmed",
   ).length;
   const waitlistedCount = eventStates.filter(
     ({ rsvp }) => rsvp?.status === "waitlisted",
   ).length;
+  const completedSurveyCount = surveyStates.filter(
+    ({ response }) => response,
+  ).length;
 
   return (
     <DashboardShell memberName={member.telegramDisplayName}>
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-4">
         <StatusCard label="Active events" value={String(eventStates.length)} />
         <StatusCard label="Confirmed RSVPs" value={String(confirmedCount)} />
         <StatusCard label="Waitlisted" value={String(waitlistedCount)} />
+        <StatusCard
+          label="Surveys done"
+          value={`${completedSurveyCount}/${surveyStates.length}`}
+        />
       </section>
 
       <section className="mt-8">
@@ -78,6 +90,37 @@ export default async function DashboardPage() {
           <div className="mt-6 grid gap-5">
             {eventStates.map((eventState) => (
               <EventCard key={eventState.event.id} eventState={eventState} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-8">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
+            Preferences
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold">Surveys</h2>
+          <p className="mt-3 max-w-2xl leading-7 text-[#4e5b57]">
+            These responses are attached to your Telegram-backed ARF profile so
+            organizers can plan rooming, food, activities, and retreat details.
+          </p>
+        </div>
+
+        {surveyStates.length === 0 ? (
+          <div className="mt-6">
+            <EmptyState
+              title="No surveys are available yet."
+              body="Published general surveys and event-specific surveys for your active RSVPs will appear here."
+            />
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-5">
+            {surveyStates.map((surveyState) => (
+              <SurveyCard
+                key={surveyState.survey.id}
+                surveyState={surveyState}
+              />
             ))}
           </div>
         )}
@@ -197,6 +240,78 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   );
 }
 
+function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
+  const { survey, event, schema, response } = surveyState;
+  const hasQuestions = schema.questions.length > 0;
+
+  return (
+    <article className="border border-[#d7e3df] bg-white p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="active">
+              {event ? "Event survey" : "Member survey"}
+            </Badge>
+            {response ? <Badge tone="rsvp">submitted</Badge> : null}
+          </div>
+          <h3 className="mt-4 text-2xl font-semibold text-[#14211f]">
+            {survey.title}
+          </h3>
+          {survey.description ? (
+            <p className="mt-2 max-w-2xl leading-7 text-[#4e5b57]">
+              {survey.description}
+            </p>
+          ) : null}
+          {event ? (
+            <p className="mt-2 text-sm text-[#64706c]">
+              Linked to {event.title} on {formatDateRange(event.startsAt, null)}
+            </p>
+          ) : null}
+        </div>
+        <Metric
+          label="Questions"
+          value={String(schema.questions.length)}
+        />
+      </div>
+
+      <form action={submitSurveyResponseAction} className="mt-5 grid gap-4">
+        <input type="hidden" name="surveyId" value={survey.id} />
+        {hasQuestions ? (
+          schema.questions.map((question) => (
+            <label key={question.id} className="grid gap-2 text-sm">
+              <span className="font-medium text-[#14211f]">
+                {question.label}
+                {question.required ? (
+                  <span className="text-[#b4573f]"> *</span>
+                ) : null}
+              </span>
+              <textarea
+                name={`answer:${question.id}`}
+                required={question.required}
+                defaultValue={readAnswer(response?.answersJson, question.id)}
+                rows={3}
+                className="min-h-24 rounded-md border border-[#b8cac5] px-3 py-2 leading-6"
+              />
+            </label>
+          ))
+        ) : (
+          <p className="text-sm text-[#64706c]">
+            This survey does not have any questions yet.
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={!hasQuestions}
+          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white transition hover:bg-[#245b55] disabled:cursor-not-allowed disabled:bg-[#9ba7a3] sm:w-auto"
+        >
+          {response ? "Save response" : "Submit response"}
+        </button>
+      </form>
+    </article>
+  );
+}
+
 function EmptyState({
   title,
   body,
@@ -289,4 +404,26 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
   }
 
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
+}
+
+function readAnswer(answersJson: unknown, questionId: string): string {
+  if (
+    typeof answersJson !== "object" ||
+    answersJson === null ||
+    !(questionId in answersJson)
+  ) {
+    return "";
+  }
+
+  const value = (answersJson as Record<string, unknown>)[questionId];
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return JSON.stringify(value);
 }

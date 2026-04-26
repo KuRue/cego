@@ -6,7 +6,7 @@ This repository starts as a documentation-first project. The implementation targ
 
 ## Status
 
-Planning and technical scaffold. The repository now includes the documentation pack, a Next.js TypeScript ARF app shell, and early Docker development infrastructure for ARF-owned services.
+Working MVP scaffold. The repository includes the documentation pack, a Next.js TypeScript ARF app, Telegram Mini App session persistence, event/RSVP management, built-in surveys, organizer admin views, and Docker development infrastructure for ARF-owned services.
 
 ## Development
 
@@ -27,6 +27,7 @@ Run checks:
 ```sh
 npm run lint
 npm run typecheck
+npm run build
 ```
 
 ## Core Decisions

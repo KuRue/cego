@@ -31,7 +31,6 @@
 - Enforce capacity.
 - Assign `confirmed` or `waitlisted`.
 - Add organizer admin for events, caps, and RSVP state.
-- Add Telegram confirmation and waitlist notifications.
 
 ## Phase 4: Surveys And Preferences
 
@@ -40,6 +39,7 @@
 - Attach responses to member and event.
 - Add organizer survey completion view.
 - Surface relevant preference summaries in ARF admin.
+- Add Telegram confirmation, waitlist, and survey reminder notifications.
 
 ## Phase 5: Hi.Events Integration
 
