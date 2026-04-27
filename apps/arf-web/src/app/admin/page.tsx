@@ -163,6 +163,7 @@ function AdminShell({
           </Link>
           <div className="flex items-center gap-4 text-sm text-white/70">
             {memberName ? <span>{memberName}</span> : null}
+            <Link href="/admin/members">Members</Link>
             <Link href="/dashboard">Dashboard</Link>
           </div>
         </div>
@@ -173,6 +174,10 @@ function AdminShell({
           <h1 className="mt-4 text-4xl font-semibold leading-tight">
             Manage events, capacity, waitlists, and RSVP state.
           </h1>
+          <p className="mt-4 leading-7 text-white/70">
+            Use the member CRM area for profiles, tags, notes, RSVP history,
+            and survey completion filters.
+          </p>
         </div>
         <div className="mt-8">{children}</div>
       </section>

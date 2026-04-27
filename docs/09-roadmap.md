@@ -58,7 +58,7 @@
 - Add organizer-only member notes.
 - Add organizer-managed member tags.
 - Add simple filters for group status, event status, tags, and survey completion.
-- Defer external CRM integration unless ARF admin becomes insufficient.
+- Add richer exports and reporting if ARF admin becomes insufficient.
 
 ## Phase 7: Beta Readiness
 
