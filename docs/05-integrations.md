@@ -33,10 +33,20 @@ Hi.Events is used for annual retreat payment and ticket registration after ARF a
 Required ARF responsibilities:
 
 - Store the linked Hi.Events event ID on annual retreat records.
+- Require a member email before payment approval.
 - Generate or display the correct checkout link only for `approved_to_pay` members.
-- Include enough member/order context to link the webhook back to the ARF member.
-- Receive completed order or attendee webhooks.
+- Tell members to use their ARF email during Hi.Events checkout.
+- Receive signed order or attendee webhooks at `/api/hi-events/webhook`.
+- Verify the Hi.Events `Signature` header with `HI_EVENTS_WEBHOOK_SECRET`.
+- Link webhook payloads to exactly one RSVP by Hi.Events event ID plus member email, or by already stored Hi.Events order/attendee IDs for later updates.
 - Store Hi.Events order and attendee IDs on `rsvps`.
+- Record webhook processing in `hi_events_webhook_logs`.
+
+Webhook payload expectations:
+
+- Hi.Events sends `event_type`, `event_sent_at`, and `payload`.
+- ARF processes paid order/attendee states into `paid_registered`.
+- ARF treats unmatched or ambiguous paid webhooks as failed audit records for manual review instead of guessing.
 
 Hi.Events owns:
 

@@ -59,6 +59,7 @@ Required fields:
 - `member_id`
 - `event_id`
 - `status`: `confirmed`, `waitlisted`, `approved_to_pay`, `paid_registered`, `cancelled`
+- `hi_events_checkout_url`
 - `hi_events_order_id`
 - `hi_events_attendee_id`
 - `ticket_type`
@@ -72,8 +73,33 @@ Rules:
 - Under-cap RSVPs become `confirmed`.
 - Over-cap RSVPs become `waitlisted`.
 - Annual retreat payment eligibility is represented by `approved_to_pay`.
+- `confirmed`, `approved_to_pay`, and `paid_registered` count against capacity.
 - Hi.Events webhook completion moves annual retreat RSVP to `paid_registered`.
 - Mini retreats do not require `paid_registered` in v1.
+
+## `hi_events_webhook_logs`
+
+Audits inbound Hi.Events webhook processing.
+
+Required fields:
+
+- `id`
+- `event_id`
+- `rsvp_id`
+- `hi_events_event_id`
+- `hi_events_order_id`
+- `hi_events_attendee_id`
+- `event_type`
+- `status`: `processed`, `ignored`, `failed`
+- `payload_json`
+- `error_message`
+- `created_at`
+
+Rules:
+
+- Logs are operational audit records for organizers and maintainers.
+- `payload_json` should not be used for long-term storage of payment details beyond what Hi.Events already sends.
+- Failed logs indicate manual review is needed, usually because a webhook could not be matched to exactly one RSVP.
 
 ## `surveys`
 

@@ -10,12 +10,21 @@ import {
   eventTypes,
   events,
   getDb,
+  inArray,
+  members,
   rsvps,
   type EventStatus,
   type EventType,
   type RsvpStatus,
 } from "@arf/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
+import { buildHiEventsCheckoutUrl } from "@/lib/hi-events";
+
+const capacityBearingStatuses = [
+  "confirmed",
+  "approved_to_pay",
+  "paid_registered",
+] as const;
 
 export async function createEventAction(formData: FormData) {
   await requireAdminMember();
@@ -88,7 +97,12 @@ export async function rsvpForEventAction(formData: FormData) {
     const confirmedRows = await tx
       .select({ total: count() })
       .from(rsvps)
-      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "confirmed")));
+      .where(
+        and(
+          eq(rsvps.eventId, eventId),
+          inArray(rsvps.status, capacityBearingStatuses),
+        ),
+      );
     const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
     const nextStatus: RsvpStatus =
       confirmedCount < event.capacity ? "confirmed" : "waitlisted";
@@ -96,7 +110,15 @@ export async function rsvpForEventAction(formData: FormData) {
     if (currentRsvp) {
       await tx
         .update(rsvps)
-        .set({ status: nextStatus, updatedAt: new Date() })
+        .set({
+          status: nextStatus,
+          hiEventsCheckoutUrl: null,
+          hiEventsOrderId: null,
+          hiEventsAttendeeId: null,
+          ticketType: null,
+          checkedInAt: null,
+          updatedAt: new Date(),
+        })
         .where(eq(rsvps.id, currentRsvp.id));
       return;
     }
@@ -124,7 +146,11 @@ export async function cancelRsvpAction(formData: FormData) {
   const db = getDb();
   await db
     .update(rsvps)
-    .set({ status: "cancelled", updatedAt: new Date() })
+    .set({
+      status: "cancelled",
+      hiEventsCheckoutUrl: null,
+      updatedAt: new Date(),
+    })
     .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
 
   revalidatePath("/dashboard");
@@ -138,6 +164,8 @@ export async function updateRsvpStatusAction(formData: FormData) {
   const status = readEnum(formData, "status", [
     "confirmed",
     "waitlisted",
+    "approved_to_pay",
+    "paid_registered",
     "cancelled",
   ] as const);
 
@@ -145,15 +173,94 @@ export async function updateRsvpStatusAction(formData: FormData) {
     redirect("/admin");
   }
 
+  if (status === "approved_to_pay") {
+    await approveRsvpForPayment(rsvpId);
+    revalidatePath("/admin");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/members");
+    redirect("/admin");
+  }
+
   const db = getDb();
+  const updates =
+    status === "paid_registered"
+      ? { status, updatedAt: new Date() }
+      : { status, hiEventsCheckoutUrl: null, updatedAt: new Date() };
+
   await db
     .update(rsvps)
-    .set({ status, updatedAt: new Date() })
+    .set(updates)
     .where(eq(rsvps.id, rsvpId));
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   redirect("/admin");
+}
+
+export async function approveRsvpForPaymentAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+
+  if (!rsvpId) {
+    redirect("/admin");
+  }
+
+  await approveRsvpForPayment(rsvpId);
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/members");
+  redirect("/admin");
+}
+
+async function approveRsvpForPayment(rsvpId: string) {
+  const db = getDb();
+
+  await db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ rsvp: rsvps, event: events, member: members })
+      .from(rsvps)
+      .innerJoin(events, eq(rsvps.eventId, events.id))
+      .innerJoin(members, eq(rsvps.memberId, members.id))
+      .where(eq(rsvps.id, rsvpId))
+      .limit(1);
+    const row = rows[0];
+
+    if (!row) {
+      throw new Error("RSVP not found.");
+    }
+
+    if (row.event.type !== "annual_retreat") {
+      throw new Error("Only annual retreat RSVPs can be approved for payment.");
+    }
+
+    if (!row.event.hiEventsEventId) {
+      throw new Error("Set the Hi.Events event ID before payment approval.");
+    }
+
+    if (!row.member.email) {
+      throw new Error("Set the member email before payment approval.");
+    }
+
+    if (
+      !["confirmed", "waitlisted", "approved_to_pay"].includes(row.rsvp.status)
+    ) {
+      throw new Error(
+        "This RSVP cannot be approved for payment from its current state.",
+      );
+    }
+
+    const checkoutUrl = buildHiEventsCheckoutUrl(row);
+
+    await tx
+      .update(rsvps)
+      .set({
+        status: "approved_to_pay",
+        hiEventsCheckoutUrl: checkoutUrl,
+        updatedAt: new Date(),
+      })
+      .where(eq(rsvps.id, rsvpId));
+  });
 }
 
 function parseEventForm(formData: FormData) {

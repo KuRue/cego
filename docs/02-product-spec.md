@@ -26,13 +26,14 @@ The annual retreat starts with RSVP and organizer-controlled payment eligibility
 1. Member submits RSVP.
 2. ARF assigns `confirmed` or `waitlisted` based on event capacity.
 3. Organizer reviews confirmed and waitlisted members as needed.
-4. Organizer promotes selected annual retreat members to `approved_to_pay`.
-5. ARF sends a Telegram notification with the Hi.Events checkout link.
-6. Member completes payment and ticket registration in Hi.Events.
-7. Hi.Events sends a webhook to ARF.
-8. ARF links the Hi.Events order and attendee to the member RSVP.
-9. ARF updates RSVP status to `paid_registered`.
-10. ARF records the paid registration state on the member/event history.
+4. Organizer confirms the member email that will be used for Hi.Events checkout.
+5. Organizer promotes selected annual retreat members to `approved_to_pay`.
+6. ARF displays the Hi.Events checkout link on the member dashboard.
+7. Member completes payment and ticket registration in Hi.Events with the same email.
+8. Hi.Events sends a signed webhook to ARF.
+9. ARF links the Hi.Events order and attendee to the member RSVP.
+10. ARF updates RSVP status to `paid_registered`.
+11. ARF records the paid registration state on the member/event history.
 
 ## Mini Retreat Flow
 
@@ -52,6 +53,7 @@ Organizers use ARF Admin to:
 - Review confirmed and waitlisted RSVPs.
 - Promote annual retreat members to `approved_to_pay`.
 - Link annual retreat events to Hi.Events event IDs.
+- Review Hi.Events checkout links and webhook-linked order/attendee IDs.
 - Create and publish surveys.
 - Review survey completion status.
 - Trigger Telegram notifications.

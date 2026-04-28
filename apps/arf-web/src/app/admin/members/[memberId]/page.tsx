@@ -250,6 +250,34 @@ export default async function AdminMemberDetailPage({
                     <p className="mt-1 text-sm text-[#64706c]">
                       {formatDate(event.startsAt)}
                     </p>
+                    {rsvp.ticketType ? (
+                      <p className="mt-2 text-sm text-[#64706c]">
+                        Ticket: {rsvp.ticketType}
+                      </p>
+                    ) : null}
+                    {rsvp.hiEventsOrderId || rsvp.hiEventsAttendeeId ? (
+                      <p className="mt-2 break-all text-sm text-[#64706c]">
+                        {rsvp.hiEventsOrderId
+                          ? `Hi.Events order ${rsvp.hiEventsOrderId}`
+                          : null}
+                        {rsvp.hiEventsOrderId && rsvp.hiEventsAttendeeId
+                          ? " - "
+                          : null}
+                        {rsvp.hiEventsAttendeeId
+                          ? `attendee ${rsvp.hiEventsAttendeeId}`
+                          : null}
+                      </p>
+                    ) : null}
+                    {rsvp.hiEventsCheckoutUrl ? (
+                      <a
+                        href={rsvp.hiEventsCheckoutUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex text-sm font-semibold text-[#183f3c]"
+                      >
+                        Checkout link
+                      </a>
+                    ) : null}
                   </article>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
+import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
@@ -42,8 +43,10 @@ export default async function DashboardPage() {
     getDashboardEvents(member.id),
     getDashboardSurveys(member.id),
   ]);
-  const confirmedCount = eventStates.filter(
-    ({ rsvp }) => rsvp?.status === "confirmed",
+  const capacityCount = eventStates.filter(({ rsvp }) =>
+    ["confirmed", "approved_to_pay", "paid_registered"].includes(
+      rsvp?.status ?? "",
+    ),
   ).length;
   const waitlistedCount = eventStates.filter(
     ({ rsvp }) => rsvp?.status === "waitlisted",
@@ -56,12 +59,44 @@ export default async function DashboardPage() {
     <DashboardShell memberName={member.telegramDisplayName}>
       <section className="grid gap-4 md:grid-cols-4">
         <StatusCard label="Active events" value={String(eventStates.length)} />
-        <StatusCard label="Confirmed RSVPs" value={String(confirmedCount)} />
+        <StatusCard label="Capacity spots" value={String(capacityCount)} />
         <StatusCard label="Waitlisted" value={String(waitlistedCount)} />
         <StatusCard
           label="Surveys done"
           value={`${completedSurveyCount}/${surveyStates.length}`}
         />
+      </section>
+
+      <section className="mt-6 border border-[#d7e3df] bg-white p-5">
+        <div className="grid gap-4 lg:grid-cols-[1fr_24rem] lg:items-end">
+          <div>
+            <h2 className="text-2xl font-semibold text-[#14211f]">
+              Contact email
+            </h2>
+            <p className="mt-2 max-w-2xl leading-7 text-[#4e5b57]">
+              Annual retreat payment approval requires an email so Hi.Events
+              registration can be linked back to your ARF profile. Use this
+              same email at checkout.
+            </p>
+          </div>
+          <form action={updateCurrentMemberEmailAction} className="grid gap-2">
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium">Email</span>
+              <input
+                name="email"
+                type="email"
+                defaultValue={member.email ?? ""}
+                className="h-10 rounded-md border border-[#b8cac5] px-3"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
+            >
+              Save email
+            </button>
+          </form>
+        </div>
       </section>
 
       <section className="mt-8">
@@ -169,11 +204,17 @@ function DashboardShell({
 
 function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   const { event, confirmedCount, waitlistedCount, rsvp } = eventState;
-  const isActiveRsvp =
-    rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
+  const isCancelableRsvp =
+    rsvp?.status === "confirmed" ||
+    rsvp?.status === "waitlisted" ||
+    rsvp?.status === "approved_to_pay";
   const canRsvp =
     (event.status === "open" || event.status === "full") &&
     (!rsvp || rsvp.status === "cancelled");
+  const canCheckout =
+    event.type === "annual_retreat" &&
+    rsvp?.status === "approved_to_pay" &&
+    Boolean(rsvp.hiEventsCheckoutUrl);
 
   return (
     <article className="border border-[#d7e3df] bg-white p-5">
@@ -198,12 +239,41 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
         </div>
 
         <div className="grid min-w-48 grid-cols-2 gap-3 text-sm">
-          <Metric label="Confirmed" value={`${confirmedCount}/${event.capacity}`} />
+          <Metric label="Capacity" value={`${confirmedCount}/${event.capacity}`} />
           <Metric label="Waitlist" value={String(waitlistedCount)} />
         </div>
       </div>
 
       <div className="mt-5 border-t border-[#e3ece9] pt-5">
+        {rsvp?.status === "approved_to_pay" ? (
+          <div className="mb-4 border border-[#f0d487] bg-[#fff8df] p-4 text-sm text-[#6b4c00]">
+            <p className="font-semibold">Payment approved.</p>
+            <p className="mt-1">
+              Complete Hi.Events checkout with the email saved on this
+              dashboard so ARF can link the registration automatically.
+            </p>
+            {canCheckout ? (
+              <a
+                href={rsvp.hiEventsCheckoutUrl ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white sm:w-auto"
+              >
+                Open Hi.Events checkout
+              </a>
+            ) : (
+              <p className="mt-2">The checkout link is not available yet.</p>
+            )}
+          </div>
+        ) : null}
+
+        {rsvp?.status === "paid_registered" ? (
+          <div className="mb-4 border border-[#8bb5aa] bg-[#edf8f4] p-4 text-sm text-[#183f3c]">
+            <p className="font-semibold">Payment and registration complete.</p>
+            {rsvp.ticketType ? <p className="mt-1">{rsvp.ticketType}</p> : null}
+          </div>
+        ) : null}
+
         {canRsvp ? (
           <form action={rsvpForEventAction}>
             <input type="hidden" name="eventId" value={event.id} />
@@ -216,7 +286,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           </form>
         ) : null}
 
-        {isActiveRsvp ? (
+        {isCancelableRsvp ? (
           <form action={cancelRsvpAction}>
             <input type="hidden" name="eventId" value={event.id} />
             <button
@@ -228,7 +298,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           </form>
         ) : null}
 
-        {!canRsvp && !isActiveRsvp ? (
+        {!canRsvp && !isCancelableRsvp && !canCheckout ? (
           <p className="text-sm text-[#64706c]">
             {event.status === "closed"
               ? "This event is closed to new RSVPs."

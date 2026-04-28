@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  approveRsvpForPaymentAction,
   createEventAction,
   updateEventAction,
   updateRsvpStatusAction,
@@ -29,9 +30,11 @@ export default async function AdminPage() {
   if (!member || !member.isAdmin) {
     return (
       <AdminShell>
-        <div className="border border-white/15 bg-white/5 p-6">
-          <h1 className="text-3xl font-semibold">Organizer access required.</h1>
-          <p className="mt-3 max-w-2xl leading-7 text-white/70">
+        <div className="max-w-full border border-white/15 bg-white/5 p-5 sm:p-6">
+          <h1 className="text-2xl font-semibold sm:text-3xl">
+            Organizer access required.
+          </h1>
+          <p className="mt-3 max-w-2xl break-words leading-7 text-white/70">
             Sign in through Telegram with an admin-listed Telegram ID to manage
             events, capacity, and RSVP state.
           </p>
@@ -155,13 +158,13 @@ function AdminShell({
   memberName?: string;
 }) {
   return (
-    <main className="min-h-screen bg-[#14211f] px-5 py-8 text-white">
-      <section className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between">
+    <main className="min-h-screen overflow-x-hidden bg-[#14211f] px-4 py-8 text-white sm:px-5">
+      <section className="mx-auto w-full max-w-[22rem] sm:max-w-6xl">
+        <div className="grid gap-4 sm:flex sm:items-center sm:justify-between">
           <Link href="/" className="font-semibold">
             ARF
           </Link>
-          <div className="flex items-center gap-4 text-sm text-white/70">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-white/70 sm:justify-end">
             {memberName ? <span>{memberName}</span> : null}
             <Link href="/admin/members">Members</Link>
             <Link href="/dashboard">Dashboard</Link>
@@ -171,7 +174,7 @@ function AdminShell({
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#d8b35a]">
             Organizer admin
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">
+          <h1 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl">
             Manage events, capacity, waitlists, and RSVP state.
           </h1>
           <p className="mt-4 leading-7 text-white/70">
@@ -227,7 +230,7 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
             {formatDateRange(event.startsAt, event.endsAt)}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <Metric label="Confirmed" value={`${confirmedCount}/${event.capacity}`} />
+            <Metric label="Capacity" value={`${confirmedCount}/${event.capacity}`} />
             <Metric label="Waitlist" value={String(waitlistedCount)} />
           </div>
         </div>
@@ -249,41 +252,130 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
         ) : (
           <div className="mt-3 grid gap-3">
             {rsvps.map(({ rsvp, member }) => (
-              <form
+              <div
                 key={rsvp.id}
-                action={updateRsvpStatusAction}
-                className="grid gap-3 border border-[#d7e3df] p-4 md:grid-cols-[1fr_auto_auto]"
+                className="grid gap-3 border border-[#d7e3df] p-4 lg:grid-cols-[minmax(0,1fr)_auto]"
               >
-                <input type="hidden" name="rsvpId" value={rsvp.id} />
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{member.telegramDisplayName}</p>
                   <p className="mt-1 text-sm text-[#64706c]">
                     {member.telegramUsername
                       ? `@${member.telegramUsername}`
                       : member.email || member.groupStatus}
                   </p>
+                  {member.email ? (
+                    <p className="mt-1 break-all text-sm text-[#64706c]">
+                      {member.email}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge>{rsvp.status}</Badge>
+                    {rsvp.hiEventsOrderId ? (
+                      <Badge>order {rsvp.hiEventsOrderId}</Badge>
+                    ) : null}
+                    {rsvp.hiEventsAttendeeId ? (
+                      <Badge>attendee {rsvp.hiEventsAttendeeId}</Badge>
+                    ) : null}
+                  </div>
+                  {rsvp.hiEventsCheckoutUrl ? (
+                    <a
+                      href={rsvp.hiEventsCheckoutUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex text-sm font-semibold text-[#183f3c]"
+                    >
+                      Checkout link
+                    </a>
+                  ) : null}
                 </div>
-                <select
-                  name="status"
-                  defaultValue={rsvp.status}
-                  className="h-10 rounded-md border border-[#b8cac5] bg-white px-3 text-sm"
-                >
-                  <option value="confirmed">confirmed</option>
-                  <option value="waitlisted">waitlisted</option>
-                  <option value="cancelled">cancelled</option>
-                </select>
-                <button
-                  type="submit"
-                  className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
-                >
-                  Update
-                </button>
-              </form>
+                <div className="grid gap-3 sm:grid-cols-[auto_auto] lg:justify-end">
+                  <form
+                    action={updateRsvpStatusAction}
+                    className="grid gap-2 sm:grid-cols-[auto_auto]"
+                  >
+                    <input type="hidden" name="rsvpId" value={rsvp.id} />
+                    <select
+                      name="status"
+                      defaultValue={rsvp.status}
+                      className="h-10 rounded-md border border-[#b8cac5] bg-white px-3 text-sm"
+                    >
+                      <option value="confirmed">confirmed</option>
+                      <option value="waitlisted">waitlisted</option>
+                      <option value="approved_to_pay">approved_to_pay</option>
+                      <option value="paid_registered">paid_registered</option>
+                      <option value="cancelled">cancelled</option>
+                    </select>
+                    <button
+                      type="submit"
+                      className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
+                    >
+                      Update
+                    </button>
+                  </form>
+                  <PaymentApprovalControl
+                    event={event}
+                    memberEmail={member.email}
+                    rsvp={rsvp}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         )}
       </div>
     </article>
+  );
+}
+
+function PaymentApprovalControl({
+  event,
+  memberEmail,
+  rsvp,
+}: {
+  event: AdminEventWithRsvps["event"];
+  memberEmail: string | null;
+  rsvp: AdminEventWithRsvps["rsvps"][number]["rsvp"];
+}) {
+  if (event.type !== "annual_retreat") {
+    return null;
+  }
+
+  if (rsvp.status === "paid_registered") {
+    return (
+      <p className="text-sm font-semibold text-[#183f3c]">Paid and registered</p>
+    );
+  }
+
+  if (!["confirmed", "waitlisted", "approved_to_pay"].includes(rsvp.status)) {
+    return null;
+  }
+
+  if (!event.hiEventsEventId) {
+    return (
+      <p className="max-w-64 text-sm text-[#64706c]">
+        Set the Hi.Events event ID before payment approval.
+      </p>
+    );
+  }
+
+  if (!memberEmail) {
+    return (
+      <p className="max-w-64 text-sm text-[#64706c]">
+        Add this member&apos;s email before payment approval.
+      </p>
+    );
+  }
+
+  return (
+    <form action={approveRsvpForPaymentAction}>
+      <input type="hidden" name="rsvpId" value={rsvp.id} />
+      <button
+        type="submit"
+        className="h-10 rounded-md border border-[#b8cac5] px-4 text-sm font-semibold text-[#183f3c]"
+      >
+        {rsvp.status === "approved_to_pay" ? "Regenerate link" : "Approve payment"}
+      </button>
+    </form>
   );
 }
 

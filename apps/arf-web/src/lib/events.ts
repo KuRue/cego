@@ -34,6 +34,12 @@ export interface AdminEventWithRsvps {
   }>;
 }
 
+const capacityBearingStatuses = [
+  "confirmed",
+  "approved_to_pay",
+  "paid_registered",
+] as const;
+
 export async function getDashboardEvents(
   memberId: string,
 ): Promise<EventWithRsvpState[]> {
@@ -132,7 +138,7 @@ async function getRsvpCountRows(eventIds: string[]) {
     .where(
       and(
         inArray(rsvps.eventId, eventIds),
-        inArray(rsvps.status, ["confirmed", "waitlisted"]),
+        inArray(rsvps.status, [...capacityBearingStatuses, "waitlisted"]),
       ),
     )
     .groupBy(rsvps.eventId, rsvps.status);
@@ -152,8 +158,8 @@ function toCountMap(
       waitlisted: 0,
     };
 
-    if (row.status === "confirmed") {
-      current.confirmed = Number(row.total);
+    if (isCapacityBearingStatus(row.status)) {
+      current.confirmed += Number(row.total);
     }
 
     if (row.status === "waitlisted") {
@@ -164,4 +170,10 @@ function toCountMap(
   }
 
   return countsByEvent;
+}
+
+function isCapacityBearingStatus(status: string): boolean {
+  return capacityBearingStatuses.includes(
+    status as (typeof capacityBearingStatuses)[number],
+  );
 }
