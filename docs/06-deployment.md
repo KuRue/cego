@@ -6,17 +6,21 @@ The target v1 deployment is one Linux VPS running Docker Compose. Public traffic
 
 ## Compose Services
 
-Planned service groups:
+Implemented ARF-owned service groups:
 
 - `cloudflared`: Cloudflare Tunnel connector.
 - `arf-web`: Next.js ARF public site, Mini App, dashboard, API routes if monolithic.
-- `arf-worker`: async jobs, webhook retries, Telegram notifications, CRM-lite reminders/rollups.
 - `arf-postgres`: ARF database.
 - `arf-redis`: queue/cache if needed.
-- `hi-events`: Hi.Events service group, following upstream deployment guidance.
-- `hievents-db`: Hi.Events database.
-- `hievents-redis`: Hi.Events cache/queue if required.
-- `backup`: scheduled backup job.
+- `arf-migrate`: manual migration tool profile.
+- `arf-postgres-backup`: manual backup tool profile.
+
+Deferred or external service groups:
+
+- `arf-worker`: async jobs, webhook retries, Telegram notifications, CRM-lite reminders/rollups.
+- `hi-events`: Hi.Events service group, following upstream deployment guidance and attached to the `arf_edge` Docker network.
+- `hievents-db`: Hi.Events database, owned by the Hi.Events deployment.
+- `hievents-redis`: Hi.Events cache/queue, owned by the Hi.Events deployment.
 
 ## Network Exposure
 
@@ -27,6 +31,8 @@ Internal service routing:
 - `arf.kurue.com` -> `arf-web`
 - `api.arf.kurue.com` -> `arf-web` or `arf-api`
 - `events.arf.kurue.com` -> Hi.Events frontend/backend entrypoint
+
+The production Compose scaffold uses a remotely-managed tunnel token. Configure Cloudflare Tunnel public hostnames to point at container DNS names, such as `http://arf-web:3000` for both ARF hostnames.
 
 ## Environment Variables
 
@@ -46,6 +52,9 @@ ARF app:
 - `HI_EVENTS_CHECKOUT_URL_TEMPLATE`
 - `APP_BASE_URL`
 - `SOURCE_CODE_URL`
+- `ARF_POSTGRES_DB`
+- `ARF_POSTGRES_USER`
+- `ARF_POSTGRES_PASSWORD`
 
 cloudflared:
 
@@ -71,6 +80,8 @@ Minimum backup behavior:
 - Daily encrypted database backups.
 - Retention policy with recent daily and longer monthly backups.
 - Restore instructions tested before annual retreat launch.
+
+The current Compose scaffold includes a manual ARF Postgres backup tool profile. Scheduled encrypted backups and restore drills are still launch-readiness work.
 
 ## Deployment Acceptance
 

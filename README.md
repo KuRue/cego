@@ -6,7 +6,7 @@ This repository starts as a documentation-first project. The implementation targ
 
 ## Status
 
-Working MVP scaffold. The repository includes the documentation pack, a Next.js TypeScript ARF app, Telegram Mini App session persistence, event/RSVP management, built-in surveys, CRM-lite member admin, organizer admin views, and Docker development infrastructure for ARF-owned services.
+Working MVP scaffold. The repository includes the documentation pack, a Next.js TypeScript ARF app, Telegram Mini App session persistence, event/RSVP management, built-in surveys, CRM-lite member admin, organizer admin views, Hi.Events payment webhook handling, and Docker development/production infrastructure for ARF-owned services.
 
 ## Development
 
@@ -28,6 +28,13 @@ Run checks:
 npm run lint
 npm run typecheck
 npm run build
+```
+
+Validate the production Docker Compose scaffold:
+
+```sh
+cp infra/docker/env.production.example .env
+npm run docker:prod:config
 ```
 
 ## Core Decisions

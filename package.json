@@ -9,6 +9,10 @@
     "start": "npm --prefix apps/arf-web run start",
     "lint": "npm --prefix apps/arf-web run lint",
     "typecheck": "npm --prefix packages/telegram run typecheck && npm --prefix packages/db run typecheck && npm --prefix apps/arf-web run typecheck",
-    "docker:dev": "docker compose --env-file .env -f infra/docker/compose.dev.yml up"
+    "docker:dev": "docker compose --env-file .env -f infra/docker/compose.dev.yml up",
+    "docker:prod": "docker compose --env-file .env -f infra/docker/compose.prod.yml up -d --build",
+    "docker:prod:config": "docker compose --env-file .env -f infra/docker/compose.prod.yml config",
+    "docker:prod:migrate": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm arf-migrate",
+    "docker:prod:backup": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm arf-postgres-backup"
   }
 }
