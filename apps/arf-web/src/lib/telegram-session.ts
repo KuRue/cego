@@ -3,8 +3,10 @@ import {
   getTelegramGroupStatus,
   TelegramBotApiError,
   TelegramInitDataError,
+  TelegramLoginWidgetError,
+  verifyTelegramLoginWidgetData,
+  type TelegramDisplayUser,
   verifyTelegramInitData,
-  type VerifiedTelegramInitData,
 } from "@arf/telegram";
 import { upsertTelegramMember } from "@/lib/members";
 
@@ -33,7 +35,7 @@ export async function createTelegramSession({
   if (isDevMockEnabled(useDevMock)) {
     const verifiedInitData = getDevTelegramInitData();
     const member = await upsertTelegramMember({
-      verifiedInitData,
+      telegramUser: verifiedInitData.user,
       groupStatus: "member",
     });
 
@@ -58,8 +60,47 @@ export async function createTelegramSession({
   }
 
   const verifiedInitData = verifyTelegramInitData(initData ?? "", botToken);
-  const groupStatus = await resolveTelegramGroupStatus(verifiedInitData, botToken);
-  const member = await upsertTelegramMember({ verifiedInitData, groupStatus });
+  const groupStatus = await resolveTelegramGroupStatus(
+    verifiedInitData.user,
+    botToken,
+  );
+  const member = await upsertTelegramMember({
+    telegramUser: verifiedInitData.user,
+    groupStatus,
+  });
+
+  return {
+    status: groupStatus === "member" ? "accepted" : "blocked",
+    member: {
+      id: member.id,
+      telegramId: member.telegramId,
+      telegramUsername: member.telegramUsername,
+      telegramDisplayName: member.telegramDisplayName,
+      telegramPhotoUrl: member.telegramPhotoUrl,
+      groupStatus: member.groupStatus,
+      isAdmin: member.isAdmin,
+    },
+  };
+}
+
+export async function createTelegramLoginWidgetSession(
+  searchParams: URLSearchParams,
+): Promise<TelegramSessionResult> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!botToken) {
+    throw new TelegramLoginWidgetError("TELEGRAM_BOT_TOKEN is not configured.");
+  }
+
+  const verifiedLoginData = verifyTelegramLoginWidgetData(searchParams, botToken);
+  const groupStatus = await resolveTelegramGroupStatus(
+    verifiedLoginData.user,
+    botToken,
+  );
+  const member = await upsertTelegramMember({
+    telegramUser: verifiedLoginData.user,
+    groupStatus,
+  });
 
   return {
     status: groupStatus === "member" ? "accepted" : "blocked",
@@ -84,7 +125,7 @@ function isDevMockEnabled(useDevMock?: boolean): boolean {
 }
 
 async function resolveTelegramGroupStatus(
-  verifiedInitData: VerifiedTelegramInitData,
+  telegramUser: Pick<TelegramDisplayUser, "id">,
   botToken: string,
 ): Promise<"member" | "not_member" | "unknown"> {
   const chatId = process.env.TELEGRAM_GROUP_ID;
@@ -97,7 +138,7 @@ async function resolveTelegramGroupStatus(
     return await getTelegramGroupStatus({
       botToken,
       chatId,
-      userId: verifiedInitData.user.id,
+      userId: getTelegramBotApiUserId(telegramUser.id),
     });
   } catch (error) {
     if (error instanceof TelegramBotApiError) {
@@ -106,4 +147,14 @@ async function resolveTelegramGroupStatus(
 
     throw error;
   }
+}
+
+function getTelegramBotApiUserId(telegramId: string | number): number {
+  const userId = Number(telegramId);
+
+  if (!Number.isSafeInteger(userId) || userId <= 0) {
+    throw new TelegramBotApiError("Telegram user ID is invalid.");
+  }
+
+  return userId;
 }

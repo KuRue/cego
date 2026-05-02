@@ -41,8 +41,8 @@ export default function Home() {
           </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-[#4e5b57] md:flex">
-          <Link href="/mini-app" className="hover:text-[#183f3c]">
-            Mini App
+          <Link href="/sign-in" className="hover:text-[#183f3c]">
+            Sign in
           </Link>
           <Link href="/dashboard" className="hover:text-[#183f3c]">
             Dashboard
@@ -76,10 +76,10 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/mini-app"
+              href="/sign-in"
               className="inline-flex h-12 items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white transition hover:bg-[#245b55]"
             >
-              Open Mini App Shell
+              Sign in with Telegram
             </Link>
             <Link
               href="/dashboard"
@@ -163,4 +163,3 @@ export default function Home() {
     </main>
   );
 }
-

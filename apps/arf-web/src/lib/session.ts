@@ -68,7 +68,7 @@ export async function requireCurrentMember(): Promise<Member> {
   const member = await getCurrentMember();
 
   if (!member) {
-    redirect("/mini-app");
+    redirect("/sign-in");
   }
 
   return member;

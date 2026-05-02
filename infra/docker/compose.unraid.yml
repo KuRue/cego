@@ -1,0 +1,129 @@
+name: arf
+
+services:
+  arf-web:
+    build:
+      context: ${ARF_SOURCE_DIR:-/mnt/user/appdata/arf/source}
+      dockerfile: infra/docker/arf-web.Dockerfile
+      target: runner
+    image: arf-web:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      APP_BASE_URL: ${APP_BASE_URL:-https://arf.kurue.com}
+      SOURCE_CODE_URL: ${SOURCE_CODE_URL:-https://github.com/KuRue/ARF}
+      DATABASE_URL: postgres://${ARF_POSTGRES_USER:-arf}:${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}@arf-postgres:5432/${ARF_POSTGRES_DB:-arf}
+      REDIS_URL: redis://arf-redis:6379
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      ARF_ADMIN_TELEGRAM_IDS: ${ARF_ADMIN_TELEGRAM_IDS:?set ARF_ADMIN_TELEGRAM_IDS}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:?set TELEGRAM_BOT_USERNAME}
+      TELEGRAM_GROUP_ID: ${TELEGRAM_GROUP_ID:?set TELEGRAM_GROUP_ID}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-https://arf.kurue.com/mini-app}
+      ARF_DEV_TELEGRAM_MOCK: "false"
+      HI_EVENTS_BASE_URL: ${HI_EVENTS_BASE_URL:-https://events.arf.kurue.com}
+      HI_EVENTS_API_KEY: ${HI_EVENTS_API_KEY:-}
+      HI_EVENTS_WEBHOOK_SECRET: ${HI_EVENTS_WEBHOOK_SECRET:?set HI_EVENTS_WEBHOOK_SECRET}
+      HI_EVENTS_CHECKOUT_URL_TEMPLATE: ${HI_EVENTS_CHECKOUT_URL_TEMPLATE:?set HI_EVENTS_CHECKOUT_URL_TEMPLATE}
+    expose:
+      - "3000"
+    depends_on:
+      arf-postgres:
+        condition: service_healthy
+      arf-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - arf_edge
+      - arf_data
+
+  arf-migrate:
+    build:
+      context: ${ARF_SOURCE_DIR:-/mnt/user/appdata/arf/source}
+      dockerfile: infra/docker/arf-web.Dockerfile
+      target: migrator
+    image: arf-migrate:latest
+    profiles:
+      - tools
+    environment:
+      DATABASE_URL: postgres://${ARF_POSTGRES_USER:-arf}:${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}@arf-postgres:5432/${ARF_POSTGRES_DB:-arf}
+    depends_on:
+      arf-postgres:
+        condition: service_healthy
+    networks:
+      - arf_data
+
+  arf-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ARF_POSTGRES_DB:-arf}
+      POSTGRES_USER: ${ARF_POSTGRES_USER:-arf}
+      POSTGRES_PASSWORD: ${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}
+    volumes:
+      - ${ARF_APPDATA_DIR:-/mnt/user/appdata/arf}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - arf_data
+
+  arf-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ${ARF_APPDATA_DIR:-/mnt/user/appdata/arf}/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - arf_data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN}
+    depends_on:
+      arf-web:
+        condition: service_healthy
+    networks:
+      - arf_edge
+
+  arf-postgres-backup:
+    image: postgres:16-alpine
+    profiles:
+      - tools
+    environment:
+      PGPASSWORD: ${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        mkdir -p /backups &&
+        pg_dump -h arf-postgres -U ${ARF_POSTGRES_USER:-arf} -d ${ARF_POSTGRES_DB:-arf}
+        > /backups/arf-$$(date -u +%Y%m%dT%H%M%SZ).sql
+    depends_on:
+      arf-postgres:
+        condition: service_healthy
+    volumes:
+      - ${ARF_APPDATA_DIR:-/mnt/user/appdata/arf}/backups:/backups
+    networks:
+      - arf_data
+
+networks:
+  arf_edge:
+    name: arf_edge
+  arf_data:
+    internal: true

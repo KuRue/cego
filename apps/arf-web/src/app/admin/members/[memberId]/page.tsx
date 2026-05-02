@@ -372,10 +372,10 @@ function AccessRequired() {
         members.
       </p>
       <Link
-        href="/mini-app"
+        href="/sign-in"
         className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-white px-5 text-sm font-semibold text-[#14211f]"
       >
-        Open Mini App
+        Sign in with Telegram
       </Link>
     </div>
   );

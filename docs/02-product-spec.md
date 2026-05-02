@@ -9,8 +9,8 @@
 
 ## Member Flow
 
-1. A member opens ARF through a Telegram bot button or Mini App link.
-2. The Mini App sends signed Telegram init data to ARF.
+1. A member opens ARF through a normal browser link, Telegram bot button, or Mini App link.
+2. Browser users sign in with Telegram Login Widget; Mini App users send signed Telegram init data to ARF.
 3. ARF verifies the Telegram identity and checks membership in the configured Telegram group.
 4. If the user is a group member, ARF creates or updates the member profile.
 5. The member sees active annual retreats and mini retreats.
@@ -71,6 +71,7 @@ Organizers use ARF Admin to:
 ## Acceptance Scenarios
 
 - Telegram group member can open the Mini App and create or update their ARF profile.
+- Telegram group member can sign in from a normal browser with Telegram Login Widget and create or update their ARF profile.
 - Non-group Telegram user is blocked from RSVP flows.
 - Annual retreat RSVP under cap becomes `confirmed`.
 - Annual retreat RSVP over cap becomes `waitlisted`.

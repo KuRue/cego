@@ -20,8 +20,8 @@ export default async function DashboardPage() {
       <DashboardShell>
         <EmptyState
           title="Sign in through Telegram to see ARF events."
-          body="ARF uses Telegram Mini App identity instead of password accounts. Open the Mini App shell to create your session."
-          action={<PrimaryLink href="/mini-app">Open Mini App</PrimaryLink>}
+          body="ARF uses Telegram identity instead of password accounts. Sign in with Telegram to create your ARF session."
+          action={<PrimaryLink href="/sign-in">Sign in with Telegram</PrimaryLink>}
         />
       </DashboardShell>
     );
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
         <EmptyState
           title="Telegram group access is required."
           body="This account is signed in, but ARF event flows are only open to members of the configured Telegram group."
-          action={<PrimaryLink href="/mini-app">Check Telegram access</PrimaryLink>}
+          action={<PrimaryLink href="/sign-in">Refresh Telegram access</PrimaryLink>}
         />
       </DashboardShell>
     );
@@ -180,7 +180,7 @@ function DashboardShell({
           </Link>
           <div className="flex items-center gap-4 text-sm text-[#4e5b57]">
             {memberName ? <span>{memberName}</span> : null}
-            <Link href="/mini-app">Mini App</Link>
+            <Link href="/sign-in">Telegram sign-in</Link>
           </div>
         </div>
       </header>

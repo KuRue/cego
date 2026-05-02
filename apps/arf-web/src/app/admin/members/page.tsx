@@ -143,8 +143,8 @@ export default async function AdminMembersPage({
           <div className="border border-white/15 bg-white/5 p-6">
             <h2 className="text-2xl font-semibold">No members match.</h2>
             <p className="mt-3 text-white/70">
-              Adjust the filters or open the Telegram Mini App with another
-              account to create a member profile.
+              Adjust the filters or sign in with another Telegram account to
+              create a member profile.
             </p>
           </div>
         ) : (
@@ -199,10 +199,10 @@ function AccessRequired() {
         members.
       </p>
       <Link
-        href="/mini-app"
+        href="/sign-in"
         className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-white px-5 text-sm font-semibold text-[#14211f]"
       >
-        Open Mini App
+        Sign in with Telegram
       </Link>
     </div>
   );

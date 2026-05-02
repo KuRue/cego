@@ -1,16 +1,21 @@
 # Integrations
 
-## Telegram Mini App
+## Telegram Identity
 
-Telegram Mini App authentication is the primary sign-in path. The ARF app verifies signed Telegram init data on every Mini App session and maps the Telegram user ID to a `members` record.
+Telegram is the only member identity provider. ARF supports two Telegram-backed entry paths that both map the Telegram user ID to a `members` record and issue the same signed ARF session cookie.
+
+- Telegram Mini App: verifies signed `Telegram.WebApp.initData`.
+- Browser Telegram SSO: verifies Telegram Login Widget callback params at `/api/telegram/login`.
 
 Required behavior:
 
 - Reject invalid or expired Telegram init data.
+- Reject invalid or expired Telegram Login Widget data.
 - Create a member record on first valid access.
 - Update Telegram username, display name, and photo on later access.
 - Do not create password credentials.
 - Do not treat Telegram username as stable identity; use Telegram ID.
+- Require BotFather `/setdomain` configuration for browser SSO on `arf.kurue.com`.
 
 ## Telegram Bot
 

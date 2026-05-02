@@ -19,6 +19,7 @@
 - Create Telegram bot.
 - Configure Telegram Mini App URL.
 - Verify Telegram Mini App init data.
+- Verify Telegram Login Widget browser sign-in data.
 - Create/update member profile from Telegram identity.
 - Check Telegram group membership.
 - Block non-group users from event flows.

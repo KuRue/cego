@@ -64,3 +64,31 @@ The production stack uses a remotely-managed Cloudflare Tunnel token. Configure 
 - `events.arf.kurue.com` -> the Hi.Events service attached to the `arf_edge` Docker network, for example `http://hi-events:80`
 
 The ARF Compose file creates the shared `arf_edge` network. If Hi.Events is run from its upstream Compose project, attach its public HTTP service to that same Docker network and give it the alias used in the Cloudflare route.
+
+## Unraid Compose
+
+For Unraid, use `compose.unraid.yml` and keep persistent data under `/mnt/user/appdata/arf`.
+
+Suggested layout:
+
+```text
+/mnt/user/appdata/arf/.env
+/mnt/user/appdata/arf/source
+/mnt/user/appdata/arf/postgres
+/mnt/user/appdata/arf/redis
+/mnt/user/appdata/arf/backups
+```
+
+Clone this repository to `/mnt/user/appdata/arf/source`, copy `env.unraid.example` to `/mnt/user/appdata/arf/.env`, fill in the secrets, then deploy with:
+
+```sh
+docker compose --env-file /mnt/user/appdata/arf/.env \
+  -f /mnt/user/appdata/arf/source/infra/docker/compose.unraid.yml \
+  --profile tools run --rm arf-migrate
+
+docker compose --env-file /mnt/user/appdata/arf/.env \
+  -f /mnt/user/appdata/arf/source/infra/docker/compose.unraid.yml \
+  up -d --build
+```
+
+No host ports are published by default. The included `cloudflared` container joins the `arf_edge` Docker network and routes traffic directly to `http://arf-web:3000`.

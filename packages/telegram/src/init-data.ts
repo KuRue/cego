@@ -1,11 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export interface TelegramInitUser {
-  id: number;
+export interface TelegramDisplayUser {
+  id: number | string;
   first_name?: string;
   last_name?: string;
   username?: string;
   photo_url?: string;
+}
+
+export interface TelegramInitUser extends TelegramDisplayUser {
+  id: number;
   language_code?: string;
   allows_write_to_pm?: boolean;
 }
@@ -116,8 +120,7 @@ function safeCompareHex(actualHex: string, expectedHex: string): boolean {
   return timingSafeEqual(actual, expected);
 }
 
-export function getTelegramDisplayName(user: TelegramInitUser): string {
+export function getTelegramDisplayName(user: TelegramDisplayUser): string {
   const displayName = [user.first_name, user.last_name].filter(Boolean).join(" ");
   return displayName || user.username || String(user.id);
 }
-
