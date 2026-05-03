@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import {
   createEventAction,
   updateEventAction,
@@ -44,13 +44,13 @@ export default async function AdminPage() {
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               Sign in with an admin-listed Telegram ID to manage events.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -192,12 +192,12 @@ function AdminNavLink({
   children: React.ReactNode;
 }) {
   return (
-    <Link
+    <AppLink
       href={href}
       className="glass glass-hover inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold transition"
     >
       {children}
-    </Link>
+    </AppLink>
   );
 }
 

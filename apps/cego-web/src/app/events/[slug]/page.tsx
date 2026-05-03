@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import { Badge, StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
@@ -32,13 +32,13 @@ export default async function EventDetailPage({
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               Event details are available to Telegram-backed cego members.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in with Telegram
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -62,13 +62,13 @@ export default async function EventDetailPage({
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               This event is only available to members of the configured Telegram group.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Refresh access
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -109,13 +109,13 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
   return (
     <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
       <div className="mb-5">
-        <Link
+        <AppLink
           href="/dashboard"
           className="text-sm font-semibold"
           style={{ color: "var(--color-accent)" }}
         >
           Back to dashboard
-        </Link>
+        </AppLink>
       </div>
 
       <section className="glass-lg overflow-hidden rounded-2xl">

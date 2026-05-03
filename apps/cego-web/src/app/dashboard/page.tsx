@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import { Badge, StatusBadge } from "@/components/badge";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
@@ -36,13 +36,13 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               cego uses your Telegram identity instead of passwords.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in with Telegram
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -67,13 +67,13 @@ export default async function DashboardPage() {
               This account is signed in, but cego events are only open to members of the
               configured Telegram group.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Refresh access
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -244,7 +244,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link
+            <AppLink
               href={`/events/${event.slug}`}
               className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{
@@ -254,7 +254,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               }}
             >
               View details
-            </Link>
+            </AppLink>
 
             {canRsvp ? (
               <form action={rsvpForEventAction}>

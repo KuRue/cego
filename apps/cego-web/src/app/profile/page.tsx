@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import Avatar from "@/components/avatar";
 import { getCurrentMember } from "@/lib/session";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
@@ -25,13 +25,13 @@ export default async function ProfilePage() {
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               cego profiles are connected to Telegram sessions.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in with Telegram
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>

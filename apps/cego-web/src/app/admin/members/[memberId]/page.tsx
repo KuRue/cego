@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import {
   assignExistingMemberTagAction,
@@ -41,13 +41,13 @@ export default async function AdminMemberDetailPage({
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               Sign in with an admin-listed Telegram ID to manage members.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -102,7 +102,7 @@ export default async function AdminMemberDetailPage({
                 - Telegram ID {detail.member.telegramId}
               </p>
             </div>
-            <Link
+            <AppLink
               href="/admin/members"
               className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold"
               style={{
@@ -111,7 +111,7 @@ export default async function AdminMemberDetailPage({
               }}
             >
               Back to members
-            </Link>
+            </AppLink>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-4">

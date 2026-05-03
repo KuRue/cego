@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import {
   getAdminMemberDirectory,
   normalizeDirectoryFilters,
@@ -33,13 +33,13 @@ export default async function AdminMembersPage({
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               Sign in with an admin-listed Telegram ID to manage members.
             </p>
-            <Link
+            <AppLink
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in
-            </Link>
+            </AppLink>
           </div>
         </main>
       </>
@@ -85,13 +85,13 @@ export default async function AdminMembersPage({
               </p>
               <h2 className="mt-2 text-3xl font-semibold">Members</h2>
             </div>
-            <Link
+            <AppLink
               href="/admin"
               className="text-sm font-semibold"
               style={{ color: "var(--color-accent)" }}
             >
               Event and survey admin
-            </Link>
+            </AppLink>
           </div>
 
           <form className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -175,7 +175,7 @@ export default async function AdminMembersPage({
               >
                 Filter
               </button>
-              <Link
+              <AppLink
                 href="/admin/members"
                 className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold"
                 style={{
@@ -184,7 +184,7 @@ export default async function AdminMembersPage({
                 }}
               >
                 Clear
-              </Link>
+              </AppLink>
             </div>
           </form>
         </section>
@@ -251,13 +251,13 @@ function MemberRow({ summary }: { summary: AdminMemberSummary }) {
           />
         </div>
 
-        <Link
+        <AppLink
           href={`/admin/members/${member.id}`}
           className="inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold transition lg:w-auto"
           style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
         >
           Open profile
-        </Link>
+        </AppLink>
       </div>
     </article>
   );

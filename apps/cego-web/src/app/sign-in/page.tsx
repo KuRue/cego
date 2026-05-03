@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import { headers } from "next/headers";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
@@ -91,7 +91,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
                 Open the Mini App for automatic sign-in.
               </p>
-              <Link
+              <AppLink
                 href="/mini-app"
                 className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
                 style={{
@@ -100,7 +100,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                 }}
               >
                 Open Mini App
-              </Link>
+              </AppLink>
             </div>
           </div>
         </div>

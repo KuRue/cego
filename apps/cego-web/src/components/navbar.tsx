@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import { useEffect, useRef, useState } from "react";
 import Avatar from "@/components/avatar";
 
@@ -58,7 +58,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
       style={isMiniApp ? { paddingTop: "env(safe-area-inset-top, 48px)" } : undefined}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-        <Link href="/" className="flex items-center gap-2">
+        <AppLink href="/" className="flex items-center gap-2">
           {logoUrl ? (
             <Image
               src={logoUrl}
@@ -78,7 +78,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
           <span className="text-sm font-semibold tracking-wide">
             {siteName}
           </span>
-        </Link>
+        </AppLink>
 
         {member ? (
           <div className="flex items-center gap-3">
@@ -111,44 +111,44 @@ export default function Navbar({ member, brand }: NavbarProps) {
                     <p className="text-sm font-semibold">{member.telegramDisplayName}</p>
                   </div>
                   <div className="py-1">
-                    <Link
-                      href="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm transition"
-                      style={{ color: "var(--color-foreground)" }}
-                      role="menuitem"
-                    >
-                      Profile
-                    </Link>
-                    {member.isAdmin ? (
-                      <>
-                        <Link
-                          href="/admin"
-                          onClick={() => setMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm transition"
-                          style={{ color: "var(--color-foreground)" }}
-                          role="menuitem"
-                        >
-                          Admin Dashboard
-                        </Link>
-                        <Link
-                          href="/admin#settings"
-                          onClick={() => setMenuOpen(false)}
-                          className="block px-4 py-2.5 text-sm transition"
-                          style={{ color: "var(--color-foreground)" }}
-                          role="menuitem"
-                        >
-                          Settings
-                        </Link>
-                      </>
-                    ) : null}
+                  <AppLink
+                    href="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-2.5 text-sm transition"
+                    style={{ color: "var(--color-foreground)" }}
+                    role="menuitem"
+                  >
+                    Profile
+                  </AppLink>
+                  {member.isAdmin ? (
+                    <>
+                      <AppLink
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--color-foreground)" }}
+                        role="menuitem"
+                      >
+                        Admin Dashboard
+                      </AppLink>
+                      <AppLink
+                        href="/admin#settings"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--color-foreground)" }}
+                        role="menuitem"
+                      >
+                        Settings
+                      </AppLink>
+                    </>
+                  ) : null}
                   </div>
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <Link
+          <AppLink
             href="/sign-in"
             className="rounded-lg px-4 py-2 text-sm font-medium transition"
             style={{
@@ -157,7 +157,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
             }}
           >
             Sign in
-          </Link>
+          </AppLink>
         )}
       </nav>
     </header>
@@ -166,12 +166,21 @@ export default function Navbar({ member, brand }: NavbarProps) {
 
 function NavItem({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link
+    <AppLink
       href={href}
       className="rounded-lg px-3 py-2 text-sm font-semibold transition"
       style={{ color: "var(--color-foreground)" }}
     >
       {children}
-    </Link>
+    </AppLink>
   );
+}
+
+function miniAppNavigate(href: string) {
+  return (e: React.MouseEvent) => {
+    if (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) {
+      e.preventDefault();
+      window.location.href = href;
+    }
+  };
 }

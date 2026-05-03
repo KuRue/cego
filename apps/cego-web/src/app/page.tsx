@@ -1,4 +1,4 @@
-import Link from "next/link";
+import AppLink from "@/components/app-link";
 import Script from "next/script";
 import Navbar from "@/components/navbar";
 import { getSiteSettings } from "@/lib/settings";
@@ -59,19 +59,19 @@ export default async function Home() {
               {settings.heroBody}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
+              <AppLink
                 href="/sign-in"
                 className="inline-flex h-12 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
                 style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
               >
                 Sign in with Telegram
-              </Link>
-              <Link
+              </AppLink>
+              <AppLink
                 href="/dashboard"
                 className="glass glass-hover inline-flex h-12 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
               >
                 View Dashboard
-              </Link>
+              </AppLink>
             </div>
           </div>
 
