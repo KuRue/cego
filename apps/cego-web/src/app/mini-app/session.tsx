@@ -24,29 +24,47 @@ interface SessionResponse {
   error?: string;
 }
 
+const MAX_SESSION_RETRIES = 3;
+const SESSION_RETRY_BASE_MS = 1500;
+
 export default function MiniAppSession() {
   const [state, setState] = useState<SessionState>({ status: "idle" });
+  const [retryCount, setRetryCount] = useState(0);
 
   const createSession = useCallback(async (payload: {
     initData?: string;
     useDevMock?: boolean;
-  }) => {
+  }, attempt = 0) => {
     setState({ status: "checking" });
 
     let response: Response;
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       response = await fetch("/api/telegram/session", {
         method: "POST",
         headers: {
           "content-type": "application/json",
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-    } catch {
+      clearTimeout(timeout);
+    } catch (err) {
+      const isAbort = err instanceof DOMException && err.name === "AbortError";
+      if (attempt < MAX_SESSION_RETRIES - 1) {
+        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+        setRetryCount(attempt + 1);
+        await new Promise((r) => setTimeout(r, delay));
+        return createSession(payload, attempt + 1);
+      }
+
       setState({
         status: "error",
-        message: "cego could not reach the session endpoint. Reopen the Mini App and try again.",
+        message: isAbort
+          ? "Session request timed out. Reopen the Mini App and try again."
+          : "cego could not reach the session endpoint. Reopen the Mini App and try again.",
       });
       return;
     }
@@ -56,6 +74,13 @@ export default function MiniAppSession() {
     try {
       body = (await response.json()) as SessionResponse;
     } catch {
+      if (attempt < MAX_SESSION_RETRIES - 1) {
+        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+        setRetryCount(attempt + 1);
+        await new Promise((r) => setTimeout(r, delay));
+        return createSession(payload, attempt + 1);
+      }
+
       setState({
         status: "error",
         message: `cego returned a non-JSON session response with status ${response.status}.`,
@@ -64,6 +89,15 @@ export default function MiniAppSession() {
     }
 
     if (!response.ok) {
+      const isRetryable = response.status >= 500 || response.status === 429;
+
+      if (isRetryable && attempt < MAX_SESSION_RETRIES - 1) {
+        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+        setRetryCount(attempt + 1);
+        await new Promise((r) => setTimeout(r, delay));
+        return createSession(payload, attempt + 1);
+      }
+
       setState({
         status: "error",
         message: body.error
@@ -129,14 +163,20 @@ export default function MiniAppSession() {
           cego
         </Link>
 
-        {state.status === "checking" ? (
-          <div className="mt-6 text-center">
-            <p className="font-semibold">Verifying your account.</p>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              Checking Telegram identity and group access...
-            </p>
-          </div>
-        ) : null}
+    {state.status === "checking" ? (
+      <div className="mt-6 text-center">
+        <div
+          className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+          style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
+        />
+        <p className="mt-4 font-semibold">Verifying your account.</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          {retryCount > 0
+            ? `Retrying (attempt ${retryCount + 1} of ${MAX_SESSION_RETRIES})...`
+            : "Checking Telegram identity and group access..."}
+        </p>
+      </div>
+    ) : null}
 
         {state.status === "accepted" ? (
           <div className="mt-6 text-center">
@@ -157,25 +197,48 @@ export default function MiniAppSession() {
           </div>
         ) : null}
 
-        {state.status === "error" ? (
-          <div className="mt-6 text-center">
-            <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Session unavailable.</p>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              {state.message}
-            </p>
-            <DevMockButton onDevMock={() => createSession({ useDevMock: true })} />
-          </div>
-        ) : null}
+    {state.status === "error" ? (
+      <div className="mt-6 text-center">
+        <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Session unavailable.</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          {state.message}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setRetryCount(0);
+            const initData = window.Telegram?.WebApp?.initData;
+            if (initData) {
+              void createSession({ initData }, 0);
+            } else {
+              void createSession({ useDevMock: true }, 0);
+            }
+          }}
+          className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+          style={{
+            background: "var(--color-accent)",
+            color: "var(--color-on-accent)",
+          }}
+        >
+          Retry
+        </button>
+        <DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }, 0); }} />
+      </div>
+    ) : null}
 
-        {state.status === "idle" ? (
-          <div className="mt-6 text-center">
-            <p className="font-semibold">Waiting for Telegram...</p>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              Open this page inside Telegram to sign in automatically.
-            </p>
-            <DevMockButton onDevMock={() => createSession({ useDevMock: true })} />
-          </div>
-        ) : null}
+    {state.status === "idle" ? (
+      <div className="mt-6 text-center">
+        <div
+          className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+          style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
+        />
+        <p className="mt-4 font-semibold">Waiting for Telegram...</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          Open this page inside Telegram to sign in automatically.
+        </p>
+        <DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }, 0); }} />
+      </div>
+    ) : null}
       </div>
     </main>
   );

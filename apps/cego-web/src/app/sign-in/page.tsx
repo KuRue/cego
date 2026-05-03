@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -52,17 +51,20 @@ export default function SignInPage() {
         webApp.expand();
         setState({ status: "mini_app", message: "Verifying Telegram identity..." });
 
-        try {
-          const form = new FormData();
-          form.append("initData", webApp.initData);
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
 
-          const res = await fetch("/api/telegram/session", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ initData: webApp.initData }),
-          });
+      const res = await fetch("/api/telegram/session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ initData: webApp.initData }),
+        signal: controller.signal,
+      });
 
-          const body = await res.json();
+      clearTimeout(timeout);
+
+      const body = await res.json();
 
           if (!res.ok) {
             setState({ status: "browser", error: body.error });
@@ -107,10 +109,6 @@ export default function SignInPage() {
 
   return (
     <>
-      <Script
-        src="https://telegram.org/js/telegram-web-app.js"
-        strategy="beforeInteractive"
-      />
       <Navbar brand={brand} />
       <main className="mx-auto flex min-h-[calc(100vh-60px)] max-w-md flex-col justify-center px-5 py-16">
         <div className="glass-lg rounded-2xl p-8">

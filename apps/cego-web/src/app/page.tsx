@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Script from "next/script";
 import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
 import { StatusBadge, eventStatusLabel } from "@/components/badge";
@@ -15,10 +14,6 @@ export default async function Home() {
 
   return (
     <>
-      <Script
-        src="https://telegram.org/js/telegram-web-app.js"
-        strategy="beforeInteractive"
-      />
       <TelegramMiniAppRedirect />
       <Navbar brand={{ siteName: settings.siteName, logoUrl: settings.logoUrl }} />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8 sm:pt-12">

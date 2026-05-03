@@ -47,6 +47,42 @@ export class TelegramBotApiError extends Error {
   }
 }
 
+const API_TIMEOUT_MS = 8000;
+const API_MAX_RETRIES = 2;
+
+async function fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
+  for (let attempt = 0; attempt <= API_MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeout);
+      return response;
+    } catch (err) {
+      clearTimeout(timeout);
+
+      const isAbort = err instanceof DOMException && err.name === "AbortError";
+      const isRetryable = isAbort || (err instanceof TypeError);
+
+      if (isRetryable && attempt < API_MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+        continue;
+      }
+
+      throw new TelegramBotApiError(
+        isAbort
+          ? "Telegram API request timed out."
+          : err instanceof Error
+            ? err.message
+            : "Telegram API request failed.",
+      );
+    }
+  }
+
+  throw new TelegramBotApiError("Telegram API request failed after retries.");
+}
+
 export async function getTelegramBotInfo({
   botToken,
 }: {
@@ -57,7 +93,7 @@ export async function getTelegramBotInfo({
   }
 
   const endpoint = `https://api.telegram.org/bot${botToken}/getMe`;
-  const response = await fetch(endpoint);
+  const response = await fetchWithRetry(endpoint);
   const payload = (await response.json()) as TelegramApiResponse<TelegramBotInfo>;
 
   if (!response.ok || !payload.ok || !payload.result) {
@@ -83,7 +119,7 @@ export async function getTelegramChatAdministrators({
   }
 
   const endpoint = `https://api.telegram.org/bot${botToken}/getChatAdministrators`;
-  const response = await fetch(endpoint, {
+  const response = await fetchWithRetry(endpoint, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -123,7 +159,7 @@ export async function getTelegramGroupStatus({
   }
 
   const endpoint = `https://api.telegram.org/bot${botToken}/getChatMember`;
-  const response = await fetch(endpoint, {
+  const response = await fetchWithRetry(endpoint, {
     method: "POST",
     headers: {
       "content-type": "application/json",

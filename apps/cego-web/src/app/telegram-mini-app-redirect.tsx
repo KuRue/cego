@@ -4,16 +4,26 @@ import { useEffect } from "react";
 
 export default function TelegramMiniAppRedirect() {
   useEffect(() => {
-    const redirectIfMiniApp = () => {
-      if (window.Telegram?.WebApp?.initData) {
-        window.location.replace("/mini-app");
+    let cancelled = false;
+
+    const redirectIfMiniApp = async () => {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        if (cancelled) return;
+
+        if (window.Telegram?.WebApp?.initData) {
+          window.location.replace("/mini-app");
+          return;
+        }
+
+        await new Promise((r) => setTimeout(r, 100));
       }
     };
 
-    redirectIfMiniApp();
-    const timeoutId = window.setTimeout(redirectIfMiniApp, 250);
+    void redirectIfMiniApp();
 
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return null;
