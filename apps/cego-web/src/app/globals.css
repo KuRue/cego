@@ -3,9 +3,9 @@
 :root {
   --color-background: #eef4f6;
   --color-foreground: #151a20;
-  --color-surface: rgba(255, 255, 255, 0.48);
-  --color-surface-strong: rgba(255, 255, 255, 0.60);
-  --color-surface-hover: rgba(255, 255, 255, 0.82);
+  --color-surface: rgba(255, 255, 255, 0.22);
+  --color-surface-strong: rgba(255, 255, 255, 0.34);
+  --color-surface-hover: rgba(255, 255, 255, 0.60);
   --color-surface-border: rgba(128, 148, 160, 0.3);
   --color-muted: #596571;
   --color-accent: #183f3c;
@@ -31,8 +31,8 @@
   --color-tag-blue-text: #2563eb;
   --color-tag-gray-bg: rgba(107, 114, 128, 0.1);
   --color-tag-gray-text: #6b7280;
-  --glass-blur: 28px;
-  --glass-saturate: 1.6;
+  --glass-blur: 40px;
+  --glass-saturate: 1.7;
   --glass-border: 1px solid rgba(128, 148, 160, 0.3);
   --glass-shadow: 0 14px 36px rgba(23, 34, 45, 0.08);
   --glass-shadow-lg: 0 22px 64px rgba(23, 34, 45, 0.12);
@@ -45,9 +45,9 @@
   :root {
     --color-background: #101318;
     --color-foreground: #eff4f4;
-    --color-surface: rgba(255, 255, 255, 0.06);
-    --color-surface-strong: rgba(255, 255, 255, 0.10);
-    --color-surface-hover: rgba(255, 255, 255, 0.15);
+    --color-surface: rgba(255, 255, 255, 0.08);
+    --color-surface-strong: rgba(255, 255, 255, 0.14);
+    --color-surface-hover: rgba(255, 255, 255, 0.22);
     --color-surface-border: rgba(255, 255, 255, 0.12);
     --color-muted: #a7b0b8;
     --color-accent: #5bbcb4;
@@ -142,9 +142,7 @@ a {
 }
 
 .glass {
-  background:
-    linear-gradient(135deg, var(--color-surface-strong), var(--color-surface)),
-    var(--color-surface);
+  background: linear-gradient(135deg, var(--color-surface-strong), var(--color-surface));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
@@ -152,9 +150,7 @@ a {
 }
 
 .glass-lg {
-  background:
-    linear-gradient(135deg, var(--color-surface-strong), var(--color-surface)),
-    var(--color-surface);
+  background: linear-gradient(135deg, var(--color-surface-strong), var(--color-surface));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
