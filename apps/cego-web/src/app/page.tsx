@@ -157,23 +157,6 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount }: { event: im
                   <dd className="mt-1 leading-6">{event.locationText}</dd>
                 </div>
               ) : null}
-              <div>
-                <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-                  Capacity
-                </dt>
-                <dd className="mt-1 leading-6">
-                  {confirmedCount}/{event.capacity} filled
-                  {waitlistedCount > 0 ? `; ${waitlistedCount} waitlisted` : ""}
-                </dd>
-              </div>
-              {event.priceCents !== null ? (
-                <div>
-                  <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-                    Price
-                  </dt>
-                  <dd className="mt-1 leading-6">{formatPrice(event.priceCents, event.currency)}</dd>
-                </div>
-              ) : null}
             </dl>
           </div>
           <div className="mt-4">
@@ -230,8 +213,6 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   });
 
   if (!endsAt) {
@@ -239,11 +220,4 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
   }
 
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
-}
-
-function formatPrice(priceCents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }
