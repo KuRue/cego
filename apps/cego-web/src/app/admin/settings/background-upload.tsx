@@ -7,7 +7,6 @@ export default function BackgroundUpload({ currentUrl }: { currentUrl: string | 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [url, setUrl] = useState<string | null>(currentUrl);
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
@@ -36,11 +35,16 @@ export default function BackgroundUpload({ currentUrl }: { currentUrl: string | 
         return;
       }
 
-      setUrl(body.url);
-      setSuccess("Background uploaded.");
+      setSuccess("Background uploaded. Click Save settings below to apply.");
+
       const hiddenInput = document.querySelector<HTMLInputElement>('input[name="backgroundUrl"]');
       if (hiddenInput) {
-        hiddenInput.setAttribute("value", body.url);
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        nativeInputValueSetter?.call(hiddenInput, body.url);
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");

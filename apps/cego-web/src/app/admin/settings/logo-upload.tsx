@@ -7,7 +7,6 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(currentLogoUrl);
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
@@ -36,11 +35,16 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
         return;
       }
 
-      setLogoUrl(body.url);
-      setSuccess("Logo uploaded.");
+      setSuccess("Logo uploaded. Click Save settings below to apply.");
+
       const hiddenInput = document.querySelector<HTMLInputElement>('input[name="logoUrl"]');
       if (hiddenInput) {
-        hiddenInput.setAttribute("value", body.url);
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        nativeInputValueSetter?.call(hiddenInput, body.url);
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
