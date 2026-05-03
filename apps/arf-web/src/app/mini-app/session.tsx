@@ -40,13 +40,23 @@ export default function MiniAppSession() {
   }) => {
     setState({ status: "checking" });
 
-    const response = await fetch("/api/telegram/session", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    let response: Response;
+
+    try {
+      response = await fetch("/api/telegram/session", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      setState({
+        status: "error",
+        message: "ARF could not reach the session endpoint. Reopen the Mini App and try again.",
+      });
+      return;
+    }
 
     const body = (await response.json()) as SessionResponse;
 
@@ -71,19 +81,30 @@ export default function MiniAppSession() {
   }, []);
 
   useEffect(() => {
-    const webApp = window.Telegram?.WebApp;
-    webApp?.ready();
-    webApp?.expand();
+    let cancelled = false;
 
-    const initData = webApp?.initData ?? "";
+    const initializeTelegramSession = async () => {
+      const webApp = await waitForTelegramWebApp();
 
-    if (initData) {
-      const timeoutId = window.setTimeout(() => {
+      if (cancelled) {
+        return;
+      }
+
+      webApp?.ready();
+      webApp?.expand();
+
+      const initData = webApp?.initData ?? "";
+
+      if (initData) {
         void createSession({ initData });
-      }, 0);
+      }
+    };
 
-      return () => window.clearTimeout(timeoutId);
-    }
+    void initializeTelegramSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [createSession]);
 
   return (
@@ -157,12 +178,13 @@ function SessionPanel({
           Mode: {state.mode === "dev" ? "local dev mock" : "Telegram verified"}.
           Group status: {state.member.groupStatus}.
         </p>
-        <Link
-          href="/dashboard"
+        <button
+          type="button"
+          onClick={() => window.location.assign("/dashboard")}
           className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white"
         >
           Continue to dashboard
-        </Link>
+        </button>
       </div>
     );
   }
@@ -215,4 +237,18 @@ function DevMockButton({ onDevMock }: { onDevMock: () => void }) {
       Try local dev mock
     </button>
   );
+}
+
+async function waitForTelegramWebApp() {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const webApp = window.Telegram?.WebApp;
+
+    if (webApp) {
+      return webApp;
+    }
+
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+  }
+
+  return window.Telegram?.WebApp;
 }

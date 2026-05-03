@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Script from "next/script";
+import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
 
 const eventTypes = [
   {
@@ -31,6 +33,11 @@ const dashboardPreview = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f3f8f6] text-[#1d2523]">
+      <Script
+        src="https://telegram.org/js/telegram-web-app.js"
+        strategy="beforeInteractive"
+      />
+      <TelegramMiniAppRedirect />
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
         <Link href="/" className="flex items-center gap-3" aria-label="ARF home">
           <span className="grid h-10 w-10 place-items-center rounded-md bg-[#183f3c] font-semibold text-white">
