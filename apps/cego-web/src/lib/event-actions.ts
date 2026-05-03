@@ -52,15 +52,16 @@ export async function updateEventAction(formData: FormData) {
 
 export async function rsvpForEventAction(formData: FormData) {
   const member = await requireCurrentMember();
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
 
   if (member.groupStatus !== "member") {
-    redirect("/dashboard");
+    redirect(returnTo);
   }
 
   const eventId = readText(formData, "eventId");
 
   if (!eventId) {
-    redirect("/dashboard");
+    redirect(returnTo);
   }
 
   const db = getDb();
@@ -122,16 +123,18 @@ export async function rsvpForEventAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard");
+  revalidatePath(returnTo);
   revalidatePath("/admin");
-  redirect("/dashboard");
+  redirect(returnTo);
 }
 
 export async function cancelRsvpAction(formData: FormData) {
   const member = await requireCurrentMember();
   const eventId = readText(formData, "eventId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
 
   if (!eventId || member.groupStatus !== "member") {
-    redirect("/dashboard");
+    redirect(returnTo);
   }
 
   const db = getDb();
@@ -144,8 +147,9 @@ export async function cancelRsvpAction(formData: FormData) {
     .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
 
   revalidatePath("/dashboard");
+  revalidatePath(returnTo);
   revalidatePath("/admin");
-  redirect("/dashboard");
+  redirect(returnTo);
 }
 
 export async function updateRsvpStatusAction(formData: FormData) {
@@ -288,6 +292,16 @@ function readCurrency(formData: FormData, key: string): string {
 
 function readCheckbox(formData: FormData, key: string): boolean {
   return formData.get(key) === "on";
+}
+
+function readReturnPath(formData: FormData, key: string): string | null {
+  const value = readText(formData, key);
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }
 
 function slugify(value: string): string {

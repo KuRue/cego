@@ -71,6 +71,45 @@ export async function getDashboardEvents(
   }));
 }
 
+export async function getDashboardEventBySlug(
+  memberId: string,
+  slug: string,
+): Promise<EventWithRsvpState | null> {
+  const db = getDb();
+  const eventRows = await db
+    .select()
+    .from(events)
+    .where(
+      and(
+        eq(events.slug, slug),
+        inArray(events.status, ["open", "full", "closed"]),
+      ),
+    )
+    .limit(1);
+  const event = eventRows[0];
+
+  if (!event) {
+    return null;
+  }
+
+  const [memberRsvpRows, countRows] = await Promise.all([
+    db
+      .select()
+      .from(rsvps)
+      .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, event.id)))
+      .limit(1),
+    getRsvpCountRows([event.id]),
+  ]);
+  const countsByEvent = toCountMap(countRows);
+
+  return {
+    event,
+    confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
+    waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
+    rsvp: memberRsvpRows[0],
+  };
+}
+
 export async function getAdminEvents(): Promise<AdminEventWithRsvps[]> {
   const db = getDb();
   const eventRows = await db.select().from(events).orderBy(desc(events.startsAt));

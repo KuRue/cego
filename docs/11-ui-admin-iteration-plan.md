@@ -98,7 +98,8 @@ Implementation notes:
 Acceptance checks:
 
 - Organizer can create and edit an event with description, rules, terms, and price metadata.
-- Member dashboard shows only member-safe event details.
+- Member dashboard shows concise member-safe event summaries.
+- Member can open a dedicated event detail page with full member-safe event details and RSVP controls.
 - Organizer-only fields do not appear to normal members.
 - Existing RSVP capacity behavior still works.
 
@@ -181,7 +182,7 @@ Potential later work:
 | --- | --- | --- |
 | Phase 1: Bug triage and routing | In progress | Profile now has an explicit signed-out state and avoids Next image host issues for Telegram avatars; settings saves redirect back to `/admin#settings`. |
 | Phase 2: Admin information architecture | In progress | Settings live on the admin page; create/edit event and survey forms are collapsed with native details panels. |
-| Phase 3: Event configuration expansion | In progress | Events now include description, price metadata, rules, terms, cancellation/refund policy, and organizer notes. |
+| Phase 3: Event configuration expansion | In progress | Events now include description, price metadata, rules, terms, cancellation/refund policy, organizer notes, concise dashboard summaries, and member-facing detail pages. |
 | Phase 4: Member profile and settings | In progress | Member profile shows Telegram identity, group status, role, join date, editable contact email, and admin CRM-lite views now include last activity, profile facts, tags, notes, RSVP history, survey responses, and activity timeline. |
 | Phase 5: Liquid glass visual refresh | In progress | Shared liquid-glass tokens, page shell background treatment, focus states, and admin navigation polish have started. |
 | Phase 6: Follow-up slices | Backlog | Use after MVP usability is solid. |

@@ -241,18 +241,21 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 />
               ) : null}
             </dl>
-            {event.rulesText || event.termsText || event.refundPolicyText ? (
-              <div className="mt-4 grid gap-3">
-                {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
-                {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
-                {event.refundPolicyText ? (
-                  <PolicyBlock title="Cancellation/refund policy" body={event.refundPolicyText} />
-                ) : null}
-              </div>
-            ) : null}
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href={`/events/${event.slug}`}
+              className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{
+                background: "var(--color-surface-hover)",
+                border: "1px solid var(--color-surface-border)",
+                color: "var(--color-foreground)",
+              }}
+            >
+              View details
+            </Link>
+
             {canRsvp ? (
               <form action={rsvpForEventAction}>
                 <input type="hidden" name="eventId" value={event.id} />
@@ -305,17 +308,6 @@ function EventDetail({ label, value }: { label: string; value: string }) {
       </dt>
       <dd className="mt-1 leading-6">{value}</dd>
     </div>
-  );
-}
-
-function PolicyBlock({ title, body }: { title: string; body: string }) {
-  return (
-    <details className="rounded-xl px-4 py-3" style={{ border: "1px solid var(--color-surface-border)" }}>
-      <summary className="cursor-pointer text-sm font-semibold">{title}</summary>
-      <p className="mt-3 whitespace-pre-wrap text-sm leading-6" style={{ color: "var(--color-muted)" }}>
-        {body}
-      </p>
-    </details>
   );
 }
 
