@@ -125,49 +125,90 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
       </details>
 
       {rsvps.length > 0 ? (
-        <details className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
-          <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
-            RSVPs ({rsvps.length})
-          </summary>
-          <div className="mt-4 grid gap-3">
-            {rsvps.map(({ rsvp, member: m }) => (
-              <div key={rsvp.id} className="glass rounded-xl p-4">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                  <div>
-                    <p className="font-medium">{m.telegramDisplayName}</p>
-                    <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                      {m.telegramUsername ? `@${m.telegramUsername}` : m.email || m.groupStatus}
-                    </p>
-                    <StatusBadge status={rsvp.status} />
-                  </div>
-                  <form action={updateRsvpStatusAction} className="flex gap-2">
-                    <input type="hidden" name="rsvpId" value={rsvp.id} />
-                    <select
-                      name="status"
-                      defaultValue={rsvp.status}
-                      className="h-10 rounded-xl px-3 text-sm outline-none"
-                      style={{
-                        background: "var(--color-surface-hover)",
-                        border: "1px solid var(--color-surface-border)",
-                      }}
-                    >
-                      <option value="confirmed">confirmed</option>
-                      <option value="waitlisted">waitlisted</option>
-                      <option value="cancelled">cancelled</option>
-                    </select>
-                    <button
-                      type="submit"
-                      className="h-10 rounded-xl px-4 text-sm font-semibold transition"
-                      style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                    >
-                      Update
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))}
-          </div>
-        </details>
+          <details className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+            <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
+              RSVPs ({rsvps.filter((r) => !r.rsvp.parentRsvpId).length})
+            </summary>
+            <div className="mt-4 grid gap-3">
+              {rsvps
+                .filter(({ rsvp }) => !rsvp.parentRsvpId)
+                .map(({ rsvp, member: m }) => {
+                  const plusOneRows = rsvps.filter(
+                    (r) => r.rsvp.parentRsvpId === rsvp.id,
+                  );
+                  return (
+                    <div key={rsvp.id} className="glass rounded-xl p-4">
+                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+                        <div>
+                          <p className="font-medium">{m.telegramDisplayName}</p>
+                          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                            {m.telegramUsername ? `@${m.telegramUsername}` : m.email || m.groupStatus}
+                          </p>
+                          <StatusBadge status={rsvp.status} />
+                        </div>
+                        <form action={updateRsvpStatusAction} className="flex gap-2">
+                          <input type="hidden" name="rsvpId" value={rsvp.id} />
+                          <select
+                            name="status"
+                            defaultValue={rsvp.status}
+                            className="h-10 rounded-xl px-3 text-sm outline-none"
+                            style={{
+                              background: "var(--color-surface-hover)",
+                              border: "1px solid var(--color-surface-border)",
+                            }}
+                          >
+                            <option value="confirmed">confirmed</option>
+                            <option value="waitlisted">waitlisted</option>
+                            <option value="cancelled">cancelled</option>
+                          </select>
+                          <button
+                            type="submit"
+                            className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                            style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                          >
+                            Update
+                          </button>
+                        </form>
+                      </div>
+                      {plusOneRows.length > 0 ? (
+                        <div className="mt-3 rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+                          {plusOneRows.map((po) => (
+                            <div key={po.rsvp.id} className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm" style={{ color: "var(--color-muted)" }}>+1:</span>
+                              <span className="text-sm font-medium">{po.rsvp.plusOneName}</span>
+                              <StatusBadge status={po.rsvp.status} />
+                              <form action={updateRsvpStatusAction} className="ml-auto flex gap-2">
+                                <input type="hidden" name="rsvpId" value={po.rsvp.id} />
+                                <select
+                                  name="status"
+                                  defaultValue={po.rsvp.status}
+                                  className="h-8 rounded-lg px-2 text-xs outline-none"
+                                  style={{
+                                    background: "var(--color-background)",
+                                    border: "1px solid var(--color-surface-border)",
+                                  }}
+                                >
+                                  <option value="confirmed">confirmed</option>
+                                  <option value="waitlisted">waitlisted</option>
+                                  <option value="cancelled">cancelled</option>
+                                </select>
+                                <button
+                                  type="submit"
+                                  className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                                >
+                                  Update
+                                </button>
+                              </form>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+            </div>
+          </details>
       ) : null}
     </article>
   );

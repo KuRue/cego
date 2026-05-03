@@ -57,6 +57,7 @@ export async function rsvpForEventAction(formData: FormData) {
   }
 
   const eventId = readText(formData, "eventId");
+  const plusOneName = readOptionalText(formData, "plusOneName")?.trim() || null;
 
   if (!eventId) {
     redirect(returnTo);
@@ -79,13 +80,16 @@ export async function rsvpForEventAction(formData: FormData) {
     const currentRsvpRows = await tx
       .select()
       .from(rsvps)
-      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)))
-      .limit(1);
-    const currentRsvp = currentRsvpRows[0];
+      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
+    const hasActiveRsvp = currentRsvpRows.some(
+      (r) => r.status !== "cancelled" && !r.parentRsvpId,
+    );
 
-    if (currentRsvp && currentRsvp.status !== "cancelled") {
+    if (hasActiveRsvp) {
       return;
     }
+
+    const needed = plusOneName ? 2 : 1;
 
     const confirmedRows = await tx
       .select({ total: count() })
@@ -97,27 +101,69 @@ export async function rsvpForEventAction(formData: FormData) {
         ),
       );
     const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
-    const nextStatus: RsvpStatus =
-      confirmedCount < event.capacity ? "confirmed" : "waitlisted";
+    const slotsLeft = event.capacity - confirmedCount;
 
-    if (currentRsvp) {
+    const parentStatus: RsvpStatus =
+      slotsLeft >= needed ? "confirmed" : slotsLeft >= 1 ? "confirmed" : "waitlisted";
+    const plusOneStatus: RsvpStatus =
+      slotsLeft >= needed ? "confirmed" : "waitlisted";
+
+    const cancelledRsvp = currentRsvpRows.find(
+      (r) => r.status === "cancelled" && !r.parentRsvpId,
+    );
+
+    let parentRsvpId: string;
+
+    if (cancelledRsvp) {
       await tx
         .update(rsvps)
         .set({
-          status: nextStatus,
+          status: parentStatus,
           ticketType: null,
           checkedInAt: null,
+          plusOneName: null,
+          parentRsvpId: null,
           updatedAt: new Date(),
         })
-        .where(eq(rsvps.id, currentRsvp.id));
-      return;
+        .where(eq(rsvps.id, cancelledRsvp.id));
+      parentRsvpId = cancelledRsvp.id;
+    } else {
+      const [inserted] = await tx
+        .insert(rsvps)
+        .values({
+          memberId: member.id,
+          eventId,
+          status: parentStatus,
+        })
+        .returning({ id: rsvps.id });
+      parentRsvpId = inserted.id;
     }
 
-    await tx.insert(rsvps).values({
-      memberId: member.id,
-      eventId,
-      status: nextStatus,
-    });
+    if (plusOneName) {
+      const cancelledPlusOne = currentRsvpRows.find(
+        (r) => r.status === "cancelled" && r.parentRsvpId,
+      );
+
+      if (cancelledPlusOne) {
+        await tx
+          .update(rsvps)
+          .set({
+            status: plusOneStatus,
+            plusOneName,
+            parentRsvpId,
+            updatedAt: new Date(),
+          })
+          .where(eq(rsvps.id, cancelledPlusOne.id));
+      } else {
+        await tx.insert(rsvps).values({
+          memberId: member.id,
+          eventId,
+          status: plusOneStatus,
+          plusOneName,
+          parentRsvpId,
+        });
+      }
+    }
   });
 
   revalidatePath("/dashboard");
@@ -136,13 +182,28 @@ export async function cancelRsvpAction(formData: FormData) {
   }
 
   const db = getDb();
-  await db
-    .update(rsvps)
-    .set({
-      status: "cancelled",
-      updatedAt: new Date(),
-    })
-    .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
+
+  await db.transaction(async (tx) => {
+    const memberRsvps = await tx
+      .select()
+      .from(rsvps)
+      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
+
+    const parentRsvp = memberRsvps.find((r) => !r.parentRsvpId);
+    if (!parentRsvp || parentRsvp.status === "cancelled") return;
+
+    const now = new Date();
+
+    await tx
+      .update(rsvps)
+      .set({ status: "cancelled", updatedAt: now })
+      .where(eq(rsvps.id, parentRsvp.id));
+
+    await tx
+      .update(rsvps)
+      .set({ status: "cancelled", updatedAt: now })
+      .where(eq(rsvps.parentRsvpId, parentRsvp.id));
+  });
 
   revalidatePath("/dashboard");
   revalidatePath(returnTo);

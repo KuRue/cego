@@ -18,6 +18,7 @@ export interface EventWithRsvpState {
   confirmedCount: number;
   waitlistedCount: number;
   rsvp?: Rsvp;
+  plusOne?: Rsvp;
 }
 
 export interface PublicEvent {
@@ -69,7 +70,14 @@ export async function getDashboardEvents(
   ]);
 
   const memberRsvpsByEvent = new Map(
-    memberRsvpRows.map((rsvp) => [rsvp.eventId, rsvp]),
+    memberRsvpRows
+      .filter((r) => !r.parentRsvpId)
+      .map((rsvp) => [rsvp.eventId, rsvp]),
+  );
+  const plusOneByEvent = new Map(
+    memberRsvpRows
+      .filter((r) => r.parentRsvpId)
+      .map((rsvp) => [rsvp.eventId, rsvp]),
   );
   const countsByEvent = toCountMap(countRows);
 
@@ -78,6 +86,7 @@ export async function getDashboardEvents(
     confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
     rsvp: memberRsvpsByEvent.get(event.id),
+    plusOne: plusOneByEvent.get(event.id),
   }));
 }
 
@@ -111,12 +120,15 @@ export async function getDashboardEventBySlug(
     getRsvpCountRows([event.id]),
   ]);
   const countsByEvent = toCountMap(countRows);
+  const parentRsvp = memberRsvpRows.find((r) => !r.parentRsvpId);
+  const plusOne = memberRsvpRows.find((r) => r.parentRsvpId);
 
   return {
     event,
     confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
-    rsvp: memberRsvpRows[0],
+    rsvp: parentRsvp,
+    plusOne,
   };
 }
 

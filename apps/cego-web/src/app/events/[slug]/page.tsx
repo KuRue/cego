@@ -5,6 +5,7 @@ import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/bad
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEventBySlug, type EventWithRsvpState } from "@/lib/events";
+import type { Rsvp } from "@cego/db";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -98,7 +99,7 @@ export default async function EventDetailPage({
 }
 
 function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
-  const { event, confirmedCount, waitlistedCount, rsvp } = eventState;
+  const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
   const returnTo = `/events/${event.slug}`;
   const isCancelableRsvp =
     rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
@@ -156,7 +157,9 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
                 label="Price"
                 value={
                   event.priceCents !== null
-                    ? formatPrice(event.priceCents, event.currency)
+                    ? plusOne && rsvp?.status !== "cancelled"
+                      ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
+                      : formatPrice(event.priceCents, event.currency)
                     : event.paymentRequired
                       ? "Payment required"
                       : "Free"
@@ -186,7 +189,7 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
 
           <div className="mt-5 grid gap-3">
             {canRsvp ? (
-              <form action={rsvpForEventAction}>
+              <form action={rsvpForEventAction} className="grid gap-3">
                 <input type="hidden" name="eventId" value={event.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <button
@@ -196,6 +199,17 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
                 >
                   RSVP
                 </button>
+                <input
+                  name="plusOneName"
+                  type="text"
+                  placeholder="+1 name (optional)"
+                  className="h-11 rounded-xl px-4 text-sm outline-none"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                />
               </form>
             ) : null}
 
@@ -226,12 +240,19 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
             ) : null}
           </div>
 
-          {rsvp ? (
+          {rsvp && rsvp.status !== "cancelled" ? (
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-                Current status
+                Your RSVP
               </p>
-              <p className="mt-2 font-semibold">{rsvp.status}</p>
+              <p className="mt-2 font-semibold">{rsvpStatusLabel(rsvp.status)}</p>
+              {plusOne && plusOne.status !== "cancelled" ? (
+                <div className="mt-3 flex items-center gap-2" style={{ borderTop: "1px solid var(--color-surface-border)", paddingTop: "0.75rem" }}>
+                  <span className="text-sm" style={{ color: "var(--color-muted)" }}>+1:</span>
+                  <span className="text-sm font-medium">{plusOne.plusOneName}</span>
+                  <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
+                </div>
+              ) : null}
             </div>
           ) : null}
         </aside>

@@ -3,6 +3,7 @@ import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
+import type { Rsvp } from "@cego/db";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
@@ -174,7 +175,7 @@ export default async function DashboardPage() {
 }
 
 function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
-  const { event, confirmedCount, waitlistedCount, rsvp } = eventState;
+  const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
   const isCancelableRsvp =
     rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
   const canRsvp =
@@ -234,12 +235,22 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                   label="Price"
                   value={
                     event.priceCents !== null
-                      ? formatPrice(event.priceCents, event.currency)
+                      ? plusOne && rsvp?.status !== "cancelled"
+                        ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
+                        : formatPrice(event.priceCents, event.currency)
                       : "Payment required"
                   }
                 />
               ) : null}
             </dl>
+
+            {rsvp && rsvp.status !== "cancelled" && plusOne && plusOne.status !== "cancelled" ? (
+              <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm" style={{ background: "var(--color-surface-hover)" }}>
+                <span style={{ color: "var(--color-muted)" }}>+1:</span>
+                <span className="font-medium">{plusOne.plusOneName}</span>
+                <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-3">
@@ -256,7 +267,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
             </AppLink>
 
             {canRsvp ? (
-              <form action={rsvpForEventAction}>
+              <form action={rsvpForEventAction} className="flex flex-wrap items-center gap-2">
                 <input type="hidden" name="eventId" value={event.id} />
                 <button
                   type="submit"
@@ -265,6 +276,17 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 >
                   RSVP
                 </button>
+                <input
+                  name="plusOneName"
+                  type="text"
+                  placeholder="+1 name (optional)"
+                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                />
               </form>
             ) : null}
 

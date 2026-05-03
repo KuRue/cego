@@ -101,11 +101,14 @@ export const rsvps = pgTable(
     status: rsvpStatusEnum("status").notNull(),
     ticketType: text("ticket_type"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    plusOneName: text("plus_one_name"),
+    parentRsvpId: uuid("parent_rsvp_id"),
     ...lifecycleColumns,
   },
   (table) => [
     uniqueIndex("rsvps_member_event_idx").on(table.memberId, table.eventId),
     index("rsvps_event_status_idx").on(table.eventId, table.status),
+    index("rsvps_parent_rsvp_id_idx").on(table.parentRsvpId),
   ],
 );
 
