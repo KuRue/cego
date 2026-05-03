@@ -20,7 +20,7 @@ interface SessionMember {
 
 interface SessionResponse {
   status: "accepted" | "blocked" | "dev_mock";
-  member: SessionMember;
+  member?: SessionMember;
   error?: string;
 }
 
@@ -58,12 +58,32 @@ export default function MiniAppSession() {
       return;
     }
 
-    const body = (await response.json()) as SessionResponse;
+    let body: SessionResponse;
+
+    try {
+      body = (await response.json()) as SessionResponse;
+    } catch {
+      setState({
+        status: "error",
+        message: `ARF returned a non-JSON session response with status ${response.status}.`,
+      });
+      return;
+    }
 
     if (!response.ok) {
       setState({
         status: "error",
-        message: body.error ?? "Telegram session failed.",
+        message: body.error
+          ? `Telegram session failed: ${body.error}`
+          : `Telegram session failed with status ${response.status}.`,
+      });
+      return;
+    }
+
+    if (!body.member) {
+      setState({
+        status: "error",
+        message: "Telegram session succeeded but ARF did not return a member profile.",
       });
       return;
     }
@@ -206,6 +226,10 @@ function SessionPanel({
       <div className="mt-8 border border-[#e0b6a9] bg-[#fff6f3] p-5">
         <p className="font-semibold text-[#7c2f20]">Session unavailable.</p>
         <p className="mt-2 text-sm text-[#4e5b57]">{state.message}</p>
+        <p className="mt-2 text-sm text-[#4e5b57]">
+          Close and reopen the Mini App after checking the BotFather Mini App
+          URL and the server logs.
+        </p>
         <DevMockButton onDevMock={onDevMock} />
       </div>
     );

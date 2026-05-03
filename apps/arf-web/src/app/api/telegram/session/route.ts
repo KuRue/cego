@@ -36,11 +36,18 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     if (error instanceof TelegramInitDataError) {
+      console.warn("Telegram Mini App session rejected.", {
+        reason: error.message,
+      });
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
     const message =
       error instanceof Error ? error.message : "Failed to create session.";
+
+    console.error("Telegram Mini App session failed.", {
+      reason: message,
+    });
 
     return NextResponse.json({ error: message }, { status: 500 });
   }
