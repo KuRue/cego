@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
@@ -5,11 +6,12 @@ import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
+import Navbar from "@/components/navbar";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Member Dashboard",
+  title: "Dashboard",
 };
 
 export default async function DashboardPage() {
@@ -17,25 +19,60 @@ export default async function DashboardPage() {
 
   if (!member) {
     return (
-      <DashboardShell>
-        <EmptyState
-          title="Sign in through Telegram to see cego events."
-          body="cego uses Telegram identity instead of password accounts. Sign in with Telegram to create your cego session."
-          action={<PrimaryLink href="/sign-in">Sign in with Telegram</PrimaryLink>}
-        />
-      </DashboardShell>
+      <>
+        <Navbar />
+        <main className="mx-auto max-w-6xl px-5 py-16">
+          <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
+            <div
+              className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full text-xl font-bold"
+              style={{ background: "var(--color-surface-hover)", color: "var(--color-muted)" }}
+            >
+              ?
+            </div>
+            <h1 className="text-xl font-semibold">Sign in to see events</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              cego uses your Telegram identity instead of passwords.
+            </p>
+            <Link
+              href="/sign-in"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "#fff" }}
+            >
+              Sign in with Telegram
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
   if (member.groupStatus !== "member") {
     return (
-      <DashboardShell memberName={member.telegramDisplayName}>
-        <EmptyState
-          title="Telegram group access is required."
-          body="This account is signed in, but cego event flows are only open to members of the configured Telegram group."
-          action={<PrimaryLink href="/sign-in">Refresh Telegram access</PrimaryLink>}
+      <>
+        <Navbar
+          member={{
+            telegramDisplayName: member.telegramDisplayName,
+            telegramPhotoUrl: member.telegramPhotoUrl,
+            isAdmin: member.isAdmin,
+          }}
         />
-      </DashboardShell>
+        <main className="mx-auto max-w-6xl px-5 py-16">
+          <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
+            <h1 className="text-xl font-semibold">Group access required</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              This account is signed in, but cego events are only open to members of the
+              configured Telegram group.
+            </p>
+            <Link
+              href="/sign-in"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "#fff" }}
+            >
+              Refresh access
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
@@ -43,159 +80,91 @@ export default async function DashboardPage() {
     getDashboardEvents(member.id),
     getDashboardSurveys(member.id),
   ]);
-  const capacityCount = eventStates.filter(
-    ({ rsvp }) => rsvp?.status === "confirmed",
-  ).length;
-  const waitlistedCount = eventStates.filter(
-    ({ rsvp }) => rsvp?.status === "waitlisted",
-  ).length;
-  const completedSurveyCount = surveyStates.filter(
-    ({ response }) => response,
-  ).length;
 
   return (
-    <DashboardShell memberName={member.telegramDisplayName}>
-      <section className="grid gap-4 md:grid-cols-4">
-        <StatusCard label="Active events" value={String(eventStates.length)} />
-        <StatusCard label="Capacity spots" value={String(capacityCount)} />
-        <StatusCard label="Waitlisted" value={String(waitlistedCount)} />
-        <StatusCard
-          label="Surveys done"
-          value={`${completedSurveyCount}/${surveyStates.length}`}
-        />
-      </section>
-
-      <section className="mt-6 border border-[#d7e3df] bg-white p-5">
-        <div className="grid gap-4 lg:grid-cols-[1fr_24rem] lg:items-end">
-          <div>
-            <h2 className="text-2xl font-semibold text-[#14211f]">
-              Contact email
-            </h2>
-            <p className="mt-2 max-w-2xl leading-7 text-[#4e5b57]">
-              Add an email so organizers have a reliable contact method for
-              event planning and future payment steps.
-            </p>
-          </div>
-          <form action={updateCurrentMemberEmailAction} className="grid gap-2">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium">Email</span>
-              <input
-                name="email"
-                type="email"
-                defaultValue={member.email ?? ""}
-                className="h-10 rounded-md border border-[#b8cac5] px-3"
-              />
-            </label>
-            <button
-              type="submit"
-              className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
-            >
-              Save email
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
-              Events
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold">Event RSVPs</h2>
-          </div>
-          {member.isAdmin ? (
-            <Link href="/admin" className="text-sm font-semibold text-[#183f3c]">
-              Organizer admin
-            </Link>
-          ) : null}
-        </div>
-
-        {eventStates.length === 0 ? (
-          <div className="mt-6">
-            <EmptyState
-              title="No open cego events yet."
-              body="Once organizers publish a major event or local event, it will appear here with RSVP status and capacity."
-            />
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-5">
-            {eventStates.map((eventState) => (
-              <EventCard key={eventState.event.id} eventState={eventState} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="mt-8">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
-            Preferences
+    <>
+      <Navbar
+        member={{
+          telegramDisplayName: member.telegramDisplayName,
+          telegramPhotoUrl: member.telegramPhotoUrl,
+          isAdmin: member.isAdmin,
+        }}
+      />
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+        <section>
+          <h1 className="text-3xl font-semibold">Events</h1>
+          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+            Upcoming events from your community. RSVP to secure your spot.
           </p>
-          <h2 className="mt-2 text-3xl font-semibold">Surveys</h2>
-          <p className="mt-3 max-w-2xl leading-7 text-[#4e5b57]">
-            These responses are attached to your Telegram-backed cego profile so
-            organizers can plan logistics, food, activities, and event details.
-          </p>
-        </div>
 
-        {surveyStates.length === 0 ? (
-          <div className="mt-6">
-            <EmptyState
-              title="No surveys are available yet."
-              body="Published general surveys and event-specific surveys for your active RSVPs will appear here."
-            />
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-5">
-            {surveyStates.map((surveyState) => (
-              <SurveyCard
-                key={surveyState.survey.id}
-                surveyState={surveyState}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </DashboardShell>
-  );
-}
+          {eventStates.length === 0 ? (
+            <div className="glass-lg mt-8 rounded-2xl p-8 text-center">
+              <p className="font-medium">No events right now</p>
+              <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                Once organizers publish an event, it will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-6">
+              {eventStates.map((eventState) => (
+                <EventCard key={eventState.event.id} eventState={eventState} />
+              ))}
+            </div>
+          )}
+        </section>
 
-function DashboardShell({
-  children,
-  memberName,
-}: {
-  children: React.ReactNode;
-  memberName?: string;
-}) {
-  return (
-    <main className="min-h-screen bg-[#f8fbff] text-[#1d2523]">
-      <header className="border-b border-[#d7e3df] bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <Link href="/" className="font-semibold text-[#183f3c]">
-            cego
-          </Link>
-          <div className="flex items-center gap-4 text-sm text-[#4e5b57]">
-            {memberName ? <span>{memberName}</span> : null}
-            <Link href="/sign-in">Telegram sign-in</Link>
-          </div>
-        </div>
-      </header>
+        {surveyStates.length > 0 ? (
+          <section className="mt-12">
+            <h2 className="text-2xl font-semibold">Surveys</h2>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Help organizers plan by answering these surveys.
+            </p>
+            <div className="mt-6 grid gap-6">
+              {surveyStates.map((surveyState) => (
+                <SurveyCard
+                  key={surveyState.survey.id}
+                  surveyState={surveyState}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
-          Member dashboard
-        </p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight">
-          RSVP for major events and local events.
-        </h1>
-        <p className="mt-4 max-w-2xl leading-7 text-[#4e5b57]">
-          Confirmed spots count against event capacity. Once capacity is full,
-          new RSVPs move to the manual waitlist.
-        </p>
-        <div className="mt-8">{children}</div>
-      </section>
-    </main>
+        <section className="mt-12">
+          <div className="glass rounded-2xl p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Contact email</h2>
+                <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                  Give organizers a reliable way to reach you.
+                </p>
+              </div>
+              <form action={updateCurrentMemberEmailAction} className="flex gap-2">
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={member.email ?? ""}
+                  placeholder="you@example.com"
+                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl px-5 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "#fff" }}
+                >
+                  Save
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
 
@@ -208,67 +177,129 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
     (!rsvp || rsvp.status === "cancelled");
 
   return (
-    <article className="border border-[#d7e3df] bg-white p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
-            <Badge tone={event.status === "closed" ? "muted" : "active"}>
-              {event.status}
-            </Badge>
-            {rsvp ? <Badge tone="rsvp">{rsvp.status}</Badge> : null}
+    <article className="glass-lg glass-hover overflow-hidden rounded-2xl transition">
+      <div className="flex flex-col md:flex-row">
+        {event.imageUrl ? (
+          <div className="relative md:w-72 lg:w-80">
+            <Image
+              src={event.imageUrl}
+              alt=""
+              fill
+              className="h-48 w-full object-cover md:h-full"
+            />
           </div>
-          <h3 className="mt-4 text-2xl font-semibold text-[#14211f]">
-            {event.title}
-          </h3>
-          <p className="mt-2 text-sm text-[#4e5b57]">
-            {formatDateRange(event.startsAt, event.endsAt)}
-          </p>
-          {event.locationText ? (
-            <p className="mt-2 text-sm text-[#4e5b57]">{event.locationText}</p>
-          ) : null}
-        </div>
-
-        <div className="grid min-w-48 grid-cols-2 gap-3 text-sm">
-          <Metric label="Capacity" value={`${confirmedCount}/${event.capacity}`} />
-          <Metric label="Waitlist" value={String(waitlistedCount)} />
-        </div>
-      </div>
-
-      <div className="mt-5 border-t border-[#e3ece9] pt-5">
-        {canRsvp ? (
-          <form action={rsvpForEventAction}>
-            <input type="hidden" name="eventId" value={event.id} />
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white transition hover:bg-[#245b55] sm:w-auto"
+        ) : (
+          <div
+            className="flex items-center justify-center md:w-72 lg:w-80"
+            style={{ background: "var(--color-surface-hover)" }}
+          >
+            <span
+              className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold"
+              style={{ background: "var(--color-accent)", color: "#fff" }}
             >
-              RSVP
-            </button>
-          </form>
-        ) : null}
+              {event.title.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
+        <div className="flex flex-1 flex-col justify-between p-5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="rounded-lg px-2.5 py-1 text-xs font-semibold"
+                style={{
+                  background: "var(--color-badge-bg)",
+                  color: "var(--color-badge-text)",
+                }}
+              >
+                {event.type === "major_event" ? "Major" : "Local"}
+              </span>
+              <StatusBadge status={event.status} />
+              {rsvp ? <StatusBadge status={rsvp.status} /> : null}
+            </div>
+            <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
+            <div className="mt-2 space-y-1">
+              <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                <span aria-hidden="true" className="text-base">&#x1F4C5;</span>
+                {formatDateRange(event.startsAt, event.endsAt)}
+              </p>
+              {event.locationText ? (
+                <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                  <span aria-hidden="true" className="text-base">&#x1F4CD;</span>
+                  {event.locationText}
+                </p>
+              ) : null}
+              <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                <span aria-hidden="true" className="text-base">&#x1F465;</span>
+                {confirmedCount}/{event.capacity} spots filled
+                {waitlistedCount > 0 ? ` · ${waitlistedCount} waitlisted` : ""}
+              </p>
+            </div>
+          </div>
 
-        {isCancelableRsvp ? (
-          <form action={cancelRsvpAction}>
-            <input type="hidden" name="eventId" value={event.id} />
-            <button
-              type="submit"
-              className="inline-flex h-11 w-full items-center justify-center rounded-md border border-[#b8cac5] px-5 text-sm font-semibold text-[#183f3c] transition hover:border-[#183f3c] sm:w-auto"
-            >
-              Cancel RSVP
-            </button>
-          </form>
-        ) : null}
+          <div className="mt-4">
+            {canRsvp ? (
+              <form action={rsvpForEventAction}>
+                <input type="hidden" name="eventId" value={event.id} />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "#fff" }}
+                >
+                  RSVP
+                </button>
+              </form>
+            ) : null}
 
-        {!canRsvp && !isCancelableRsvp ? (
-          <p className="text-sm text-[#64706c]">
-            {event.status === "closed"
-              ? "This event is closed to new RSVPs."
-              : "Your RSVP state is already recorded."}
-          </p>
-        ) : null}
+            {isCancelableRsvp ? (
+              <form action={cancelRsvpAction}>
+                <input type="hidden" name="eventId" value={event.id} />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                >
+                  Cancel RSVP
+                </button>
+              </form>
+            ) : null}
+
+            {!canRsvp && !isCancelableRsvp ? (
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                {event.status === "closed"
+                  ? "This event is closed."
+                  : "Your RSVP is recorded."}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
     </article>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const toneMap: Record<string, { bg: string; text: string }> = {
+    open: { bg: "rgba(34, 197, 94, 0.12)", text: "#16a34a" },
+    full: { bg: "rgba(234, 179, 8, 0.12)", text: "#ca8a04" },
+    closed: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
+    draft: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
+    confirmed: { bg: "rgba(34, 197, 94, 0.12)", text: "#16a34a" },
+    waitlisted: { bg: "rgba(234, 179, 8, 0.12)", text: "#ca8a04" },
+    cancelled: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
+  };
+  const tone = toneMap[status] ?? { bg: "var(--color-surface-hover)", text: "var(--color-muted)" };
+
+  return (
+    <span
+      className="rounded-lg px-2.5 py-1 text-xs font-semibold"
+      style={{ background: tone.bg, color: tone.text }}
+    >
+      {status}
+    </span>
   );
 }
 
@@ -277,44 +308,47 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
   const hasQuestions = schema.questions.length > 0;
 
   return (
-    <article className="border border-[#d7e3df] bg-white p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="active">
-              {event ? "Event survey" : "Member survey"}
-            </Badge>
-            {response ? <Badge tone="rsvp">submitted</Badge> : null}
-          </div>
-          <h3 className="mt-4 text-2xl font-semibold text-[#14211f]">
-            {survey.title}
-          </h3>
-          {survey.description ? (
-            <p className="mt-2 max-w-2xl leading-7 text-[#4e5b57]">
-              {survey.description}
-            </p>
-          ) : null}
-          {event ? (
-            <p className="mt-2 text-sm text-[#64706c]">
-              Linked to {event.title} on {formatDateRange(event.startsAt, null)}
-            </p>
-          ) : null}
-        </div>
-        <Metric
-          label="Questions"
-          value={String(schema.questions.length)}
-        />
+    <article className="glass rounded-2xl p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className="rounded-lg px-2.5 py-1 text-xs font-semibold"
+          style={{
+            background: "var(--color-badge-bg)",
+            color: "var(--color-badge-text)",
+          }}
+        >
+          {event ? "Event survey" : "Member survey"}
+        </span>
+        {response ? (
+          <span
+            className="rounded-lg px-2.5 py-1 text-xs font-semibold"
+            style={{ background: "rgba(34, 197, 94, 0.12)", color: "#16a34a" }}
+          >
+            submitted
+          </span>
+        ) : null}
       </div>
+      <h3 className="mt-3 text-lg font-semibold">{survey.title}</h3>
+      {survey.description ? (
+        <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+          {survey.description}
+        </p>
+      ) : null}
+      {event ? (
+        <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+          Linked to {event.title} on {formatDateRange(event.startsAt, null)}
+        </p>
+      ) : null}
 
-      <form action={submitSurveyResponseAction} className="mt-5 grid gap-4">
+      <form action={submitSurveyResponseAction} className="mt-4 grid gap-4">
         <input type="hidden" name="surveyId" value={survey.id} />
         {hasQuestions ? (
           schema.questions.map((question) => (
-            <label key={question.id} className="grid gap-2 text-sm">
-              <span className="font-medium text-[#14211f]">
+            <label key={question.id} className="grid gap-1.5 text-sm">
+              <span className="font-medium">
                 {question.label}
                 {question.required ? (
-                  <span className="text-[#b4573f]"> *</span>
+                  <span style={{ color: "var(--color-danger)" }}> *</span>
                 ) : null}
               </span>
               <textarea
@@ -322,103 +356,35 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
                 required={question.required}
                 defaultValue={readAnswer(response?.answersJson, question.id)}
                 rows={3}
-                className="min-h-24 rounded-md border border-[#b8cac5] px-3 py-2 leading-6"
+                className="min-h-20 rounded-xl px-4 py-3 text-sm outline-none"
+                style={{
+                  background: "var(--color-surface-hover)",
+                  border: "1px solid var(--color-surface-border)",
+                  color: "var(--color-foreground)",
+                }}
               />
             </label>
           ))
         ) : (
-          <p className="text-sm text-[#64706c]">
-            This survey does not have any questions yet.
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+            No questions yet.
           </p>
         )}
 
         <button
           type="submit"
           disabled={!hasQuestions}
-          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white transition hover:bg-[#245b55] disabled:cursor-not-allowed disabled:bg-[#9ba7a3] sm:w-auto"
+          className="inline-flex h-10 w-full items-center justify-center rounded-xl px-6 text-sm font-semibold transition sm:w-auto"
+          style={{
+            background: "var(--color-accent)",
+            color: "#fff",
+            opacity: hasQuestions ? 1 : 0.5,
+          }}
         >
           {response ? "Save response" : "Submit response"}
         </button>
       </form>
     </article>
-  );
-}
-
-function EmptyState({
-  title,
-  body,
-  action,
-}: {
-  title: string;
-  body: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="border border-[#d7e3df] bg-white p-6">
-      <h2 className="text-2xl font-semibold text-[#14211f]">{title}</h2>
-      <p className="mt-3 max-w-2xl leading-7 text-[#4e5b57]">{body}</p>
-      {action ? <div className="mt-5">{action}</div> : null}
-    </div>
-  );
-}
-
-function PrimaryLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex h-11 items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white transition hover:bg-[#245b55]"
-    >
-      {children}
-    </Link>
-  );
-}
-
-function StatusCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-[#d7e3df] bg-white p-5">
-      <p className="text-xs uppercase tracking-[0.16em] text-[#6b746f]">
-        {label}
-      </p>
-      <p className="mt-3 text-2xl font-semibold text-[#183f3c]">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-[#e3ece9] bg-[#f8fbff] p-3">
-      <p className="text-xs uppercase tracking-[0.14em] text-[#6b746f]">
-        {label}
-      </p>
-      <p className="mt-2 font-semibold text-[#183f3c]">{value}</p>
-    </div>
-  );
-}
-
-function Badge({
-  children,
-  tone = "muted",
-}: {
-  children: React.ReactNode;
-  tone?: "active" | "muted" | "rsvp";
-}) {
-  const className =
-    tone === "active"
-      ? "bg-[#dbe9e5] text-[#183f3c]"
-      : tone === "rsvp"
-        ? "bg-[#f7e9c0] text-[#6b4c00]"
-        : "bg-[#eef3f1] text-[#4e5b57]";
-
-  return (
-    <span className={`rounded-md px-3 py-1 text-xs font-semibold ${className}`}>
-      {children}
-    </span>
   );
 }
 

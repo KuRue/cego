@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: repoRoot,
   transpilePackages: ["@cego/db", "@cego/telegram"],
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**" },
+    ],
+  },
   turbopack: {
     root: repoRoot,
   },

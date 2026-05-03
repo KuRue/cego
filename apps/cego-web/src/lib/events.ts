@@ -1,6 +1,5 @@
 import {
   and,
-  asc,
   count,
   desc,
   events,
@@ -44,7 +43,7 @@ export async function getDashboardEvents(
     .select()
     .from(events)
     .where(inArray(events.status, ["open", "full", "closed"]))
-    .orderBy(asc(events.startsAt));
+    .orderBy(desc(events.startsAt));
 
   if (eventRows.length === 0) {
     return [];
