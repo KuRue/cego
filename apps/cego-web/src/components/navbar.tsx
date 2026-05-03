@@ -10,12 +10,18 @@ interface NavbarProps {
     telegramPhotoUrl: string | null;
     isAdmin: boolean;
   } | null;
+  brand?: {
+    siteName: string;
+    logoUrl: string | null;
+  } | null;
 }
 
-export default function Navbar({ member }: NavbarProps) {
+export default function Navbar({ member, brand }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isMiniApp = typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
+  const siteName = brand?.siteName || "cego";
+  const logoUrl = brand?.logoUrl;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -49,14 +55,24 @@ export default function Navbar({ member }: NavbarProps) {
     <header className="glass sticky top-0 z-50" style={isMiniApp ? { paddingTop: "env(safe-area-inset-top, 48px)" } : undefined}>
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span
-            className="grid h-8 w-8 place-items-center rounded-lg font-bold"
-            style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-          >
-            c
-          </span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={siteName}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-cover"
+            />
+          ) : (
+            <span
+              className="grid h-8 w-8 place-items-center rounded-lg font-bold"
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+            >
+              {siteName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <span className="text-sm font-semibold tracking-wide">
-            cego
+            {siteName}
           </span>
         </Link>
 
@@ -112,15 +128,26 @@ export default function Navbar({ member }: NavbarProps) {
                     Profile
                   </Link>
                   {member.isAdmin ? (
-                    <Link
-                      href="/admin"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm transition"
-                      style={{ color: "var(--color-foreground)" }}
-                      role="menuitem"
-                    >
-                      Admin Dashboard
-                    </Link>
+                    <>
+                      <Link
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--color-foreground)" }}
+                        role="menuitem"
+                      >
+                        Admin Dashboard
+                      </Link>
+                      <Link
+                        href="/admin/settings"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm transition"
+                        style={{ color: "var(--color-foreground)" }}
+                        role="menuitem"
+                      >
+                        Settings
+                      </Link>
+                    </>
                   ) : null}
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
 import Navbar from "@/components/navbar";
+import { getNavbarBrand } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,12 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const member = await getCurrentMember();
+  const brand = await getNavbarBrand();
 
   if (!member) {
     return (
       <>
-        <Navbar />
+        <Navbar brand={brand} />
         <main className="mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <div
@@ -56,6 +58,7 @@ export default async function DashboardPage() {
             telegramPhotoUrl: member.telegramPhotoUrl,
             isAdmin: member.isAdmin,
           }}
+          brand={brand}
         />
         <main className="mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
@@ -90,6 +93,7 @@ export default async function DashboardPage() {
           telegramPhotoUrl: member.telegramPhotoUrl,
           isAdmin: member.isAdmin,
         }}
+        brand={brand}
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>

@@ -12,6 +12,7 @@ import { getCurrentMember } from "@/lib/session";
 import { formatSurveyAnswer, parseSurveySchema } from "@/lib/surveys";
 import { Badge, StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
+import { getNavbarBrand } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,12 @@ export default async function AdminMemberDetailPage({
   params: Promise<{ memberId: string }>;
 }) {
   const currentMember = await getCurrentMember();
+  const brand = await getNavbarBrand();
 
   if (!currentMember || !currentMember.isAdmin) {
     return (
       <>
-        <Navbar />
+        <Navbar brand={brand} />
         <main className="mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Organizer access required</h1>
@@ -75,6 +77,7 @@ export default async function AdminMemberDetailPage({
           telegramPhotoUrl: currentMember.telegramPhotoUrl,
           isAdmin: currentMember.isAdmin,
         }}
+        brand={brand}
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section className="glass-lg rounded-2xl p-5">

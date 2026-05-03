@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import Navbar from "@/components/navbar";
+import { getNavbarBrand } from "@/lib/settings";
 import { getPublicUrl } from "@/lib/public-url";
 import TelegramLoginWidget from "./telegram-login-widget";
 
@@ -19,10 +20,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const hasTelegramError = params?.error === "telegram_login_failed";
   const botUsername = process.env.TELEGRAM_BOT_USERNAME;
   const authUrl = await getTelegramAuthUrl();
+  const brand = await getNavbarBrand();
 
   return (
     <>
-      <Navbar />
+      <Navbar brand={brand} />
       <main className="mx-auto flex min-h-[calc(100vh-60px)] max-w-lg flex-col justify-center px-5 py-16">
         <div className="glass-lg rounded-2xl p-8">
           <h1 className="text-3xl font-semibold">Sign in</h1>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import Navbar from "@/components/navbar";
+import { getSiteSettings } from "@/lib/settings";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
 
 const eventTypes = [
@@ -31,7 +32,9 @@ const dashboardPreview = [
   { label: "Payments", value: "cego-native later" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const settings = await getSiteSettings();
+
   return (
     <>
       <Script
@@ -39,7 +42,7 @@ export default function Home() {
         strategy="beforeInteractive"
       />
       <TelegramMiniAppRedirect />
-      <Navbar />
+      <Navbar brand={{ siteName: settings.siteName, logoUrl: settings.logoUrl }} />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
@@ -50,13 +53,10 @@ export default function Home() {
               Telegram-first event operations
             </p>
             <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.05] sm:text-5xl lg:text-6xl">
-              Run community events without turning the group chat into a spreadsheet.
+              {settings.heroTitle}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8" style={{ color: "var(--color-muted)" }}>
-              cego is the self-hosted planning surface for communities that need
-              Telegram identity, capacity-aware RSVPs, built-in surveys,
-              organizer review, and room to add cego-native payment steps when
-              paid registration is ready.
+              {settings.heroBody}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -154,7 +154,7 @@ export default function Home() {
           className="mt-16 flex flex-col gap-3 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"
           style={{ borderTop: "1px solid var(--color-surface-border)", color: "var(--color-muted)" }}
         >
-          <span>AGPLv3. Self-hosted.</span>
+          <span>{settings.footerText}</span>
           <div className="flex gap-4">
             <a href="https://github.com/KuRue/cego" rel="noreferrer">
               Source code

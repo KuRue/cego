@@ -18,6 +18,7 @@ import {
 } from "@/lib/surveys";
 import { Badge, StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
+import { getNavbarBrand } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,12 @@ export const metadata = {
 
 export default async function AdminPage() {
   const member = await getCurrentMember();
+  const brand = await getNavbarBrand();
 
   if (!member || !member.isAdmin) {
     return (
       <>
-        <Navbar />
+        <Navbar brand={brand} />
         <main className="mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Organizer access required</h1>
@@ -65,6 +67,7 @@ export default async function AdminPage() {
           telegramPhotoUrl: member.telegramPhotoUrl,
           isAdmin: member.isAdmin,
         }}
+        brand={brand}
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>

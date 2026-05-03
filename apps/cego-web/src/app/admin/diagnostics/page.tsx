@@ -7,6 +7,7 @@ import {
 } from "@cego/telegram";
 import { StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
+import { getNavbarBrand } from "@/lib/settings";
 import { getPublicUrl } from "@/lib/public-url";
 import { requireAdminMember } from "@/lib/session";
 
@@ -27,6 +28,7 @@ interface DiagnosticItem {
 
 export default async function AdminDiagnosticsPage() {
   const currentMember = await requireAdminMember();
+  const brand = await getNavbarBrand();
   const [database, publicHealth, telegramBot, telegramGroup, telegramAdmins] =
     await Promise.all([
       checkDatabase(),
@@ -64,6 +66,7 @@ export default async function AdminDiagnosticsPage() {
           telegramPhotoUrl: currentMember.telegramPhotoUrl,
           isAdmin: currentMember.isAdmin,
         }}
+        brand={brand}
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <h1 className="text-3xl font-semibold">Diagnostics</h1>
