@@ -53,7 +53,10 @@ export default function Navbar({ member, brand }: NavbarProps) {
   }, [menuOpen]);
 
   return (
-    <header className="glass sticky top-0 z-50" style={isMiniApp ? { paddingTop: "env(safe-area-inset-top, 48px)" } : undefined}>
+    <header
+      className="glass sticky top-0 z-50"
+      style={isMiniApp ? { paddingTop: "env(safe-area-inset-top, 48px)" } : undefined}
+    >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Link href="/" className="flex items-center gap-2">
           {logoUrl ? (
@@ -78,64 +81,71 @@ export default function Navbar({ member, brand }: NavbarProps) {
         </Link>
 
         {member ? (
-          <div className="relative" ref={menuRef}>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 rounded-full p-0.5 transition"
-              style={{ background: menuOpen ? "var(--color-surface-hover)" : "transparent" }}
-              aria-expanded={menuOpen}
-              aria-haspopup="true"
-            >
-              <Avatar
-                displayName={member.telegramDisplayName}
-                photoUrl={member.telegramPhotoUrl}
-              />
-            </button>
-
-            {menuOpen && (
-              <div
-                className="glass-lg absolute right-0 mt-2 min-w-48 overflow-hidden rounded-xl py-1"
-                role="menu"
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-1 sm:flex">
+              <NavItem href="/dashboard">Dashboard</NavItem>
+              {member.isAdmin ? <NavItem href="/admin">Admin</NavItem> : null}
+            </div>
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center gap-2 rounded-full p-0.5 transition"
+                style={{ background: menuOpen ? "var(--color-surface-hover)" : "transparent" }}
+                aria-label="Open account menu"
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
               >
-                <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
-                  <p className="text-sm font-semibold">{member.telegramDisplayName}</p>
+                <Avatar
+                  displayName={member.telegramDisplayName}
+                  photoUrl={member.telegramPhotoUrl}
+                />
+              </button>
+
+              {menuOpen && (
+                <div
+                  className="glass-lg absolute right-0 mt-2 min-w-48 overflow-hidden rounded-xl py-1"
+                  role="menu"
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
+                    <p className="text-sm font-semibold">{member.telegramDisplayName}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm transition"
+                      style={{ color: "var(--color-foreground)" }}
+                      role="menuitem"
+                    >
+                      Profile
+                    </Link>
+                    {member.isAdmin ? (
+                      <>
+                        <Link
+                          href="/admin"
+                          onClick={() => setMenuOpen(false)}
+                          className="block px-4 py-2.5 text-sm transition"
+                          style={{ color: "var(--color-foreground)" }}
+                          role="menuitem"
+                        >
+                          Admin Dashboard
+                        </Link>
+                        <Link
+                          href="/admin#settings"
+                          onClick={() => setMenuOpen(false)}
+                          className="block px-4 py-2.5 text-sm transition"
+                          style={{ color: "var(--color-foreground)" }}
+                          role="menuitem"
+                        >
+                          Settings
+                        </Link>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="py-1">
-                  <Link
-                    href="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm transition"
-                    style={{ color: "var(--color-foreground)" }}
-                    role="menuitem"
-                  >
-                    Profile
-                  </Link>
-                  {member.isAdmin ? (
-                    <>
-                      <Link
-                        href="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm transition"
-                        style={{ color: "var(--color-foreground)" }}
-                        role="menuitem"
-                      >
-                        Admin Dashboard
-                      </Link>
-                      <Link
-                        href="/admin#settings"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm transition"
-                        style={{ color: "var(--color-foreground)" }}
-                        role="menuitem"
-                      >
-                        Settings
-                      </Link>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : (
           <Link
@@ -151,5 +161,17 @@ export default function Navbar({ member, brand }: NavbarProps) {
         )}
       </nav>
     </header>
+  );
+}
+
+function NavItem({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-lg px-3 py-2 text-sm font-semibold transition"
+      style={{ color: "var(--color-foreground)" }}
+    >
+      {children}
+    </Link>
   );
 }

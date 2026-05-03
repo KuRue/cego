@@ -183,5 +183,5 @@ Potential later work:
 | Phase 2: Admin information architecture | In progress | Settings live on the admin page; create/edit event and survey forms are collapsed with native details panels. |
 | Phase 3: Event configuration expansion | In progress | Events now include description, price metadata, rules, terms, cancellation/refund policy, and organizer notes. |
 | Phase 4: Member profile and settings | In progress | Profile shows Telegram identity, group status, role, join date, and editable contact email. |
-| Phase 5: Liquid glass visual refresh | Not started | Start after core admin flows are stable. |
+| Phase 5: Liquid glass visual refresh | In progress | Shared liquid-glass tokens, page shell background treatment, focus states, and admin navigation polish have started. |
 | Phase 6: Follow-up slices | Backlog | Use after MVP usability is solid. |

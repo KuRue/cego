@@ -123,7 +123,7 @@ export default function MiniAppSession() {
   }, [createSession]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-6">
+    <main className="page-shell flex min-h-screen items-center justify-center px-5 py-6">
       <div className="glass-lg mx-auto w-full max-w-md rounded-2xl p-6">
         <Link href="/" className="text-sm font-semibold">
           cego

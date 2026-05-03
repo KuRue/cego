@@ -19,7 +19,7 @@ export default async function ProfilePage() {
     return (
       <>
         <Navbar brand={brand} />
-        <main className="mx-auto max-w-2xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-2xl px-5 py-16">
           <div className="glass-lg rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Sign in to view your profile</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -48,7 +48,7 @@ export default async function ProfilePage() {
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-2xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-2xl px-5 pb-16 pt-8">
         <h1 className="text-3xl font-semibold">Profile</h1>
 
         <div className="glass-lg mt-8 rounded-2xl p-6">

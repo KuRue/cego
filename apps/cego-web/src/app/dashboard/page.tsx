@@ -24,7 +24,7 @@ export default async function DashboardPage() {
     return (
       <>
         <Navbar brand={brand} />
-        <main className="mx-auto max-w-6xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <div
               className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full text-xl font-bold"
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           }}
           brand={brand}
         />
-        <main className="mx-auto max-w-6xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Group access required</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>
           <h1 className="text-3xl font-semibold">Events</h1>
           <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>

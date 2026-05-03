@@ -68,7 +68,7 @@ export default async function AdminDiagnosticsPage() {
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <h1 className="text-3xl font-semibold">Diagnostics</h1>
         <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
           Runtime checks without printing secrets. Use this when Telegram, database, or admin access looks wrong.

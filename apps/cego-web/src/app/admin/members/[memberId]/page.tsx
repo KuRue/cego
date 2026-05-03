@@ -32,7 +32,7 @@ export default async function AdminMemberDetailPage({
     return (
       <>
         <Navbar brand={brand} />
-        <main className="mx-auto max-w-6xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Organizer access required</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -79,7 +79,7 @@ export default async function AdminMemberDetailPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section className="glass-lg rounded-2xl p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>

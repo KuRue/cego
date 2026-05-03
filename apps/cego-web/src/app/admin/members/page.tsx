@@ -27,7 +27,7 @@ export default async function AdminMembersPage({
     return (
       <>
         <Navbar brand={brand} />
-        <main className="mx-auto max-w-6xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Organizer access required</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -66,7 +66,7 @@ export default async function AdminMembersPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section className="grid gap-3 md:grid-cols-4">
           <Metric label="Visible members" value={String(directory.members.length)} />
           <Metric label="Group members" value={String(directory.totals.groupMembers)} />

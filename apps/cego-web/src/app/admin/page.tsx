@@ -38,7 +38,7 @@ export default async function AdminPage() {
     return (
       <>
         <Navbar brand={brand} />
-        <main className="mx-auto max-w-6xl px-5 py-16">
+        <main className="page-shell mx-auto max-w-6xl px-5 py-16">
           <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
             <h1 className="text-xl font-semibold">Organizer access required</h1>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -73,7 +73,7 @@ export default async function AdminPage() {
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>
           <h1 className="text-3xl font-semibold">Admin</h1>
           <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -82,7 +82,9 @@ export default async function AdminPage() {
           <nav className="mt-6 flex flex-wrap gap-2">
             <AdminNavLink href="#events">Events</AdminNavLink>
             <AdminNavLink href="#surveys">Surveys</AdminNavLink>
+            <AdminNavLink href="/admin/members">Members</AdminNavLink>
             <AdminNavLink href="#settings">Settings</AdminNavLink>
+            <AdminNavLink href="/admin/diagnostics">Diagnostics</AdminNavLink>
           </nav>
         </section>
 
@@ -190,12 +192,12 @@ function AdminNavLink({
   children: React.ReactNode;
 }) {
   return (
-    <a
+    <Link
       href={href}
       className="glass glass-hover inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold transition"
     >
       {children}
-    </a>
+    </Link>
   );
 }
 

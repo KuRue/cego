@@ -43,7 +43,7 @@ export default async function Home() {
       />
       <TelegramMiniAppRedirect />
       <Navbar brand={{ siteName: settings.siteName, logoUrl: settings.logoUrl }} />
-      <main className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
+      <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <p
