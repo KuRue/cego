@@ -20,6 +20,12 @@ export interface EventWithRsvpState {
   rsvp?: Rsvp;
 }
 
+export interface PublicEvent {
+  event: Event;
+  confirmedCount: number;
+  waitlistedCount: number;
+}
+
 export interface AdminEventWithRsvps {
   event: Event;
   confirmedCount: number;
@@ -153,6 +159,46 @@ export async function getAdminEvents(): Promise<AdminEventWithRsvps[]> {
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
     rsvps: rsvpsByEvent.get(event.id) ?? [],
   }));
+}
+
+export async function getPublicEvents(): Promise<{
+  upcoming: PublicEvent[];
+  past: PublicEvent[];
+}> {
+  const db = getDb();
+  const eventRows = await db
+    .select()
+    .from(events)
+    .where(inArray(events.status, ["open", "full", "closed"]))
+    .orderBy(desc(events.startsAt));
+
+  if (eventRows.length === 0) {
+    return { upcoming: [], past: [] };
+  }
+
+  const eventIds = eventRows.map((event) => event.id);
+  const countRows = await getRsvpCountRows(eventIds);
+  const countsByEvent = toCountMap(countRows);
+
+  const now = new Date();
+  const upcoming: PublicEvent[] = [];
+  const past: PublicEvent[] = [];
+
+  for (const event of eventRows) {
+    const entry: PublicEvent = {
+      event,
+      confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
+      waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
+    };
+
+    if (event.endsAt ? event.endsAt < now : event.startsAt < now) {
+      past.push(entry);
+    } else {
+      upcoming.push(entry);
+    }
+  }
+
+  return { upcoming, past };
 }
 
 async function getRsvpCountRows(eventIds: string[]) {
