@@ -345,6 +345,7 @@ function MemberProfileShell({
           </Link>
           <div className="flex flex-wrap items-center justify-end gap-4 text-sm text-white/70">
             {memberName ? <span>{memberName}</span> : null}
+            <Link href="/admin/diagnostics">Diagnostics</Link>
             <Link href="/admin/members">Members</Link>
             <Link href="/dashboard">Dashboard</Link>
           </div>

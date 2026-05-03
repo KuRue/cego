@@ -173,6 +173,7 @@ function AdminMembersShell({
           </Link>
           <div className="flex items-center gap-4 text-sm text-white/70">
             {memberName ? <span>{memberName}</span> : null}
+            <Link href="/admin/diagnostics">Diagnostics</Link>
             <Link href="/dashboard">Dashboard</Link>
           </div>
         </div>

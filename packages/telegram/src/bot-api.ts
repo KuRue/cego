@@ -17,11 +17,41 @@ interface TelegramChatMember {
   is_member?: boolean;
 }
 
+export interface TelegramBotInfo {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  username?: string;
+  can_join_groups?: boolean;
+  can_read_all_group_messages?: boolean;
+  supports_inline_queries?: boolean;
+}
+
 export class TelegramBotApiError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "TelegramBotApiError";
   }
+}
+
+export async function getTelegramBotInfo({
+  botToken,
+}: {
+  botToken: string;
+}): Promise<TelegramBotInfo> {
+  if (!botToken) {
+    throw new TelegramBotApiError("Telegram bot token is required.");
+  }
+
+  const endpoint = `https://api.telegram.org/bot${botToken}/getMe`;
+  const response = await fetch(endpoint);
+  const payload = (await response.json()) as TelegramApiResponse<TelegramBotInfo>;
+
+  if (!response.ok || !payload.ok || !payload.result) {
+    throw new TelegramBotApiError(payload.description ?? "Telegram getMe failed.");
+  }
+
+  return payload.result;
 }
 
 export async function getTelegramGroupStatus({
@@ -71,4 +101,3 @@ function isActiveChatMember(member: TelegramChatMember): boolean {
 
   return ["creator", "administrator", "member"].includes(member.status);
 }
-
