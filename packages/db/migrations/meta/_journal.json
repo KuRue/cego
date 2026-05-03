@@ -43,6 +43,13 @@
       "when": 1777960000000,
       "tag": "0005_add_site_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778040000000,
+      "tag": "0006_expand_event_configuration",
+      "breakpoints": true
     }
   ]
 }

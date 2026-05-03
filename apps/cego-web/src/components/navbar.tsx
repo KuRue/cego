@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import Avatar from "@/components/avatar";
 
 interface NavbarProps {
   member?: {
@@ -86,27 +87,10 @@ export default function Navbar({ member, brand }: NavbarProps) {
               aria-expanded={menuOpen}
               aria-haspopup="true"
             >
-              {member.telegramPhotoUrl ? (
-                <Image
-                  src={member.telegramPhotoUrl}
-                  alt={member.telegramDisplayName}
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 rounded-full object-cover"
-                  style={{ border: "2px solid var(--color-surface-border)" }}
-                />
-              ) : (
-                <span
-                  className="grid h-8 w-8 place-items-center rounded-full text-xs font-semibold"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    color: "var(--color-foreground)",
-                    border: "2px solid var(--color-surface-border)",
-                  }}
-                >
-                  {member.telegramDisplayName.charAt(0).toUpperCase()}
-                </span>
-              )}
+              <Avatar
+                displayName={member.telegramDisplayName}
+                photoUrl={member.telegramPhotoUrl}
+              />
             </button>
 
             {menuOpen && (
@@ -139,7 +123,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
                         Admin Dashboard
                       </Link>
                       <Link
-                        href="/admin/settings"
+                        href="/admin#settings"
                         onClick={() => setMenuOpen(false)}
                         className="block px-4 py-2.5 text-sm transition"
                         style={{ color: "var(--color-foreground)" }}

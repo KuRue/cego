@@ -8,6 +8,7 @@ import { requireCurrentMember } from "@/lib/session";
 export async function updateCurrentMemberEmailAction(formData: FormData) {
   const member = await requireCurrentMember();
   const db = getDb();
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
 
   await db
     .update(members)
@@ -18,9 +19,10 @@ export async function updateCurrentMemberEmailAction(formData: FormData) {
     .where(eq(members.id, member.id));
 
   revalidatePath("/dashboard");
+  revalidatePath("/profile");
   revalidatePath("/admin");
   revalidatePath("/admin/members");
-  redirect("/dashboard");
+  redirect(returnTo);
 }
 
 function readText(formData: FormData, key: string): string {
@@ -30,4 +32,14 @@ function readText(formData: FormData, key: string): string {
 
 function normalizeEmail(value: string): string | null {
   return value ? value.toLowerCase() : null;
+}
+
+function readReturnPath(formData: FormData, key: string): string | null {
+  const value = readText(formData, key);
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }

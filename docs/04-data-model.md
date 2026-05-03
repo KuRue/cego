@@ -35,9 +35,17 @@ Required fields:
 - `type`: `major_event` or `local_event`
 - `title`
 - `slug`
+- `description`
 - `starts_at`
 - `ends_at`
 - `location_text`
+- `price_cents`
+- `currency`
+- `payment_required`
+- `rules_text`
+- `terms_text`
+- `refund_policy_text`
+- `organizer_notes`
 - `capacity`
 - `status`: `draft`, `open`, `full`, `closed`, `archived`
 - `created_at`
@@ -46,6 +54,9 @@ Required fields:
 Notes:
 
 - Exact private event addresses should be treated as sensitive and shown only to approved attendees when appropriate.
+- `description`, `price_cents`, `currency`, `payment_required`, `rules_text`, `terms_text`, and `refund_policy_text` are member-facing when present.
+- `organizer_notes` is internal organizer metadata and must not be shown on normal member dashboards.
+- cego stores event price metadata only in this slice; payment collection remains deferred until direct Stripe work.
 
 ## `rsvps`
 

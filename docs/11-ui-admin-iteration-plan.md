@@ -179,9 +179,9 @@ Potential later work:
 
 | Phase | Status | Notes |
 | --- | --- | --- |
-| Phase 1: Bug triage and routing | Not started | Profile load failure and settings 404 are first. |
-| Phase 2: Admin information architecture | Not started | Move settings into admin and collapse create forms. |
-| Phase 3: Event configuration expansion | Not started | Needs schema and UI decisions. |
-| Phase 4: Member profile and settings | Not started | Depends on Phase 1 findings. |
+| Phase 1: Bug triage and routing | In progress | Profile now has an explicit signed-out state and avoids Next image host issues for Telegram avatars; settings saves redirect back to `/admin#settings`. |
+| Phase 2: Admin information architecture | In progress | Settings live on the admin page; create/edit event and survey forms are collapsed with native details panels. |
+| Phase 3: Event configuration expansion | In progress | Events now include description, price metadata, rules, terms, cancellation/refund policy, and organizer notes. |
+| Phase 4: Member profile and settings | In progress | Profile shows Telegram identity, group status, role, join date, and editable contact email. |
 | Phase 5: Liquid glass visual refresh | Not started | Start after core admin flows are stable. |
 | Phase 6: Follow-up slices | Backlog | Use after MVP usability is solid. |

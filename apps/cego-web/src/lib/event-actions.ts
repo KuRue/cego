@@ -184,9 +184,17 @@ function parseEventForm(formData: FormData) {
     type: readEnum(formData, "type", eventTypes) satisfies EventType,
     title,
     slug,
+    description: readOptionalText(formData, "description"),
     startsAt: readDate(formData, "startsAt"),
     endsAt: readOptionalDate(formData, "endsAt"),
     locationText: readOptionalText(formData, "locationText"),
+    priceCents: readOptionalPriceCents(formData, "price"),
+    currency: readCurrency(formData, "currency"),
+    paymentRequired: readCheckbox(formData, "paymentRequired"),
+    rulesText: readOptionalText(formData, "rulesText"),
+    termsText: readOptionalText(formData, "termsText"),
+    refundPolicyText: readOptionalText(formData, "refundPolicyText"),
+    organizerNotes: readOptionalText(formData, "organizerNotes"),
     capacity: readCapacity(formData),
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };
@@ -250,6 +258,36 @@ function readCapacity(formData: FormData): number {
   }
 
   return capacity;
+}
+
+function readOptionalPriceCents(formData: FormData, key: string): number | null {
+  const value = readText(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("Price must be zero or greater.");
+  }
+
+  return Math.round(amount * 100);
+}
+
+function readCurrency(formData: FormData, key: string): string {
+  const value = readText(formData, key).toUpperCase();
+
+  if (!/^[A-Z]{3}$/.test(value)) {
+    return "USD";
+  }
+
+  return value;
+}
+
+function readCheckbox(formData: FormData, key: string): boolean {
+  return formData.get(key) === "on";
 }
 
 function slugify(value: string): string {

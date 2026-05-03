@@ -214,23 +214,42 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               {rsvp ? <StatusBadge status={rsvp.status} /> : null}
             </div>
             <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
-            <div className="mt-2 space-y-1">
-              <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
-                <span aria-hidden="true" className="text-base">&#x1F4C5;</span>
-                {formatDateRange(event.startsAt, event.endsAt)}
+            {event.description ? (
+              <p className="mt-3 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
+                {event.description}
               </p>
+            ) : null}
+            <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+              <EventDetail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
               {event.locationText ? (
-                <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
-                  <span aria-hidden="true" className="text-base">&#x1F4CD;</span>
-                  {event.locationText}
-                </p>
+                <EventDetail label="Location" value={event.locationText} />
               ) : null}
-              <p className="flex items-center gap-2 text-sm" style={{ color: "var(--color-muted)" }}>
-                <span aria-hidden="true" className="text-base">&#x1F465;</span>
-                {confirmedCount}/{event.capacity} spots filled
-                {waitlistedCount > 0 ? ` · ${waitlistedCount} waitlisted` : ""}
-              </p>
-            </div>
+              <EventDetail
+                label="Capacity"
+                value={`${confirmedCount}/${event.capacity} spots filled${
+                  waitlistedCount > 0 ? `; ${waitlistedCount} waitlisted` : ""
+                }`}
+              />
+              {event.priceCents !== null || event.paymentRequired ? (
+                <EventDetail
+                  label="Price"
+                  value={
+                    event.priceCents !== null
+                      ? formatPrice(event.priceCents, event.currency)
+                      : "Payment required"
+                  }
+                />
+              ) : null}
+            </dl>
+            {event.rulesText || event.termsText || event.refundPolicyText ? (
+              <div className="mt-4 grid gap-3">
+                {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
+                {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
+                {event.refundPolicyText ? (
+                  <PolicyBlock title="Cancellation/refund policy" body={event.refundPolicyText} />
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-4">
@@ -275,6 +294,28 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function EventDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+        {label}
+      </dt>
+      <dd className="mt-1 leading-6">{value}</dd>
+    </div>
+  );
+}
+
+function PolicyBlock({ title, body }: { title: string; body: string }) {
+  return (
+    <details className="rounded-xl px-4 py-3" style={{ border: "1px solid var(--color-surface-border)" }}>
+      <summary className="cursor-pointer text-sm font-semibold">{title}</summary>
+      <p className="mt-3 whitespace-pre-wrap text-sm leading-6" style={{ color: "var(--color-muted)" }}>
+        {body}
+      </p>
+    </details>
   );
 }
 
@@ -384,4 +425,11 @@ function readAnswer(answersJson: unknown, questionId: string): string {
   }
 
   return JSON.stringify(value);
+}
+
+function formatPrice(priceCents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(priceCents / 100);
 }

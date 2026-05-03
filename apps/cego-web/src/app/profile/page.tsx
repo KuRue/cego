@@ -1,5 +1,7 @@
-import Image from "next/image";
-import { requireCurrentMember } from "@/lib/session";
+import Link from "next/link";
+import Avatar from "@/components/avatar";
+import { getCurrentMember } from "@/lib/session";
+import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getNavbarBrand } from "@/lib/settings";
 import Navbar from "@/components/navbar";
 
@@ -10,8 +12,31 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  const member = await requireCurrentMember();
+  const member = await getCurrentMember();
   const brand = await getNavbarBrand();
+
+  if (!member) {
+    return (
+      <>
+        <Navbar brand={brand} />
+        <main className="mx-auto max-w-2xl px-5 py-16">
+          <div className="glass-lg rounded-2xl p-8 text-center">
+            <h1 className="text-xl font-semibold">Sign in to view your profile</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              cego profiles are connected to Telegram sessions.
+            </p>
+            <Link
+              href="/sign-in"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+            >
+              Sign in with Telegram
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -28,27 +53,11 @@ export default async function ProfilePage() {
 
         <div className="glass-lg mt-8 rounded-2xl p-6">
           <div className="flex items-center gap-5">
-            {member.telegramPhotoUrl ? (
-              <Image
-                src={member.telegramPhotoUrl}
-                alt={member.telegramDisplayName}
-                width={72}
-                height={72}
-                className="h-[72px] w-[72px] rounded-full object-cover"
-                style={{ border: "3px solid var(--color-surface-border)" }}
-              />
-            ) : (
-              <span
-                className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full text-2xl font-bold"
-                style={{
-                  background: "var(--color-surface-hover)",
-                  color: "var(--color-foreground)",
-                  border: "3px solid var(--color-surface-border)",
-                }}
-              >
-                {member.telegramDisplayName.charAt(0).toUpperCase()}
-              </span>
-            )}
+            <Avatar
+              displayName={member.telegramDisplayName}
+              photoUrl={member.telegramPhotoUrl}
+              size="lg"
+            />
             <div>
               <p className="text-xl font-semibold">{member.telegramDisplayName}</p>
               {member.telegramUsername && (
@@ -79,6 +88,12 @@ export default async function ProfilePage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm" style={{ color: "var(--color-muted)" }}>
+                Group status
+              </span>
+              <span className="text-sm font-medium">{member.groupStatus}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ color: "var(--color-muted)" }}>
                 Joined
               </span>
               <span className="text-sm">
@@ -91,6 +106,30 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <form action={updateCurrentMemberEmailAction} className="glass mt-6 rounded-2xl p-6">
+          <input type="hidden" name="returnTo" value="/profile" />
+          <h2 className="text-lg font-semibold">Contact email</h2>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+            Optional. Organizers can use this if Telegram is not enough for an event detail.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              name="email"
+              type="email"
+              defaultValue={member.email ?? ""}
+              placeholder="you@example.com"
+              className="form-input h-11 flex-1"
+            />
+            <button
+              type="submit"
+              className="h-11 rounded-xl px-5 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+            >
+              Save email
+            </button>
+          </div>
+        </form>
       </main>
     </>
   );

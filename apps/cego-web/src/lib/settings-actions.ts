@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { eq, getDb, siteSettings } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
 import { clearSettingsCache } from "@/lib/settings";
 
 export async function updateSiteSettingsAction(formData: FormData) {
   await requireAdminMember();
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin#settings";
 
   const db = getDb();
   const values = {
@@ -32,6 +34,8 @@ export async function updateSiteSettingsAction(formData: FormData) {
 
   clearSettingsCache();
   revalidatePath("/", "layout");
+  revalidatePath("/admin");
+  redirect(returnTo);
 }
 
 function readText(formData: FormData, key: string): string {
@@ -43,4 +47,14 @@ function readColor(formData: FormData, key: string, fallback: string): string {
   const value = readText(formData, key);
   if (/^#[0-9a-fA-F]{6}$/.test(value)) return value;
   return fallback;
+}
+
+function readReturnPath(formData: FormData, key: string): string | null {
+  const value = readText(formData, key);
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }

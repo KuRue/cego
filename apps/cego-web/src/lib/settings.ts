@@ -1,4 +1,4 @@
-import { eq, getDb, siteSettings, type SiteSettings } from "@cego/db";
+import { getDb, siteSettings, type SiteSettings } from "@cego/db";
 
 export interface BrandSettings {
   siteName: string;
