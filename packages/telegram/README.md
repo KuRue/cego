@@ -6,6 +6,7 @@ This package follows Telegram's Mini App server-side validation model:
 
 - Use `Telegram.WebApp.initData`, not `initDataUnsafe`.
 - Build a sorted data check string without `hash`.
+- Keep Telegram's third-party `signature` field in the bot-token data check string when present.
 - Compare against HMAC-SHA256 using the bot token-derived secret.
 - Reject stale `auth_date` values.
 
