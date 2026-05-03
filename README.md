@@ -64,6 +64,7 @@ npm run docker:prod:config
 - [Community Policy](docs/08-community-policy.md)
 - [Roadmap](docs/09-roadmap.md)
 - [Telegram Bot Setup](docs/10-bot-setup.md)
+- [UI And Admin Iteration Plan](docs/11-ui-admin-iteration-plan.md)
 
 ## Target Domains
 
