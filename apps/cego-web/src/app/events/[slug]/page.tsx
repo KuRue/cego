@@ -3,9 +3,8 @@ import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
+import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEventBySlug, type EventWithRsvpState } from "@/lib/events";
-import type { Rsvp } from "@cego/db";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -189,28 +188,13 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
 
           <div className="mt-5 grid gap-3">
             {canRsvp ? (
-              <form action={rsvpForEventAction} className="grid gap-3">
-                <input type="hidden" name="eventId" value={event.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <button
-                  type="submit"
-                  className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                >
-                  RSVP
-                </button>
-                <input
-                  name="plusOneName"
-                  type="text"
-                  placeholder="+1 name (optional)"
-                  className="h-11 rounded-xl px-4 text-sm outline-none"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                />
-              </form>
+              <AppLink
+                href={`/events/${event.slug}/rsvp`}
+                className="flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                RSVP
+              </AppLink>
             ) : null}
 
             {isCancelableRsvp ? (

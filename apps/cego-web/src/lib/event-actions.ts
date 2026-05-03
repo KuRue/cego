@@ -11,10 +11,13 @@ import {
   getDb,
   inArray,
   rsvps,
+  surveyResponses,
+  surveys,
   type EventStatus,
   type RsvpStatus,
 } from "@cego/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
+import { parseSurveySchema } from "@/lib/surveys";
 
 const capacityBearingStatuses = ["confirmed"] as const;
 
@@ -58,6 +61,7 @@ export async function rsvpForEventAction(formData: FormData) {
 
   const eventId = readText(formData, "eventId");
   const plusOneName = readOptionalText(formData, "plusOneName")?.trim() || null;
+  const surveyId = readOptionalText(formData, "surveyId");
 
   if (!eventId) {
     redirect(returnTo);
@@ -162,6 +166,41 @@ export async function rsvpForEventAction(formData: FormData) {
           plusOneName,
           parentRsvpId,
         });
+      }
+    }
+
+    if (surveyId) {
+      const surveyRows = await tx
+        .select()
+        .from(surveys)
+        .where(and(eq(surveys.id, surveyId), eq(surveys.status, "published")))
+        .limit(1);
+      const survey = surveyRows[0];
+
+      if (survey) {
+        const schema = parseSurveySchema(survey.schemaJson);
+        const answers = Object.fromEntries(
+          schema.questions.map((q) => [
+            q.id,
+            readText(formData, `answer:${q.id}`),
+          ]),
+        );
+
+        await tx
+          .insert(surveyResponses)
+          .values({
+            surveyId: survey.id,
+            memberId: member.id,
+            eventId,
+            answersJson: answers,
+          })
+          .onConflictDoUpdate({
+            target: [surveyResponses.surveyId, surveyResponses.memberId],
+            set: {
+              answersJson: answers,
+              updatedAt: new Date(),
+            },
+          });
       }
     }
   });

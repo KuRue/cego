@@ -2,16 +2,18 @@ import {
   and,
   count,
   desc,
-  events,
   eq,
+  events,
   getDb,
   inArray,
   members,
   rsvps,
+  surveys,
   type Event,
   type Member,
   type Rsvp,
 } from "@cego/db";
+import { parseSurveySchema, type SurveySchema } from "@/lib/surveys";
 
 export interface EventWithRsvpState {
   event: Event;
@@ -299,4 +301,72 @@ function isCapacityBearingStatus(status: string): boolean {
   return capacityBearingStatuses.includes(
     status as (typeof capacityBearingStatuses)[number],
   );
+}
+
+export interface RsvpPageData {
+  event: Event;
+  confirmedCount: number;
+  waitlistedCount: number;
+  rsvp?: Rsvp;
+  plusOne?: Rsvp;
+  survey?: {
+    id: string;
+    title: string;
+    schema: SurveySchema;
+  };
+}
+
+export async function getRsvpPageData(
+  memberId: string,
+  slug: string,
+): Promise<RsvpPageData | null> {
+  const db = getDb();
+
+  const eventRows = await db
+    .select()
+    .from(events)
+    .where(
+      and(
+        eq(events.slug, slug),
+        inArray(events.status, ["open", "full"]),
+      ),
+    )
+    .limit(1);
+  const event = eventRows[0];
+
+  if (!event) return null;
+
+  const [memberRsvpRows, countRows, surveyRows] = await Promise.all([
+    db
+      .select()
+      .from(rsvps)
+      .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, event.id))),
+    getRsvpCountRows([event.id]),
+    db
+      .select()
+      .from(surveys)
+      .where(
+        and(
+          eq(surveys.eventId, event.id),
+          eq(surveys.status, "published"),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  const countsByEvent = toCountMap(countRows);
+  const parentRsvp = memberRsvpRows.find((r) => !r.parentRsvpId);
+  const plusOne = memberRsvpRows.find((r) => r.parentRsvpId);
+  const survey = surveyRows[0];
+
+  return {
+    event,
+    confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
+    waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
+    rsvp: parentRsvp,
+    plusOne,
+    survey: survey
+      ? { id: survey.id, title: survey.title, schema: parseSurveySchema(survey.schemaJson) }
+      : undefined,
+  };
 }

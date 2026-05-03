@@ -139,13 +139,30 @@ function parseQuestions(value: string): SurveyQuestion[] {
     .filter(Boolean)
     .map((line, index) => {
       const required = line.startsWith("*");
-      const label = required ? line.slice(1).trim() : line;
+      let label = required ? line.slice(1).trim() : line;
+
+      const selectMatch = label.match(/^(.+?)\s*\[([^\]]+)\]$/);
+      if (selectMatch) {
+        const options = selectMatch[2]
+          .split(",")
+          .map((o) => o.trim())
+          .filter(Boolean);
+        if (options.length >= 2) {
+          return {
+            id: `q${index + 1}_${slugify(selectMatch[1]).slice(0, 32)}`,
+            label: selectMatch[1].trim(),
+            required,
+            type: "select" as const,
+            options,
+          };
+        }
+      }
 
       return {
         id: `q${index + 1}_${slugify(label).slice(0, 32)}`,
         label,
         required,
-        type: "text",
+        type: "text" as const,
       };
     });
 }

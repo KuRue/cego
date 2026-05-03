@@ -21,7 +21,8 @@ export interface SurveyQuestion {
   id: string;
   label: string;
   required: boolean;
-  type: "text";
+  type: "text" | "select";
+  options?: string[];
 }
 
 export interface SurveySchema {
@@ -211,12 +212,21 @@ export function parseSurveySchema(value: unknown): SurveySchema {
         return [];
       }
 
+      const type = "type" in question && (question.type === "text" || question.type === "select")
+        ? question.type
+        : "text";
+      const rawOptions = "options" in question && Array.isArray(question.options)
+        ? (question.options as unknown[]).filter((o): o is string => typeof o === "string")
+        : [];
+      const options = type === "select" ? rawOptions : undefined;
+
       return {
         id,
         label,
         required:
           "required" in question ? Boolean(question.required) : false,
-        type: "text" as const,
+        type,
+        ...(options && options.length > 0 ? { options } : {}),
       };
     });
 

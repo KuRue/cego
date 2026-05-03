@@ -1,9 +1,8 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
-import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
+import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
-import type { Rsvp } from "@cego/db";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
@@ -267,27 +266,13 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
             </AppLink>
 
             {canRsvp ? (
-              <form action={rsvpForEventAction} className="flex flex-wrap items-center gap-2">
-                <input type="hidden" name="eventId" value={event.id} />
-                <button
-                  type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                >
-                  RSVP
-                </button>
-                <input
-                  name="plusOneName"
-                  type="text"
-                  placeholder="+1 name (optional)"
-                  className="h-10 rounded-xl px-4 text-sm outline-none"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                />
-              </form>
+              <AppLink
+                href={`/events/${event.slug}/rsvp`}
+                className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                RSVP
+              </AppLink>
             ) : null}
 
             {isCancelableRsvp ? (
@@ -365,18 +350,37 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
                   <span style={{ color: "var(--color-danger)" }}> *</span>
                 ) : null}
               </span>
-              <textarea
-                name={`answer:${question.id}`}
-                required={question.required}
-                defaultValue={readAnswer(response?.answersJson, question.id)}
-                rows={3}
-                className="min-h-20 rounded-xl px-4 py-3 text-sm outline-none"
-                style={{
-                  background: "var(--color-surface-hover)",
-                  border: "1px solid var(--color-surface-border)",
-                  color: "var(--color-foreground)",
-                }}
-              />
+              {question.type === "select" && question.options ? (
+                <select
+                  name={`answer:${question.id}`}
+                  required={question.required}
+                  defaultValue={readAnswer(response?.answersJson, question.id)}
+                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                >
+                  <option value="">Select...</option>
+                  {question.options.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              ) : (
+                <textarea
+                  name={`answer:${question.id}`}
+                  required={question.required}
+                  defaultValue={readAnswer(response?.answersJson, question.id)}
+                  rows={3}
+                  className="min-h-20 rounded-xl px-4 py-3 text-sm outline-none"
+                  style={{
+                    background: "var(--color-surface-hover)",
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                />
+              )}
             </label>
           ))
         ) : (

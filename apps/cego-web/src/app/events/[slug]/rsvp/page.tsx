@@ -1,0 +1,256 @@
+import AppLink from "@/components/app-link";
+import { notFound } from "next/navigation";
+import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
+import Navbar from "@/components/navbar";
+import { rsvpForEventAction } from "@/lib/event-actions";
+import { getRsvpPageData } from "@/lib/events";
+import { getCurrentMember } from "@/lib/session";
+import { getNavbarBrand } from "@/lib/settings";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "RSVP",
+};
+
+export default async function RsvpPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const brand = await getNavbarBrand();
+  const member = await getCurrentMember();
+
+  if (!member || member.groupStatus !== "member") {
+    return (
+      <>
+        <Navbar brand={brand} />
+        <main className="page-shell mx-auto max-w-3xl px-5 py-16">
+          <div className="glass-lg rounded-2xl p-8 text-center">
+            <h1 className="text-xl font-semibold">Sign in to RSVP</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              You need to be a group member to register for events.
+            </p>
+            <AppLink
+              href="/sign-in"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+            >
+              Sign in with Telegram
+            </AppLink>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const { slug } = await params;
+  const data = await getRsvpPageData(member.id, slug);
+
+  if (!data) notFound();
+
+  const alreadyRsvpd =
+    data.rsvp && data.rsvp.status !== "cancelled";
+
+  return (
+    <>
+      <Navbar
+        member={{
+          telegramDisplayName: member.telegramDisplayName,
+          telegramPhotoUrl: member.telegramPhotoUrl,
+          isAdmin: member.isAdmin,
+        }}
+        brand={brand}
+      />
+      <main className="page-shell mx-auto max-w-3xl px-5 pb-16 pt-8">
+        <div className="mb-5">
+          <AppLink
+            href={`/events/${slug}`}
+            className="text-sm font-semibold"
+            style={{ color: "var(--color-accent)" }}
+          >
+            Back to event
+          </AppLink>
+        </div>
+
+        <h1 className="text-3xl font-semibold">Register for {data.event.title}</h1>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <StatusBadge status={data.event.status} label={eventStatusLabel(data.event.status, data.event.startsAt)} />
+          {alreadyRsvpd ? (
+            <StatusBadge status={data.rsvp!.status} label={rsvpStatusLabel(data.rsvp!.status)} />
+          ) : null}
+        </div>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          {data.confirmedCount}/{data.event.capacity} spots filled
+          {data.waitlistedCount > 0 ? `; ${data.waitlistedCount} waitlisted` : ""}
+          {data.event.priceCents !== null ? ` · ${formatPrice(data.event.priceCents, data.event.currency)}` : ""}
+        </p>
+
+        {alreadyRsvpd ? (
+          <div className="glass-lg mt-8 rounded-2xl p-6">
+            <p className="text-lg font-semibold">You&apos;re registered!</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Your RSVP status: <strong>{rsvpStatusLabel(data.rsvp!.status)}</strong>
+              {data.plusOne && data.plusOne.status !== "cancelled" ? (
+                <> · +1: <strong>{data.plusOne.plusOneName}</strong> ({rsvpStatusLabel(data.plusOne.status)})</>
+              ) : null}
+            </p>
+            <AppLink
+              href={`/events/${slug}`}
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{
+                background: "var(--color-surface-hover)",
+                border: "1px solid var(--color-surface-border)",
+                color: "var(--color-foreground)",
+              }}
+            >
+              Back to event
+            </AppLink>
+          </div>
+        ) : (
+          <form action={rsvpForEventAction} className="mt-8 grid gap-8">
+            <input type="hidden" name="eventId" value={data.event.id} />
+            <input type="hidden" name="returnTo" value={`/events/${slug}`} />
+            {data.survey ? (
+              <input type="hidden" name="surveyId" value={data.survey.id} />
+            ) : null}
+
+            {data.event.priceCents !== null ? (
+              <Section title="Pricing">
+                <p className="text-lg font-semibold">
+                  {formatPrice(data.event.priceCents, data.event.currency)}
+                  <span className="ml-2 text-sm font-normal" style={{ color: "var(--color-muted)" }}>per person</span>
+                </p>
+                {data.event.refundPolicyText ? (
+                  <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                    {data.event.refundPolicyText}
+                  </p>
+                ) : null}
+              </Section>
+            ) : null}
+
+            {data.event.rulesText || data.event.termsText ? (
+              <Section title="Policies">
+                <div className="grid gap-4">
+                  {data.event.rulesText ? (
+                    <TextBlock title="Rules" body={data.event.rulesText} />
+                  ) : null}
+                  {data.event.termsText ? (
+                    <TextBlock title="Terms" body={data.event.termsText} />
+                  ) : null}
+                </div>
+              </Section>
+            ) : null}
+
+            <Section title="Plus one">
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                Bringing someone? Enter their name and they&apos;ll be added as your +1.
+                {data.event.priceCents !== null ? (
+                  <> This adds {formatPrice(data.event.priceCents, data.event.currency)} to your total.</>
+                ) : null}
+              </p>
+              <input
+                name="plusOneName"
+                type="text"
+                placeholder="Plus one's name (optional)"
+                className="mt-3 h-11 w-full rounded-xl px-4 text-sm outline-none"
+                style={{
+                  background: "var(--color-surface-hover)",
+                  border: "1px solid var(--color-surface-border)",
+                  color: "var(--color-foreground)",
+                }}
+              />
+            </Section>
+
+            {data.survey && data.survey.schema.questions.length > 0 ? (
+              <Section title={data.survey.title}>
+                <div className="grid gap-4">
+                  {data.survey.schema.questions.map((question) => (
+                    <label key={question.id} className="grid gap-1.5 text-sm">
+                      <span className="font-medium">
+                        {question.label}
+                        {question.required ? (
+                          <span style={{ color: "var(--color-danger)" }}> *</span>
+                        ) : null}
+                      </span>
+                      {question.type === "select" && question.options ? (
+                        <select
+                          name={`answer:${question.id}`}
+                          required={question.required}
+                          className="h-11 rounded-xl px-4 text-sm outline-none"
+                          style={{
+                            background: "var(--color-surface-hover)",
+                            border: "1px solid var(--color-surface-border)",
+                            color: "var(--color-foreground)",
+                          }}
+                        >
+                          <option value="">Select...</option>
+                          {question.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <textarea
+                          name={`answer:${question.id}`}
+                          required={question.required}
+                          rows={2}
+                          className="min-h-16 rounded-xl px-4 py-3 text-sm outline-none"
+                          style={{
+                            background: "var(--color-surface-hover)",
+                            border: "1px solid var(--color-surface-border)",
+                            color: "var(--color-foreground)",
+                          }}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-surface-border)" }}>
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                By registering you confirm that you&apos;ve read and agree to the event policies
+                {data.event.termsText ? " and terms" : ""}.
+              </p>
+              <button
+                type="submit"
+                className="mt-4 h-11 w-full rounded-xl px-5 text-sm font-semibold transition sm:w-auto"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                Confirm RSVP
+              </button>
+            </div>
+          </form>
+        )}
+      </main>
+    </>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="glass-lg rounded-2xl p-5">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function TextBlock({ title, body }: { title: string; body: string }) {
+  return (
+    <section>
+      <h3 className="font-semibold">{title}</h3>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-7" style={{ color: "var(--color-muted)" }}>
+        {body}
+      </p>
+    </section>
+  );
+}
+
+function formatPrice(priceCents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(priceCents / 100);
+}
