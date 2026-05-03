@@ -147,7 +147,6 @@ a {
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
   box-shadow: var(--glass-inset), var(--glass-shadow);
-  isolation: isolate;
 }
 
 .glass-lg {
@@ -156,7 +155,6 @@ a {
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
   box-shadow: var(--glass-inset), var(--glass-shadow-lg);
-  isolation: isolate;
 }
 
 .glass-hover:hover {
