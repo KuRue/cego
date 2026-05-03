@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getPublicUrl } from "@/lib/public-url";
 import { setSessionCookie } from "@/lib/session";
 import { createTelegramLoginWidgetSession } from "@/lib/telegram-session";
 
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
     const session = await createTelegramLoginWidgetSession(
       requestUrl.searchParams,
     );
-    const response = NextResponse.redirect(new URL("/dashboard", requestUrl));
+    const response = NextResponse.redirect(getPublicUrl("/dashboard"));
 
     if (session.member.id) {
       setSessionCookie(response, {
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
 
     return response;
   } catch {
-    const redirectUrl = new URL("/sign-in", requestUrl);
+    const redirectUrl = getPublicUrl("/sign-in");
     redirectUrl.searchParams.set("error", "telegram_login_failed");
 
     return NextResponse.redirect(redirectUrl);

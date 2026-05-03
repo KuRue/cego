@@ -142,6 +142,11 @@ async function resolveTelegramGroupStatus(
     });
   } catch (error) {
     if (error instanceof TelegramBotApiError) {
+      console.warn("Telegram group membership check failed.", {
+        chatId,
+        telegramId: String(telegramUser.id),
+        reason: error.message,
+      });
       return "unknown";
     }
 

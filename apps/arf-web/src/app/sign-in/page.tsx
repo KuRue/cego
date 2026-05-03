@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { getPublicUrl } from "@/lib/public-url";
 import TelegramLoginWidget from "./telegram-login-widget";
 
 export const metadata = {
@@ -90,17 +91,5 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 }
 
 async function getTelegramAuthUrl(): Promise<string> {
-  const requestHeaders = await headers();
-  const forwardedProto = requestHeaders.get("x-forwarded-proto");
-  const host = requestHeaders.get("host");
-
-  if (host) {
-    const defaultProto = host.startsWith("localhost") ? "http" : "https";
-    return `${forwardedProto ?? defaultProto}://${host}/api/telegram/login`;
-  }
-
-  return new URL(
-    "/api/telegram/login",
-    process.env.APP_BASE_URL ?? "https://arf.kurue.com",
-  ).toString();
+  return getPublicUrl("/api/telegram/login", await headers()).toString();
 }
