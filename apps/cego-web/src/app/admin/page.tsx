@@ -1,7 +1,6 @@
 import AppLink from "@/components/app-link";
 import { getAdminEvents } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
-import { getAdminSurveys } from "@/lib/surveys";
 import Navbar from "@/components/navbar";
 import { getSiteSettings } from "@/lib/settings";
 
@@ -39,16 +38,11 @@ export default async function AdminPage() {
     );
   }
 
-  const [eventOverviews, surveyOverviews] = await Promise.all([
-    getAdminEvents(),
-    getAdminSurveys(),
-  ]);
+  const eventOverviews = await getAdminEvents();
 
   const openEvents = eventOverviews.filter(
     (e) => e.event.status === "open" || e.event.status === "full",
   );
-  const totalConfirmed = openEvents.reduce((sum, e) => sum + e.confirmedCount, 0);
-  const totalWaitlisted = openEvents.reduce((sum, e) => sum + e.waitlistedCount, 0);
 
   return (
     <>
@@ -65,29 +59,6 @@ export default async function AdminPage() {
         <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
           Manage events, surveys, members, and site settings.
         </p>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Open events"
-            value={String(openEvents.length)}
-            href="/admin/events"
-          />
-          <StatCard
-            label="Confirmed RSVPs"
-            value={String(totalConfirmed)}
-            href="/admin/events"
-          />
-          <StatCard
-            label="Waitlisted"
-            value={String(totalWaitlisted)}
-            href="/admin/events"
-          />
-          <StatCard
-            label="Surveys"
-            value={String(surveyOverviews.length)}
-            href="/admin/surveys"
-          />
-        </div>
 
         {openEvents.length > 0 ? (
           <section className="mt-10">
@@ -135,17 +106,6 @@ export default async function AdminPage() {
         </nav>
       </main>
     </>
-  );
-}
-
-function StatCard({ label, value, href }: { label: string; value: string; href: string }) {
-  return (
-    <AppLink href={href} className="glass glass-hover rounded-2xl p-5 transition">
-      <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-        {label}
-      </p>
-      <p className="mt-2 text-3xl font-semibold">{value}</p>
-    </AppLink>
   );
 }
 
