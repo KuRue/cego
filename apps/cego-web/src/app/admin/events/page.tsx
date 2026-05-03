@@ -1,0 +1,303 @@
+import {
+  createEventAction,
+  updateEventAction,
+  updateRsvpStatusAction,
+} from "@/lib/event-actions";
+import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
+import { requireAdminMember } from "@/lib/session";
+import Navbar from "@/components/navbar";
+import { Badge, StatusBadge } from "@/components/badge";
+import { getNavbarBrand } from "@/lib/settings";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Events",
+};
+
+export default async function AdminEventsPage() {
+  const member = await requireAdminMember();
+  const brand = await getNavbarBrand();
+  const eventOverviews = await getAdminEvents();
+
+  return (
+    <>
+      <Navbar
+        member={{
+          telegramDisplayName: member.telegramDisplayName,
+          telegramPhotoUrl: member.telegramPhotoUrl,
+          isAdmin: member.isAdmin,
+        }}
+        brand={brand}
+      />
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold">Events</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              {eventOverviews.length} event{eventOverviews.length === 1 ? "" : "s"} total
+            </p>
+          </div>
+          <CreateEventButton />
+        </div>
+
+        <div className="mt-8 grid gap-5">
+          {eventOverviews.length === 0 ? (
+            <div className="glass-lg rounded-2xl p-8 text-center">
+              <p className="font-medium">No events yet</p>
+              <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                Create the first event to start.
+              </p>
+            </div>
+          ) : (
+            eventOverviews.map((overview) => (
+              <EventRow key={overview.event.id} overview={overview} />
+            ))
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
+
+function CreateEventButton() {
+  return (
+    <form action={createEventAction} className="inline-block">
+      <input type="hidden" name="title" value="New event" />
+      <input type="hidden" name="slug" value={`event-${Date.now()}`} />
+      <input type="hidden" name="type" value="local_event" />
+      <input type="hidden" name="status" value="draft" />
+      <input type="hidden" name="capacity" value="12" />
+      <input type="hidden" name="startsAt" value={new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16)} />
+      <button
+        type="submit"
+        className="inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+      >
+        Create event
+      </button>
+    </form>
+  );
+}
+
+function EventRow({ overview }: { overview: AdminEventWithRsvps }) {
+  const { event, confirmedCount, waitlistedCount, rsvps } = overview;
+
+  return (
+    <article className="glass-lg rounded-2xl p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap gap-2">
+            <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
+            <StatusBadge status={event.status} />
+          </div>
+          <h2 className="mt-3 text-xl font-semibold">{event.title}</h2>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+            {formatDateRange(event.startsAt, event.endsAt)}
+          </p>
+          {event.locationText ? (
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              {event.locationText}
+            </p>
+          ) : null}
+          <div className="mt-3 flex gap-4 text-sm">
+            <span>{confirmedCount}/{event.capacity} confirmed</span>
+            {waitlistedCount > 0 ? <span>{waitlistedCount} waitlisted</span> : null}
+            {event.priceCents !== null ? (
+              <span>{formatPrice(event.priceCents, event.currency)}</span>
+            ) : null}
+          </div>
+        </div>
+        <span className="text-sm" style={{ color: "var(--color-muted)" }}>
+          {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      <details className="mt-5 pt-5" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+        <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
+          Edit event
+        </summary>
+        <EventForm action={updateEventAction} submitLabel="Save event" event={event} />
+      </details>
+
+      {rsvps.length > 0 ? (
+        <details className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+          <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
+            RSVPs ({rsvps.length})
+          </summary>
+          <div className="mt-4 grid gap-3">
+            {rsvps.map(({ rsvp, member: m }) => (
+              <div key={rsvp.id} className="glass rounded-xl p-4">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+                  <div>
+                    <p className="font-medium">{m.telegramDisplayName}</p>
+                    <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                      {m.telegramUsername ? `@${m.telegramUsername}` : m.email || m.groupStatus}
+                    </p>
+                    <StatusBadge status={rsvp.status} />
+                  </div>
+                  <form action={updateRsvpStatusAction} className="flex gap-2">
+                    <input type="hidden" name="rsvpId" value={rsvp.id} />
+                    <select
+                      name="status"
+                      defaultValue={rsvp.status}
+                      className="h-10 rounded-xl px-3 text-sm outline-none"
+                      style={{
+                        background: "var(--color-surface-hover)",
+                        border: "1px solid var(--color-surface-border)",
+                      }}
+                    >
+                      <option value="confirmed">confirmed</option>
+                      <option value="waitlisted">waitlisted</option>
+                      <option value="cancelled">cancelled</option>
+                    </select>
+                    <button
+                      type="submit"
+                      className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                      style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                    >
+                      Update
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+    </article>
+  );
+}
+
+function EventForm({
+  action,
+  submitLabel,
+  event,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  submitLabel: string;
+  event?: AdminEventWithRsvps["event"];
+}) {
+  return (
+    <form action={action} className="mt-4 grid gap-4">
+      {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Type">
+          <select name="type" defaultValue={event?.type ?? "local_event"} className="form-select">
+            <option value="major_event">major_event</option>
+            <option value="local_event">local_event</option>
+          </select>
+        </Field>
+        <Field label="Status">
+          <select name="status" defaultValue={event?.status ?? "draft"} className="form-select">
+            <option value="draft">draft</option>
+            <option value="open">open</option>
+            <option value="full">full</option>
+            <option value="closed">closed</option>
+            <option value="archived">archived</option>
+          </select>
+        </Field>
+      </div>
+      <Field label="Title">
+        <input name="title" required defaultValue={event?.title} className="form-input" />
+      </Field>
+      <Field label="Description">
+        <textarea name="description" defaultValue={event?.description ?? ""} rows={4} className="form-textarea" />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Slug">
+          <input name="slug" required defaultValue={event?.slug} className="form-input" />
+        </Field>
+        <Field label="Capacity">
+          <input name="capacity" required type="number" min="1" defaultValue={event?.capacity ?? 12} className="form-input" />
+        </Field>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Starts">
+          <input name="startsAt" required type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.startsAt) : ""} className="form-input" />
+        </Field>
+        <Field label="Ends">
+          <input name="endsAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.endsAt) : ""} className="form-input" />
+        </Field>
+      </div>
+      <Field label="Location text">
+        <input name="locationText" defaultValue={event?.locationText ?? ""} className="form-input" />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
+        <Field label="Price">
+          <input
+            name="price"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={event?.priceCents !== null && event?.priceCents !== undefined ? (event.priceCents / 100).toFixed(2) : ""}
+            className="form-input"
+          />
+        </Field>
+        <Field label="Currency">
+          <input name="currency" maxLength={3} defaultValue={event?.currency ?? "USD"} className="form-input uppercase" />
+        </Field>
+        <label className="flex items-end gap-2 pb-2 text-sm">
+          <input name="paymentRequired" type="checkbox" defaultChecked={event?.paymentRequired ?? false} className="h-4 w-4" />
+          <span className="font-medium">Payment required</span>
+        </label>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Field label="Rules">
+          <textarea name="rulesText" defaultValue={event?.rulesText ?? ""} rows={4} className="form-textarea" />
+        </Field>
+        <Field label="Terms">
+          <textarea name="termsText" defaultValue={event?.termsText ?? ""} rows={4} className="form-textarea" />
+        </Field>
+      </div>
+      <Field label="Cancellation/refund policy">
+        <textarea name="refundPolicyText" defaultValue={event?.refundPolicyText ?? ""} rows={3} className="form-textarea" />
+      </Field>
+      <Field label="Organizer notes">
+        <textarea name="organizerNotes" defaultValue={event?.organizerNotes ?? ""} rows={3} className="form-textarea" />
+      </Field>
+      <button
+        type="submit"
+        className="h-11 rounded-xl px-5 text-sm font-semibold transition sm:w-fit"
+        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+      >
+        {submitLabel}
+      </button>
+    </form>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="grid gap-1 text-sm">
+      <span className="font-medium">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function formatDateRange(startsAt: Date, endsAt: Date | null): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  if (!endsAt) return formatter.format(startsAt);
+  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
+}
+
+function toDateTimeLocalValue(date: Date | null): string {
+  if (!date) return "";
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+}
+
+function formatPrice(priceCents: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(priceCents / 100);
+}

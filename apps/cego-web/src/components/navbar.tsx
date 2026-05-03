@@ -132,7 +132,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
                         Admin Dashboard
                       </AppLink>
                       <AppLink
-                        href="/admin#settings"
+                        href="/admin/settings"
                         onClick={() => setMenuOpen(false)}
                         className="block px-4 py-2.5 text-sm transition"
                         style={{ color: "var(--color-foreground)" }}
