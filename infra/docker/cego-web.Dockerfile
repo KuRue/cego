@@ -33,13 +33,11 @@ ENV PORT=3000
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs \
-  && mkdir -p /data/uploads && chown nextjs:nodejs /data/uploads
+  && mkdir -p /data/uploads
 
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/public ./apps/cego-web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/.next/static ./apps/cego-web/.next/static
-
-USER nextjs
 
 EXPOSE 3000
 CMD ["node", "apps/cego-web/server.js"]
