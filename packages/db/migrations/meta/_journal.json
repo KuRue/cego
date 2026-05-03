@@ -22,6 +22,13 @@
       "when": 1777782235735,
       "tag": "0002_fluffy_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777783072141,
+      "tag": "0003_minor_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

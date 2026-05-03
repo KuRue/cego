@@ -1,30 +1,30 @@
 services:
-  arf-postgres:
+  cego-postgres:
     image: postgres:16-alpine
-    container_name: arf-postgres
+    container_name: cego-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: arf
-      POSTGRES_USER: arf
-      POSTGRES_PASSWORD: arf_dev_password
+      POSTGRES_DB: cego
+      POSTGRES_USER: cego
+      POSTGRES_PASSWORD: cego_dev_password
     ports:
-      - "${ARF_POSTGRES_PORT:-15432}:5432"
+      - "${CEGO_POSTGRES_PORT:-15432}:5432"
     volumes:
-      - arf_postgres_data:/var/lib/postgresql/data
+      - cego_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arf -d arf"]
+      test: ["CMD-SHELL", "pg_isready -U cego -d cego"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  arf-redis:
+  cego-redis:
     image: redis:7-alpine
-    container_name: arf-redis
+    container_name: cego-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - arf_redis_data:/data
+      - cego_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -32,5 +32,5 @@ services:
       retries: 5
 
 volumes:
-  arf_postgres_data:
-  arf_redis_data:
+  cego_postgres_data:
+  cego_redis_data:

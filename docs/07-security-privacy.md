@@ -2,31 +2,31 @@
 
 ## Security Model
 
-ARF is a private community operations system. Security should assume that event details, contact information, survey answers, and rental planning information are sensitive.
+cego is a private community operations system. Security should assume that event details, contact information, survey answers, and private-location planning information are sensitive.
 
 ## Identity
 
 - Telegram is the primary identity provider.
 - Telegram ID is the stable identity key.
-- ARF does not create password accounts.
-- ARF must verify Telegram Mini App init data before creating a session.
-- ARF must check configured Telegram group membership before allowing RSVP flows.
+- cego does not create password accounts.
+- cego must verify Telegram Mini App init data before creating a session.
+- cego must check configured Telegram group membership before allowing RSVP flows.
 
 ## Admin Protection
 
 Admin access uses two layers:
 
-1. Cloudflare Access for ARF admin routes.
-2. App-level organizer roles inside ARF.
+1. Cloudflare Access for cego admin routes.
+2. App-level organizer roles inside cego.
 
 Cloudflare Access protects the perimeter. App roles protect actions and records after login.
 
-ARF grants app admin access when either:
+cego grants app admin access when either:
 
-- The member Telegram ID is listed in `ARF_ADMIN_TELEGRAM_IDS`.
+- The member Telegram ID is listed in `CEGO_ADMIN_TELEGRAM_IDS`.
 - The member appears in Telegram `getChatAdministrators` for the configured `TELEGRAM_GROUP_ID` during sign-in.
 
-Telegram group admin sync only updates ARF admin status after a successful Telegram administrator lookup. If Telegram admin lookup fails, ARF keeps the previous stored admin value instead of guessing.
+Telegram group admin sync only updates cego admin status after a successful Telegram administrator lookup. If Telegram admin lookup fails, cego keeps the previous stored admin value instead of guessing.
 
 ## Data Handling
 
@@ -37,15 +37,15 @@ Collect only data needed to run events:
 - RSVP status.
 - Rooming, dietary, accessibility, travel, and privacy preferences.
 - Survey responses.
-- Organizer notes in ARF.
+- Organizer notes in cego.
 
-Avoid collecting unnecessary legal identity, address, or payment information in ARF. Payment method information should live only in Stripe if direct payments are added later.
+Avoid collecting unnecessary legal identity, address, or payment information in cego. Payment method information should live only in Stripe if direct payments are added later.
 
 ## Sensitive Data
 
 Treat these as organizer-only:
 
-- Exact rental address before attendee approval.
+- Exact private event address before attendee approval.
 - Accessibility needs.
 - Dietary restrictions.
 - Rooming preferences.
@@ -63,14 +63,14 @@ Final retention policy should be decided before production launch. Initial defau
 
 ## Source Availability
 
-Because ARF-specific code is AGPLv3, deployed network users must be able to access the corresponding source for the running ARF application. The app should include a visible source link when public code hosting is ready.
+Because cego-specific code is AGPLv3, deployed network users must be able to access the corresponding source for the running cego application. The app should include a visible source link when public code hosting is ready.
 
 ## Privacy Policy Placeholder
 
 Before inviting real attendees, publish a plain-language privacy policy explaining:
 
-- What ARF collects.
-- Why ARF collects it.
+- What cego collects.
+- Why cego collects it.
 - Which services process it.
 - Who can see organizer-only information.
 - How members can request correction or deletion.

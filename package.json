@@ -1,19 +1,19 @@
 {
-  "name": "arf",
+  "name": "cego",
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "dev": "npm --prefix apps/arf-web run dev",
-    "build": "npm --prefix apps/arf-web run build",
-    "start": "npm --prefix apps/arf-web run start",
-    "lint": "npm --prefix apps/arf-web run lint",
+    "dev": "npm --prefix apps/cego-web run dev",
+    "build": "npm --prefix apps/cego-web run build",
+    "start": "npm --prefix apps/cego-web run start",
+    "lint": "npm --prefix apps/cego-web run lint",
     "test": "npm --prefix packages/telegram run test",
-    "typecheck": "npm --prefix packages/telegram run typecheck && npm --prefix packages/db run typecheck && npm --prefix apps/arf-web run typecheck",
+    "typecheck": "npm --prefix packages/telegram run typecheck && npm --prefix packages/db run typecheck && npm --prefix apps/cego-web run typecheck",
     "docker:dev": "docker compose --env-file .env -f infra/docker/compose.dev.yml up",
     "docker:prod": "docker compose --env-file .env -f infra/docker/compose.prod.yml up -d --build",
     "docker:prod:config": "docker compose --env-file .env -f infra/docker/compose.prod.yml config",
-    "docker:prod:migrate": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm arf-migrate",
-    "docker:prod:backup": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm arf-postgres-backup"
+    "docker:prod:migrate": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm cego-migrate",
+    "docker:prod:backup": "docker compose --env-file .env -f infra/docker/compose.prod.yml --profile tools run --rm cego-postgres-backup"
   }
 }

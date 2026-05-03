@@ -1,6 +1,6 @@
-# ARF Database Package
+# cego Database Package
 
-This package contains the ARF-owned Postgres schema, migrations, and typed database helpers.
+This package contains the cego-owned Postgres schema, migrations, and typed database helpers.
 
 Planned entities:
 

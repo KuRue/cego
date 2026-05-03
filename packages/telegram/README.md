@@ -1,4 +1,4 @@
-# ARF Telegram Package
+# cego Telegram Package
 
 Utilities for Telegram Mini App identity verification, Telegram Login Widget verification, and Telegram Bot API calls.
 

@@ -1,38 +1,38 @@
 # Telegram Bot Setup
 
-ARF uses one Telegram bot for Mini App launch links, browser Telegram SSO, group membership checks, and later notifications.
+cego uses one Telegram bot for Mini App launch links, browser Telegram SSO, group membership checks, and later notifications.
 
 ## BotFather Setup
 
 1. Create the bot with `/newbot`.
 2. Save the bot token as `TELEGRAM_BOT_TOKEN`.
 3. Save the bot username without `@` as `TELEGRAM_BOT_USERNAME`.
-4. Configure the Mini App with `/newapp` and set the web app URL to `https://arf.kurue.com/mini-app`.
-5. Configure browser login with `/setdomain` and set the domain to `arf.kurue.com`.
-6. Add the bot to the ARF Telegram group.
+4. Configure the Mini App with `/newapp` and set the web app URL to `https://cego.example.com/mini-app`.
+5. Configure browser login with `/setdomain` and set the domain to `cego.example.com`.
+6. Add the bot to the community Telegram group.
 7. Promote the bot to an administrator if group membership checks fail for normal users.
 
-## ARF Environment
+## cego Environment
 
 Required Telegram variables:
 
 ```sh
 TELEGRAM_BOT_TOKEN=replace-with-telegram-bot-token
-TELEGRAM_BOT_USERNAME=arf_bot
+TELEGRAM_BOT_USERNAME=cego_bot
 TELEGRAM_GROUP_ID=replace-with-telegram-group-id
-TELEGRAM_WEBAPP_URL=https://arf.kurue.com/mini-app
-ARF_ADMIN_TELEGRAM_IDS=123456789
+TELEGRAM_WEBAPP_URL=https://cego.example.com/mini-app
+CEGO_ADMIN_TELEGRAM_IDS=123456789
 ```
 
-`ARF_ADMIN_TELEGRAM_IDS` is a comma or whitespace separated list of Telegram IDs that should become ARF admins when their member profile is created or updated.
+`CEGO_ADMIN_TELEGRAM_IDS` is a comma or whitespace separated list of Telegram IDs that should become cego admins when their member profile is created or updated.
 
-ARF also promotes Telegram group administrators to ARF admins during sign-in by calling `getChatAdministrators` for `TELEGRAM_GROUP_ID`. Keep `ARF_ADMIN_TELEGRAM_IDS` as the bootstrap override in case Telegram admin lookup is unavailable.
+cego also promotes Telegram group administrators to cego admins during sign-in by calling `getChatAdministrators` for `TELEGRAM_GROUP_ID`. Keep `CEGO_ADMIN_TELEGRAM_IDS` as the bootstrap override in case Telegram admin lookup is unavailable.
 
 ## Sign-In Paths
 
 - Browser users open `/sign-in`, use Telegram Login Widget, and return through `/api/telegram/login`.
 - Telegram app users open `/mini-app`, which sends `Telegram.WebApp.initData` to `/api/telegram/session`.
-- Both paths create or update the same member profile and issue the same `arf_session` cookie.
+- Both paths create or update the same member profile and issue the same `cego_session` cookie.
 
 ## Sanity Checks
 
@@ -40,4 +40,4 @@ ARF also promotes Telegram group administrators to ARF admins during sign-in by 
 - A valid Telegram Login Widget callback redirects to `/dashboard`.
 - `/mini-app` still creates a session from Telegram Mini App init data.
 - Non-group users can authenticate but remain blocked from RSVP flows.
-- Admin Telegram IDs listed in `ARF_ADMIN_TELEGRAM_IDS` show organizer access after sign-in.
+- Admin Telegram IDs listed in `CEGO_ADMIN_TELEGRAM_IDS` show organizer access after sign-in.

@@ -1,34 +1,34 @@
-name: arf
+name: cego
 
 services:
-  arf-web:
+  cego-web:
     build:
       context: ../..
-      dockerfile: infra/docker/arf-web.Dockerfile
+      dockerfile: infra/docker/cego-web.Dockerfile
       target: runner
-    image: arf-web:latest
+    image: cego-web:latest
     restart: unless-stopped
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
-      APP_BASE_URL: ${APP_BASE_URL:-https://arf.kurue.com}
-      SOURCE_CODE_URL: ${SOURCE_CODE_URL:-https://github.com/KuRue/ARF}
-      DATABASE_URL: postgres://${ARF_POSTGRES_USER:-arf}:${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}@arf-postgres:5432/${ARF_POSTGRES_DB:-arf}
-      REDIS_URL: redis://arf-redis:6379
+      APP_BASE_URL: ${APP_BASE_URL:-https://cego.example.com}
+      SOURCE_CODE_URL: ${SOURCE_CODE_URL:-https://github.com/KuRue/cego}
+      DATABASE_URL: postgres://${CEGO_POSTGRES_USER:-cego}:${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}@cego-postgres:5432/${CEGO_POSTGRES_DB:-cego}
+      REDIS_URL: redis://cego-redis:6379
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
-      ARF_ADMIN_TELEGRAM_IDS: ${ARF_ADMIN_TELEGRAM_IDS:?set ARF_ADMIN_TELEGRAM_IDS}
+      CEGO_ADMIN_TELEGRAM_IDS: ${CEGO_ADMIN_TELEGRAM_IDS:?set CEGO_ADMIN_TELEGRAM_IDS}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
       TELEGRAM_GROUP_ID: ${TELEGRAM_GROUP_ID:?set TELEGRAM_GROUP_ID}
-      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-https://arf.kurue.com/mini-app}
-      ARF_DEV_TELEGRAM_MOCK: "false"
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-https://cego.example.com/mini-app}
+      CEGO_DEV_TELEGRAM_MOCK: "false"
     expose:
       - "3000"
     depends_on:
-      arf-postgres:
+      cego-postgres:
         condition: service_healthy
-      arf-redis:
+      cego-redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
@@ -36,54 +36,54 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - arf_edge
-      - arf_data
+      - cego_edge
+      - cego_data
 
-  arf-migrate:
+  cego-migrate:
     build:
       context: ../..
-      dockerfile: infra/docker/arf-web.Dockerfile
+      dockerfile: infra/docker/cego-web.Dockerfile
       target: migrator
-    image: arf-migrate:latest
+    image: cego-migrate:latest
     profiles:
       - tools
     environment:
-      DATABASE_URL: postgres://${ARF_POSTGRES_USER:-arf}:${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}@arf-postgres:5432/${ARF_POSTGRES_DB:-arf}
+      DATABASE_URL: postgres://${CEGO_POSTGRES_USER:-cego}:${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}@cego-postgres:5432/${CEGO_POSTGRES_DB:-cego}
     depends_on:
-      arf-postgres:
+      cego-postgres:
         condition: service_healthy
     networks:
-      - arf_data
+      - cego_data
 
-  arf-postgres:
+  cego-postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${ARF_POSTGRES_DB:-arf}
-      POSTGRES_USER: ${ARF_POSTGRES_USER:-arf}
-      POSTGRES_PASSWORD: ${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${CEGO_POSTGRES_DB:-cego}
+      POSTGRES_USER: ${CEGO_POSTGRES_USER:-cego}
+      POSTGRES_PASSWORD: ${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}
     volumes:
-      - arf_postgres_data:/var/lib/postgresql/data
+      - cego_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - arf_data
+      - cego_data
 
-  arf-redis:
+  cego-redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
-      - arf_redis_data:/data
+      - cego_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - arf_data
+      - cego_data
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -92,39 +92,39 @@ services:
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN}
     depends_on:
-      arf-web:
+      cego-web:
         condition: service_healthy
     networks:
-      - arf_edge
+      - cego_edge
 
-  arf-postgres-backup:
+  cego-postgres-backup:
     image: postgres:16-alpine
     profiles:
       - tools
     environment:
-      PGPASSWORD: ${ARF_POSTGRES_PASSWORD:?set ARF_POSTGRES_PASSWORD}
+      PGPASSWORD: ${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}
     command:
       - /bin/sh
       - -c
       - >-
         mkdir -p /backups &&
-        pg_dump -h arf-postgres -U ${ARF_POSTGRES_USER:-arf} -d ${ARF_POSTGRES_DB:-arf}
-        > /backups/arf-$$(date -u +%Y%m%dT%H%M%SZ).sql
+        pg_dump -h cego-postgres -U ${CEGO_POSTGRES_USER:-cego} -d ${CEGO_POSTGRES_DB:-cego}
+        > /backups/cego-$$(date -u +%Y%m%dT%H%M%SZ).sql
     depends_on:
-      arf-postgres:
+      cego-postgres:
         condition: service_healthy
     volumes:
-      - arf_backups:/backups
+      - cego_backups:/backups
     networks:
-      - arf_data
+      - cego_data
 
 networks:
-  arf_edge:
-    name: arf_edge
-  arf_data:
+  cego_edge:
+    name: cego_edge
+  cego_data:
     internal: true
 
 volumes:
-  arf_postgres_data:
-  arf_redis_data:
-  arf_backups:
+  cego_postgres_data:
+  cego_redis_data:
+  cego_backups:

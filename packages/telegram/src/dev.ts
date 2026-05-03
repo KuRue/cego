@@ -7,9 +7,9 @@ export function getDevTelegramInitData(): VerifiedTelegramInitData {
     startParam: "dev",
     user: {
       id: 100000001,
-      first_name: "ARF",
+      first_name: "cego",
       last_name: "Developer",
-      username: "arf_dev",
+      username: "cego_dev",
       photo_url: undefined,
     },
     raw: {

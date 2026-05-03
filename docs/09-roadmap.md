@@ -8,7 +8,7 @@
 
 ## Phase 1: Technical Scaffold
 
-- Create Next.js TypeScript ARF app.
+- Create Next.js TypeScript cego app.
 - Add AGPL source link placeholder.
 - Add Postgres schema and migrations.
 - Add Docker Compose development stack.
@@ -26,7 +26,7 @@
 
 ## Phase 3: Event And RSVP MVP
 
-- Add annual retreat and mini retreat models.
+- Add major event and local event models.
 - Add member-facing event list.
 - Add RSVP action.
 - Enforce capacity.
@@ -39,17 +39,17 @@
 - Add member survey response UI.
 - Attach responses to member and event.
 - Add organizer survey completion view.
-- Surface relevant preference summaries in ARF admin.
+- Surface relevant preference summaries in cego admin.
 - Add Telegram confirmation, waitlist, and survey reminder notifications.
 
-## Phase 5: ARF-Native Registration And Payment
+## Phase 5: cego-Native Registration And Payment
 
-- Design an ARF-owned annual retreat registration state model.
+- Design a cego-owned major event registration state model.
 - Add organizer approval states only if paid registration needs them.
 - Add direct Stripe Checkout when payment collection is needed.
 - Store Stripe IDs needed for reconciliation and refunds.
-- Send ARF-hosted payment links by Telegram.
-- Keep payment and registration status visible inside ARF.
+- Send cego-hosted payment links by Telegram.
+- Keep payment and registration status visible inside cego.
 
 ## Phase 6: Internal CRM Admin
 
@@ -58,18 +58,18 @@
 - Add organizer-only member notes.
 - Add organizer-managed member tags.
 - Add simple filters for group status, event status, tags, and survey completion.
-- Add richer exports and reporting if ARF admin becomes insufficient.
+- Add richer exports and reporting if cego admin becomes insufficient.
 
 ## Phase 7: Beta Readiness
 
 - Test full Mini App RSVP flow with a small Telegram group.
 - Test under-cap and over-cap event behavior.
 - Test organizer waitlist promotion.
-- Test annual retreat payment flow in Stripe test mode if direct payment is added.
+- Test major event payment flow in Stripe test mode if direct payment is added.
 - Test backups and restore.
 - Publish privacy, conduct, and refund policy drafts.
 
-## Phase 8: Annual Retreat Readiness
+## Phase 8: Major Event Readiness
 
 - Finalize event details and capacity.
 - Finalize surveys and preference questions.

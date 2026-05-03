@@ -1,25 +1,25 @@
 # Contributing
 
-ARF is currently a planning-first project. Early contributions should keep implementation aligned with the documented product and architecture decisions.
+cego is currently a planning-first project. Early contributions should keep implementation aligned with the documented product and architecture decisions.
 
 ## Development Principles
 
 - Keep Telegram as the primary identity provider.
-- Keep ARF as the source of truth for member, RSVP, waitlist, survey, and registration state.
-- Keep v1 CRM behavior inside ARF unless an external CRM need is reintroduced.
-- Keep event registration flows inside ARF unless a concrete external integration need is reintroduced.
+- Keep cego as the source of truth for member, RSVP, waitlist, survey, and registration state.
+- Keep v1 CRM behavior inside cego unless an external CRM need is reintroduced.
+- Keep event registration flows inside cego unless a concrete external integration need is reintroduced.
 - Prefer small vertical slices that can be verified end to end.
 - Do not commit secrets, production data, attendee private information, or `.env` files.
 
 ## Local Setup
 
-Install dependencies for the ARF web app:
+Install dependencies for the cego web app:
 
 ```sh
-npm --prefix apps/arf-web install
+npm --prefix apps/cego-web install
 ```
 
-Run the ARF web app:
+Run the cego web app:
 
 ```sh
 npm run dev

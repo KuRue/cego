@@ -1,10 +1,10 @@
 # Data Model
 
-This document defines the minimum ARF-owned entities. Exact database column names can change during implementation, but the ownership and state model should remain stable.
+This document defines the minimum cego-owned entities. Exact database column names can change during implementation, but the ownership and state model should remain stable.
 
 ## `members`
 
-Represents a Telegram-backed ARF account.
+Represents a Telegram-backed cego account.
 
 Required fields:
 
@@ -23,16 +23,16 @@ Notes:
 
 - `telegram_id` is the stable identity key.
 - Email is collected for event/payment needs, not for password login.
-- ARF should not store Telegram auth payloads longer than needed for verification/debugging.
+- cego should not store Telegram auth payloads longer than needed for verification/debugging.
 
 ## `events`
 
-Represents an annual retreat or mini retreat.
+Represents a major event or local event.
 
 Required fields:
 
 - `id`
-- `type`: `annual_retreat` or `mini_retreat`
+- `type`: `major_event` or `local_event`
 - `title`
 - `slug`
 - `starts_at`
@@ -45,7 +45,7 @@ Required fields:
 
 Notes:
 
-- Exact rental addresses should be treated as sensitive and shown only to approved attendees when appropriate.
+- Exact private event addresses should be treated as sensitive and shown only to approved attendees when appropriate.
 
 ## `rsvps`
 
@@ -69,7 +69,7 @@ Rules:
 - Over-cap RSVPs become `waitlisted`.
 - `confirmed` counts against capacity.
 - `cancelled` does not auto-promote another waitlisted member.
-- Future direct Stripe work should add ARF-native payment tables and store only operational payment status and Stripe IDs needed for reconciliation, never payment method data.
+- Future direct Stripe work should add cego-native payment tables and store only operational payment status and Stripe IDs needed for reconciliation, never payment method data.
 
 ## `surveys`
 

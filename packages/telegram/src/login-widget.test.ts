@@ -7,7 +7,7 @@ import {
   verifyTelegramLoginWidgetData,
 } from "./login-widget";
 
-const BOT_TOKEN = "123456:arf-test-token";
+const BOT_TOKEN = "123456:cego-test-token";
 const NOW_SECONDS = 1_800_000_000;
 
 describe("verifyTelegramLoginWidgetData", () => {
@@ -23,10 +23,10 @@ describe("verifyTelegramLoginWidgetData", () => {
   it("verifies a valid Telegram Login Widget payload", () => {
     const params = signTelegramLoginParams({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       last_name: "Developer",
-      username: "arf_dev",
-      photo_url: "https://t.me/i/userpic/320/arf.jpg",
+      username: "cego_dev",
+      photo_url: "https://t.me/i/userpic/320/cego.jpg",
       auth_date: String(NOW_SECONDS),
     });
 
@@ -35,18 +35,18 @@ describe("verifyTelegramLoginWidgetData", () => {
     expect(verified.authDate).toEqual(new Date(NOW_SECONDS * 1000));
     expect(verified.user).toEqual({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       last_name: "Developer",
-      username: "arf_dev",
-      photo_url: "https://t.me/i/userpic/320/arf.jpg",
+      username: "cego_dev",
+      photo_url: "https://t.me/i/userpic/320/cego.jpg",
     });
-    expect(getTelegramDisplayName(verified.user)).toBe("ARF Developer");
+    expect(getTelegramDisplayName(verified.user)).toBe("cego Developer");
   });
 
   it("rejects an invalid hash", () => {
     const params = signTelegramLoginParams({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       auth_date: String(NOW_SECONDS),
     });
     params.set("hash", "bad-hash");
@@ -59,7 +59,7 @@ describe("verifyTelegramLoginWidgetData", () => {
   it("rejects expired login data", () => {
     const params = signTelegramLoginParams({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       auth_date: String(NOW_SECONDS - 3601),
     });
 
@@ -82,7 +82,7 @@ describe("verifyTelegramLoginWidgetData", () => {
   it("normalizes optional blank profile fields", () => {
     const params = signTelegramLoginParams({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       last_name: "",
       username: "",
       photo_url: "",
@@ -93,12 +93,12 @@ describe("verifyTelegramLoginWidgetData", () => {
 
     expect(verified.user).toEqual({
       id: "100000001",
-      first_name: "ARF",
+      first_name: "cego",
       last_name: undefined,
       username: undefined,
       photo_url: undefined,
     });
-    expect(getTelegramDisplayName(verified.user)).toBe("ARF");
+    expect(getTelegramDisplayName(verified.user)).toBe("cego");
   });
 });
 

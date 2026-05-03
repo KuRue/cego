@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { verifyTelegramInitData } from "./init-data";
 
-const BOT_TOKEN = "123456:arf-test-token";
+const BOT_TOKEN = "123456:cego-test-token";
 const NOW_SECONDS = 1_800_000_000;
 
 describe("verifyTelegramInitData", () => {
@@ -21,8 +21,8 @@ describe("verifyTelegramInitData", () => {
       query_id: "AAHdF6IQAAAAAN0XohDhrOrc",
       user: JSON.stringify({
         id: 100000001,
-        first_name: "ARF",
-        username: "arf_dev",
+        first_name: "cego",
+        username: "cego_dev",
       }),
       auth_date: String(NOW_SECONDS),
       signature: "telegram-third-party-signature",

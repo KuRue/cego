@@ -10,7 +10,7 @@ let dbClient: DbClient | null = null;
 
 export function getDb(databaseUrl = process.env.DATABASE_URL): DbClient {
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required to initialize the ARF database.");
+    throw new Error("DATABASE_URL is required to initialize the cego database.");
   }
 
   if (!sqlClient || !dbClient) {
