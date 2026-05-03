@@ -68,7 +68,7 @@ export default async function AdminMembersPage({
       />
       <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section className="grid gap-3 md:grid-cols-4">
-          <Metric label="Visible members" value={String(directory.members.length)} />
+          <Metric label="Visible members" value={String(directory.totals.members)} />
           <Metric label="Group members" value={String(directory.totals.groupMembers)} />
           <Metric label="Not members" value={String(directory.totals.nonMembers)} />
           <Metric label="Unknown" value={String(directory.totals.unknown)} />
@@ -241,10 +241,14 @@ function MemberRow({ summary }: { summary: AdminMemberSummary }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
           <Metric label="RSVPs" value={String(summary.rsvpCount)} />
           <Metric label="Surveys" value={String(summary.surveyResponseCount)} />
           <Metric label="Notes" value={String(summary.noteCount)} />
+          <Metric
+            label={summary.latestActivityLabel}
+            value={formatShortDate(summary.latestActivityAt)}
+          />
         </div>
 
         <Link
@@ -268,4 +272,11 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 font-semibold">{value}</p>
     </div>
   );
+}
+
+function formatShortDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }

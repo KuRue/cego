@@ -40,6 +40,8 @@ export interface AdminMemberSummary {
   rsvpCount: number;
   surveyResponseCount: number;
   noteCount: number;
+  latestActivityAt: Date;
+  latestActivityLabel: string;
   tags: MemberTag[];
 }
 
@@ -310,7 +312,15 @@ async function summarizeMembers(
 
   const db = getDb();
   const memberIds = memberRows.map((member) => member.id);
-  const [rsvpCountRows, surveyCountRows, noteCountRows, tagRows] =
+  const [
+    rsvpCountRows,
+    surveyCountRows,
+    noteCountRows,
+    tagRows,
+    latestRsvpRows,
+    latestSurveyRows,
+    latestNoteRows,
+  ] =
     await Promise.all([
       db
         .select({
@@ -345,12 +355,39 @@ async function summarizeMembers(
         .innerJoin(memberTags, eq(memberTagAssignments.tagId, memberTags.id))
         .where(inArray(memberTagAssignments.memberId, memberIds))
         .orderBy(asc(memberTags.name)),
+      db
+        .select({
+          memberId: rsvps.memberId,
+          updatedAt: rsvps.updatedAt,
+        })
+        .from(rsvps)
+        .where(inArray(rsvps.memberId, memberIds))
+        .orderBy(desc(rsvps.updatedAt)),
+      db
+        .select({
+          memberId: surveyResponses.memberId,
+          updatedAt: surveyResponses.updatedAt,
+        })
+        .from(surveyResponses)
+        .where(inArray(surveyResponses.memberId, memberIds))
+        .orderBy(desc(surveyResponses.updatedAt)),
+      db
+        .select({
+          memberId: memberNotes.memberId,
+          createdAt: memberNotes.createdAt,
+        })
+        .from(memberNotes)
+        .where(inArray(memberNotes.memberId, memberIds))
+        .orderBy(desc(memberNotes.createdAt)),
     ]);
 
   const rsvpCounts = toCountMap(rsvpCountRows);
   const surveyCounts = toCountMap(surveyCountRows);
   const noteCounts = toCountMap(noteCountRows);
   const tagsByMember = new Map<string, MemberTag[]>();
+  const latestRsvpByMember = toLatestMap(latestRsvpRows, "updatedAt");
+  const latestSurveyByMember = toLatestMap(latestSurveyRows, "updatedAt");
+  const latestNoteByMember = toLatestMap(latestNoteRows, "createdAt");
 
   for (const row of tagRows) {
     const current = tagsByMember.get(row.memberId) ?? [];
@@ -358,13 +395,36 @@ async function summarizeMembers(
     tagsByMember.set(row.memberId, current);
   }
 
-  return memberRows.map((member) => ({
-    member,
-    rsvpCount: rsvpCounts.get(member.id) ?? 0,
-    surveyResponseCount: surveyCounts.get(member.id) ?? 0,
-    noteCount: noteCounts.get(member.id) ?? 0,
-    tags: tagsByMember.get(member.id) ?? [],
-  }));
+  return memberRows.map((member) => {
+    const latest = getLatestActivity(member, [
+      {
+        label: "RSVP",
+        date: latestRsvpByMember.get(member.id),
+      },
+      {
+        label: "Survey",
+        date: latestSurveyByMember.get(member.id),
+      },
+      {
+        label: "Note",
+        date: latestNoteByMember.get(member.id),
+      },
+      {
+        label: "Profile",
+        date: member.updatedAt,
+      },
+    ]);
+
+    return {
+      member,
+      rsvpCount: rsvpCounts.get(member.id) ?? 0,
+      surveyResponseCount: surveyCounts.get(member.id) ?? 0,
+      noteCount: noteCounts.get(member.id) ?? 0,
+      latestActivityAt: latest.date,
+      latestActivityLabel: latest.label,
+      tags: tagsByMember.get(member.id) ?? [],
+    };
+  });
 }
 
 function summarizeMemberTotals(memberRows: Member[]) {
@@ -383,6 +443,36 @@ function summarizeMemberTotals(memberRows: Member[]) {
 
 function toCountMap(rows: Array<{ memberId: string; total: number }>) {
   return new Map(rows.map((row) => [row.memberId, Number(row.total)]));
+}
+
+function toLatestMap<T extends string>(
+  rows: Array<{ memberId: string } & Record<T, Date>>,
+  key: T,
+) {
+  const latest = new Map<string, Date>();
+
+  for (const row of rows) {
+    if (!latest.has(row.memberId)) {
+      latest.set(row.memberId, row[key]);
+    }
+  }
+
+  return latest;
+}
+
+function getLatestActivity(
+  member: Member,
+  candidates: Array<{ label: string; date: Date | undefined }>,
+): { label: string; date: Date } {
+  let latest = { label: "Joined", date: member.createdAt };
+
+  for (const candidate of candidates) {
+    if (candidate.date && candidate.date > latest.date) {
+      latest = { label: candidate.label, date: candidate.date };
+    }
+  }
+
+  return latest;
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {

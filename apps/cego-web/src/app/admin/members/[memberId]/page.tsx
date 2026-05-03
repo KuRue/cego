@@ -7,10 +7,13 @@ import {
   removeMemberTagAction,
   updateMemberEmailAction,
 } from "@/lib/member-admin-actions";
-import { getAdminMemberDetail } from "@/lib/member-admin";
+import {
+  getAdminMemberDetail,
+  type AdminMemberDetail,
+} from "@/lib/member-admin";
 import { getCurrentMember } from "@/lib/session";
 import { formatSurveyAnswer, parseSurveySchema } from "@/lib/surveys";
-import { Badge, StatusBadge } from "@/components/badge";
+import { Badge, getTagTone, StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -68,6 +71,8 @@ export default async function AdminMemberDetailPage({
     border: "1px solid var(--color-surface-border)",
     color: "var(--color-foreground)",
   };
+  const activityItems = buildActivityItems(detail);
+  const latestActivityAt = activityItems[0]?.date ?? detail.member.updatedAt;
 
   return (
     <>
@@ -118,6 +123,13 @@ export default async function AdminMemberDetailPage({
             <Metric label="Notes" value={String(detail.notes.length)} />
             <Metric label="Tags" value={String(detail.tags.length)} />
           </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <Fact label="Email" value={detail.member.email ?? "Not set"} />
+            <Fact label="Joined" value={formatDate(detail.member.createdAt)} />
+            <Fact label="Updated" value={formatDate(detail.member.updatedAt)} />
+            <Fact label="Last activity" value={formatDate(latestActivityAt)} />
+          </div>
         </section>
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -151,122 +163,141 @@ export default async function AdminMemberDetailPage({
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>No tags assigned.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {detail.tags.map((tag) => (
-                    <form key={tag.id} action={removeMemberTagAction}>
-                      <input
-                        type="hidden"
-                        name="memberId"
-                        value={detail.member.id}
-                      />
-                      <input type="hidden" name="tagId" value={tag.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex max-w-full items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold"
-                        style={{ background: "var(--color-surface-hover)", color: "var(--color-foreground)" }}
-                      >
-                        {tag.name}
-                        <span className="font-mono opacity-60">x</span>
-                      </button>
-                    </form>
-                  ))}
+                  {detail.tags.map((tag) => {
+                    const tone = getTagTone(tag.color);
+                    return (
+                      <form key={tag.id} action={removeMemberTagAction}>
+                        <input
+                          type="hidden"
+                          name="memberId"
+                          value={detail.member.id}
+                        />
+                        <input type="hidden" name="tagId" value={tag.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex max-w-full items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                          style={{ background: tone.bg, color: tone.text }}
+                          title={`Remove ${tag.name}`}
+                        >
+                          {tag.name}
+                          <span className="font-mono opacity-70">remove</span>
+                        </button>
+                      </form>
+                    );
+                  })}
                 </div>
               )}
 
-              <form action={assignExistingMemberTagAction} className="mt-4 grid gap-3">
-                <input type="hidden" name="memberId" value={detail.member.id} />
-                <label className="grid gap-1 text-sm">
-                  <span className="font-medium">Assign existing tag</span>
-                  <select
-                    name="tagId"
-                    disabled={assignableTags.length === 0}
-                    className="h-10 rounded-xl px-3 text-sm outline-none disabled:opacity-50"
-                    style={inputStyle}
-                  >
-                    <option value="">
-                      {assignableTags.length === 0
-                        ? "No available tags"
-                        : "Choose tag"}
-                    </option>
-                    {assignableTags.map((tag) => (
-                      <option key={tag.id} value={tag.id}>
-                        {tag.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  type="submit"
-                  disabled={assignableTags.length === 0}
-                  className="h-10 rounded-xl px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                  style={{
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                >
-                  Assign tag
-                </button>
-              </form>
-
-              <form
-                action={createAndAssignMemberTagAction}
-                className="mt-4 grid gap-3"
-              >
-                <input type="hidden" name="memberId" value={detail.member.id} />
-                <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr]">
+              <details className="glass mt-4 rounded-xl p-4">
+                <summary className="cursor-pointer list-none text-sm font-semibold">
+                  Assign existing tag
+                </summary>
+                <form action={assignExistingMemberTagAction} className="mt-4 grid gap-3">
+                  <input type="hidden" name="memberId" value={detail.member.id} />
                   <label className="grid gap-1 text-sm">
-                    <span className="font-medium">New tag</span>
-                    <input
-                      name="tagName"
-                      placeholder="rooming, staff, accessibility"
-                      className="h-10 rounded-xl px-3 text-sm outline-none"
-                      style={inputStyle}
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm">
-                    <span className="font-medium">Color</span>
+                    <span className="font-medium">Tag</span>
                     <select
-                      name="color"
-                      defaultValue="gray"
-                      className="h-10 rounded-xl px-3 text-sm outline-none"
+                      name="tagId"
+                      disabled={assignableTags.length === 0}
+                      className="h-10 rounded-xl px-3 text-sm outline-none disabled:opacity-50"
                       style={inputStyle}
                     >
-                      <option value="gray">gray</option>
-                      <option value="green">green</option>
-                      <option value="gold">gold</option>
-                      <option value="red">red</option>
-                      <option value="blue">blue</option>
+                      <option value="">
+                        {assignableTags.length === 0
+                          ? "No available tags"
+                          : "Choose tag"}
+                      </option>
+                      {assignableTags.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
                     </select>
                   </label>
-                </div>
-                <button
-                  type="submit"
-                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  <button
+                    type="submit"
+                    disabled={assignableTags.length === 0}
+                    className="h-10 rounded-xl px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      border: "1px solid var(--color-surface-border)",
+                      color: "var(--color-foreground)",
+                    }}
+                  >
+                    Assign tag
+                  </button>
+                </form>
+              </details>
+
+              <details className="glass mt-4 rounded-xl p-4">
+                <summary className="cursor-pointer list-none text-sm font-semibold">
+                  Create new tag
+                </summary>
+                <form
+                  action={createAndAssignMemberTagAction}
+                  className="mt-4 grid gap-3"
                 >
-                  Create and assign
-                </button>
-              </form>
+                  <input type="hidden" name="memberId" value={detail.member.id} />
+                  <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr]">
+                    <label className="grid gap-1 text-sm">
+                      <span className="font-medium">New tag</span>
+                      <input
+                        name="tagName"
+                        placeholder="rooming, staff, accessibility"
+                        className="h-10 rounded-xl px-3 text-sm outline-none"
+                        style={inputStyle}
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="font-medium">Color</span>
+                      <select
+                        name="color"
+                        defaultValue="gray"
+                        className="h-10 rounded-xl px-3 text-sm outline-none"
+                        style={inputStyle}
+                      >
+                        <option value="gray">gray</option>
+                        <option value="green">green</option>
+                        <option value="gold">gold</option>
+                        <option value="red">red</option>
+                        <option value="blue">blue</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                    style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  >
+                    Create and assign
+                  </button>
+                </form>
+              </details>
             </Panel>
 
             <Panel title="Internal Notes">
-              <form action={createMemberNoteAction} className="grid gap-3">
-                <input type="hidden" name="memberId" value={detail.member.id} />
-                <textarea
-                  name="body"
-                  required
-                  rows={4}
-                  placeholder="Organizer-only note"
-                  className="min-h-28 rounded-xl px-3 py-2 text-sm leading-6 outline-none"
-                  style={inputStyle}
-                />
-                <button
-                  type="submit"
-                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                >
-                  Add note
-                </button>
-              </form>
+              <details className="glass rounded-xl p-4">
+                <summary className="cursor-pointer list-none text-sm font-semibold">
+                  Add organizer note
+                </summary>
+                <form action={createMemberNoteAction} className="mt-4 grid gap-3">
+                  <input type="hidden" name="memberId" value={detail.member.id} />
+                  <textarea
+                    name="body"
+                    required
+                    rows={4}
+                    placeholder="Organizer-only note"
+                    className="min-h-28 rounded-xl px-3 py-2 text-sm leading-6 outline-none"
+                    style={inputStyle}
+                  />
+                  <button
+                    type="submit"
+                    className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                    style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  >
+                    Add note
+                  </button>
+                </form>
+              </details>
 
               {detail.notes.length === 0 ? (
                 <p className="mt-4 text-sm" style={{ color: "var(--color-muted)" }}>No notes yet.</p>
@@ -287,6 +318,31 @@ export default async function AdminMemberDetailPage({
           </div>
 
           <div className="grid gap-5">
+            <Panel title="Activity Timeline">
+              {activityItems.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>No activity yet.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {activityItems.slice(0, 8).map((item) => (
+                    <article key={item.id} className="glass rounded-xl p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>{item.kind}</Badge>
+                        <p className="text-xs" style={{ color: "var(--color-muted)" }}>
+                          {formatDate(item.date)}
+                        </p>
+                      </div>
+                      <h3 className="mt-3 font-semibold">{item.title}</h3>
+                      {item.description ? (
+                        <p className="mt-1 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
+                          {item.description}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </Panel>
+
             <Panel title="RSVP History">
               {detail.rsvps.length === 0 ? (
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet.</p>
@@ -388,6 +444,17 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl px-4 py-3" style={{ border: "1px solid var(--color-surface-border)" }}>
+      <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+        {label}
+      </p>
+      <p className="mt-2 truncate text-sm font-medium">{value}</p>
+    </div>
+  );
+}
+
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -396,6 +463,47 @@ function formatDate(date: Date): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+interface ActivityItem {
+  id: string;
+  kind: string;
+  title: string;
+  description?: string;
+  date: Date;
+}
+
+function buildActivityItems(detail: AdminMemberDetail): ActivityItem[] {
+  const noteItems = detail.notes.map(({ note, author }) => ({
+    id: `note:${note.id}`,
+    kind: "Note",
+    title: trimActivityTitle(note.body),
+    description: `Added by ${author?.telegramDisplayName ?? "Unknown organizer"}`,
+    date: note.createdAt,
+  }));
+  const rsvpItems = detail.rsvps.map(({ rsvp, event }) => ({
+    id: `rsvp:${rsvp.id}`,
+    kind: "RSVP",
+    title: `${rsvp.status} for ${event.title}`,
+    description: `${event.type === "major_event" ? "Major" : "Local"} event`,
+    date: rsvp.updatedAt,
+  }));
+  const surveyItems = detail.surveyResponses.map(({ response, survey, event }) => ({
+    id: `survey:${response.id}`,
+    kind: "Survey",
+    title: survey.title,
+    description: event ? `Linked to ${event.title}` : "General member survey",
+    date: response.updatedAt,
+  }));
+
+  return [...noteItems, ...rsvpItems, ...surveyItems].sort(
+    (a, b) => b.date.getTime() - a.date.getTime(),
+  );
+}
+
+function trimActivityTitle(value: string): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length > 90 ? `${normalized.slice(0, 87)}...` : normalized;
 }
 
 function formatSurveyResponse(answersJson: unknown, schemaJson: unknown) {
