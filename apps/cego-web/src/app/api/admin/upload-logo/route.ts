@@ -47,7 +47,8 @@ export async function POST(request: Request) {
   }
 
   const ext = file.type.split("/")[1] === "svg+xml" ? "svg" : file.type.split("/")[1];
-  const filename = `logo.${ext}`;
+  const timestamp = Date.now();
+  const filename = `logo-${timestamp}.${ext}`;
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -59,5 +60,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ url: `/uploads/${filename}?t=${Date.now()}` });
+  return NextResponse.json({ url: `/uploads/${filename}` });
 }

@@ -59,5 +59,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ url: `/uploads/${filename}?t=${Date.now()}` });
+  return NextResponse.json({ url: `/uploads/${filename}` });
 }

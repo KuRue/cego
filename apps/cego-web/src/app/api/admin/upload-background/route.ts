@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   }
 
   const ext = file.type.split("/")[1];
-  const filename = `background.${ext}`;
+  const filename = `background-${Date.now()}.${ext}`;
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -59,5 +59,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ url: `/uploads/${filename}?t=${Date.now()}` });
+  return NextResponse.json({ url: `/uploads/${filename}` });
 }
