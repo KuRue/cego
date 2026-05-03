@@ -26,9 +26,9 @@ export async function createEventAction(formData: FormData) {
 
   await db.insert(events).values(parseEventForm(formData));
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/events");
   revalidatePath("/dashboard");
-  redirect("/admin");
+  redirect("/admin/events");
 }
 
 export async function updateEventAction(formData: FormData) {
@@ -36,7 +36,7 @@ export async function updateEventAction(formData: FormData) {
   const eventId = readText(formData, "eventId");
 
   if (!eventId) {
-    redirect("/admin");
+    redirect("/admin/events");
   }
 
   const db = getDb();
@@ -45,9 +45,9 @@ export async function updateEventAction(formData: FormData) {
     .set({ ...parseEventForm(formData), updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/events");
   revalidatePath("/dashboard");
-  redirect("/admin");
+  redirect("/admin/events");
 }
 
 export async function rsvpForEventAction(formData: FormData) {
@@ -175,9 +175,9 @@ export async function updateRsvpStatusAction(formData: FormData) {
     })
     .where(eq(rsvps.id, rsvpId));
 
-  revalidatePath("/admin");
+  revalidatePath("/admin/events");
   revalidatePath("/dashboard");
-  redirect("/admin");
+  redirect("/admin/events");
 }
 
 function parseEventForm(formData: FormData) {
@@ -199,6 +199,7 @@ function parseEventForm(formData: FormData) {
     termsText: readOptionalText(formData, "termsText"),
     refundPolicyText: readOptionalText(formData, "refundPolicyText"),
     organizerNotes: readOptionalText(formData, "organizerNotes"),
+    imageUrl: readOptionalText(formData, "imageUrl"),
     capacity: readCapacity(formData),
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };

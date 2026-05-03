@@ -8,6 +8,8 @@ import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { Badge, StatusBadge } from "@/components/badge";
 import { getNavbarBrand } from "@/lib/settings";
+import Image from "next/image";
+import EventImageUpload from "./image-upload";
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
@@ -223,6 +225,25 @@ function EventForm({
       </div>
       <Field label="Location text">
         <input name="locationText" defaultValue={event?.locationText ?? ""} className="form-input" />
+      </Field>
+      <Field label="Cover photo">
+        <div className="mt-1 flex flex-col gap-3">
+          {event?.imageUrl ? (
+            <div className="flex items-center gap-3">
+              <Image
+                src={event.imageUrl}
+                alt="Cover"
+                width={80}
+                height={45}
+                className="h-11 w-20 rounded-lg object-cover"
+                style={{ border: "1px solid var(--color-surface-border)" }}
+              />
+              <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current cover</span>
+            </div>
+          ) : null}
+          <EventImageUpload currentUrl={event?.imageUrl ?? null} />
+          <input type="hidden" name="imageUrl" defaultValue={event?.imageUrl ?? ""} />
+        </div>
       </Field>
       <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
         <Field label="Price">
