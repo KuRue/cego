@@ -28,46 +28,25 @@ Required bot responsibilities:
 - Check the configured ARF group administrator list so Telegram group admins become ARF app admins.
 - Send RSVP confirmation notifications.
 - Send waitlist notifications.
-- Send annual retreat payment approval links.
 - Send survey reminders and event reminders.
 - Record delivery state in `notifications`.
 
-## Hi.Events
+## ARF-Native Registration
 
-Hi.Events is used for annual retreat payment and ticket registration after ARF approval. ARF should not fork Hi.Events unless a required feature cannot be integrated externally.
+ARF owns the member-facing registration flow in the current MVP. Members should not be sent to a separate event site to understand their RSVP or registration state.
 
 Required ARF responsibilities:
 
-- Store the linked Hi.Events event ID on annual retreat records.
-- Require a member email before payment approval.
-- Generate or display the correct checkout link only for `approved_to_pay` members.
-- Tell members to use their ARF email during Hi.Events checkout.
-- Receive signed order or attendee webhooks at `/api/hi-events/webhook`.
-- Verify the Hi.Events `Signature` header with `HI_EVENTS_WEBHOOK_SECRET`.
-- Link webhook payloads to exactly one RSVP by Hi.Events event ID plus member email, or by already stored Hi.Events order/attendee IDs for later updates.
-- Store Hi.Events order and attendee IDs on `rsvps`.
-- Record webhook processing in `hi_events_webhook_logs`.
-
-Webhook payload expectations:
-
-- Hi.Events sends `event_type`, `event_sent_at`, and `payload`.
-- ARF processes paid order/attendee states into `paid_registered`.
-- ARF treats unmatched or ambiguous paid webhooks as failed audit records for manual review instead of guessing.
-
-Hi.Events owns:
-
-- Ticket types.
-- Stripe payment checkout.
-- Order records.
-- Attendee records.
-- QR check-in.
-- Ticketing/refund emails.
+- Show event, capacity, RSVP, waitlist, survey, and member profile state directly in ARF.
+- Let organizers change RSVP state from ARF Admin.
+- Keep contact email available for organizer follow-up and future payment work.
+- Keep registration copy and policy links inside ARF so the experience feels like one app.
 
 ## Stripe
 
-Stripe is integrated through Hi.Events, not directly through ARF in v1.
+Stripe is deferred. If annual retreat payment is needed, the preferred direction is direct ARF-owned Stripe Checkout after organizer approval.
 
-ARF should not store payment method data. ARF stores only ticketing/payment state received from Hi.Events.
+ARF should not store payment method data. Future direct Stripe work should store only the Stripe checkout/session/payment identifiers needed for operational reconciliation and refunds.
 
 ## Internal CRM-lite
 
@@ -89,6 +68,5 @@ Required published applications:
 
 - `arf.kurue.com` to ARF web app.
 - `api.arf.kurue.com` to ARF API if separate.
-- `events.arf.kurue.com` to Hi.Events.
 
 Admin surfaces should be protected by Cloudflare Access.

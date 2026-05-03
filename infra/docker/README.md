@@ -61,9 +61,10 @@ The production stack uses a remotely-managed Cloudflare Tunnel token. Configure 
 
 - `arf.kurue.com` -> `http://arf-web:3000`
 - `api.arf.kurue.com` -> `http://arf-web:3000`
-- `events.arf.kurue.com` -> the Hi.Events service attached to the `arf_edge` Docker network, for example `http://hi-events:80`
 
-The ARF Compose file creates the shared `arf_edge` network. If Hi.Events is run from its upstream Compose project, attach its public HTTP service to that same Docker network and give it the alias used in the Cloudflare route.
+The ARF Compose file creates the shared `arf_edge` network. Event registration
+is owned by the ARF app for the MVP, so no separate event-service hostname is
+required.
 
 ## Unraid Compose
 

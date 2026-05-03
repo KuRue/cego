@@ -6,7 +6,7 @@ const eventTypes = [
   {
     title: "Annual retreat",
     description:
-      "A capacity-managed Florida short-term-rental retreat with RSVP, preference surveys, and payment approval through Hi.Events.",
+      "A capacity-managed Florida short-term-rental retreat with RSVP, preference surveys, organizer approval, and ARF-owned registration flow.",
   },
   {
     title: "Mini retreats",
@@ -27,7 +27,7 @@ const dashboardPreview = [
   { label: "Identity", value: "Telegram verified" },
   { label: "Annual RSVP", value: "Waitlist aware" },
   { label: "Surveys", value: "Built into ARF" },
-  { label: "Payments", value: "Hi.Events after approval" },
+  { label: "Payments", value: "ARF-native later" },
 ];
 
 export default function Home() {
@@ -78,8 +78,8 @@ export default function Home() {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#4e5b57]">
             ARF is the self-hosted planning surface for annual Florida retreats
             and local mini retreats: Telegram identity, capacity-aware RSVPs,
-            built-in surveys, organizer review, and Hi.Events checkout when a
-            paid registration is ready.
+            built-in surveys, organizer review, and room to add ARF-native
+            payment steps when paid registration is ready.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link

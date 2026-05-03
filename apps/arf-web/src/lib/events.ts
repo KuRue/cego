@@ -34,11 +34,7 @@ export interface AdminEventWithRsvps {
   }>;
 }
 
-const capacityBearingStatuses = [
-  "confirmed",
-  "approved_to_pay",
-  "paid_registered",
-] as const;
+const capacityBearingStatuses = ["confirmed"] as const;
 
 export async function getDashboardEvents(
   memberId: string,

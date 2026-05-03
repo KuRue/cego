@@ -13,13 +13,7 @@ export const eventStatuses = [
 ] as const;
 export type EventStatus = (typeof eventStatuses)[number];
 
-export const rsvpStatuses = [
-  "confirmed",
-  "waitlisted",
-  "approved_to_pay",
-  "paid_registered",
-  "cancelled",
-] as const;
+export const rsvpStatuses = ["confirmed", "waitlisted", "cancelled"] as const;
 export type RsvpStatus = (typeof rsvpStatuses)[number];
 
 export const surveyStatuses = ["draft", "published", "closed"] as const;

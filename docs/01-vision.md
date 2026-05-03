@@ -18,7 +18,7 @@ The annual retreat is the main ARF event. It is expected to have a fixed capacit
 
 ### Mini Retreats
 
-Mini retreats are smaller local meets organized through the same member system. In v1, mini retreats use free RSVP, capacity handling, surveys, and Telegram reminders, but they do not require Hi.Events payment by default.
+Mini retreats are smaller local meets organized through the same member system. In v1, mini retreats use free RSVP, capacity handling, surveys, and Telegram reminders. Paid flows are not required for mini retreats by default.
 
 ## Principles
 

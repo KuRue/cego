@@ -57,12 +57,7 @@ export async function getDashboardSurveys(
       .where(
         and(
           eq(rsvps.memberId, memberId),
-          inArray(rsvps.status, [
-            "confirmed",
-            "waitlisted",
-            "approved_to_pay",
-            "paid_registered",
-          ]),
+          inArray(rsvps.status, ["confirmed", "waitlisted"]),
         ),
       ),
     db

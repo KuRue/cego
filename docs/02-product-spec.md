@@ -5,7 +5,7 @@
 - Member: a Telegram group member who can access ARF event flows.
 - Waitlisted member: a group member who requested an event after capacity was reached.
 - Organizer: a trusted admin who can manage events, waitlists, surveys, approvals, and member state.
-- System: ARF backend, Telegram bot, Hi.Events, internal CRM-lite records, and background jobs.
+- System: ARF backend, Telegram bot, internal CRM-lite records, and background jobs.
 
 ## Member Flow
 
@@ -21,23 +21,18 @@
 
 ## Annual Retreat Flow
 
-The annual retreat starts with RSVP and organizer-controlled payment eligibility.
+The annual retreat starts with RSVP and organizer review. Payment collection is an ARF-native later slice and is not part of the current MVP.
 
 1. Member submits RSVP.
 2. ARF assigns `confirmed` or `waitlisted` based on event capacity.
 3. Organizer reviews confirmed and waitlisted members as needed.
-4. Organizer confirms the member email that will be used for Hi.Events checkout.
-5. Organizer promotes selected annual retreat members to `approved_to_pay`.
-6. ARF displays the Hi.Events checkout link on the member dashboard.
-7. Member completes payment and ticket registration in Hi.Events with the same email.
-8. Hi.Events sends a signed webhook to ARF.
-9. ARF links the Hi.Events order and attendee to the member RSVP.
-10. ARF updates RSVP status to `paid_registered`.
-11. ARF records the paid registration state on the member/event history.
+4. Organizer uses member email, tags, notes, and survey responses for planning.
+5. Organizer manually adjusts RSVP state when a member should be confirmed, waitlisted, or cancelled.
+6. Later ARF-native payment work can add organizer-approved checkout without sending members to a separate event site.
 
 ## Mini Retreat Flow
 
-Mini retreats use the same Telegram identity, capacity, RSVP, survey, and notification system. In v1, mini retreats do not require Hi.Events checkout.
+Mini retreats use the same Telegram identity, capacity, RSVP, survey, and notification system. In v1, mini retreats do not require checkout.
 
 1. Member submits RSVP.
 2. ARF assigns `confirmed` or `waitlisted`.
@@ -51,21 +46,16 @@ Organizers use ARF Admin to:
 - Create and edit annual retreat and mini retreat records.
 - Set event dates, location text, capacity, and status.
 - Review confirmed and waitlisted RSVPs.
-- Promote annual retreat members to `approved_to_pay`.
-- Link annual retreat events to Hi.Events event IDs.
-- Review Hi.Events checkout links and webhook-linked order/attendee IDs.
 - Create and publish surveys.
 - Review survey completion status.
 - Trigger Telegram notifications.
 - Add member notes and tags for organizer follow-up.
-- Monitor webhook and notification status.
+- Monitor notification and sync status.
 
 ## RSVP Statuses
 
 - `confirmed`: the member is inside the event cap.
 - `waitlisted`: the event cap has been reached and organizer action is needed.
-- `approved_to_pay`: annual retreat member is allowed to complete Hi.Events checkout.
-- `paid_registered`: Hi.Events payment/registration completed and linked.
 - `cancelled`: member or organizer cancelled the RSVP.
 
 ## Acceptance Scenarios
@@ -75,9 +65,8 @@ Organizers use ARF Admin to:
 - Non-group Telegram user is blocked from RSVP flows.
 - Annual retreat RSVP under cap becomes `confirmed`.
 - Annual retreat RSVP over cap becomes `waitlisted`.
-- Organizer can promote waitlisted or confirmed annual retreat member to `approved_to_pay`.
-- Hi.Events completed order webhook links attendee/order to the correct ARF member.
-- Mini retreat RSVP works without Hi.Events checkout.
+- Organizer can review and change RSVP states from ARF Admin.
+- Mini retreat RSVP works without checkout.
 - Survey response attaches to member and event.
 - Organizer can add member notes and tags from ARF admin.
 - ARF admin is protected by Cloudflare Access plus app-level roles.

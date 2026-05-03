@@ -15,6 +15,13 @@
       "when": 1777405803479,
       "tag": "0001_woozy_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777782235735,
+      "tag": "0002_fluffy_clint_barton",
+      "breakpoints": true
     }
   ]
 }

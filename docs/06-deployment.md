@@ -17,10 +17,7 @@ Implemented ARF-owned service groups:
 
 Deferred or external service groups:
 
-- `arf-worker`: async jobs, webhook retries, Telegram notifications, CRM-lite reminders/rollups.
-- `hi-events`: Hi.Events service group, following upstream deployment guidance and attached to the `arf_edge` Docker network.
-- `hievents-db`: Hi.Events database, owned by the Hi.Events deployment.
-- `hievents-redis`: Hi.Events cache/queue, owned by the Hi.Events deployment.
+- `arf-worker`: async jobs, Telegram notifications, CRM-lite reminders/rollups, and future payment reconciliation.
 
 ## Network Exposure
 
@@ -30,7 +27,6 @@ Internal service routing:
 
 - `arf.kurue.com` -> `arf-web`
 - `api.arf.kurue.com` -> `arf-web` or `arf-api`
-- `events.arf.kurue.com` -> Hi.Events frontend/backend entrypoint
 
 The production Compose scaffold uses a remotely-managed tunnel token. Configure Cloudflare Tunnel public hostnames to point at container DNS names, such as `http://arf-web:3000` for both ARF hostnames.
 
@@ -46,10 +42,6 @@ ARF app:
 - `TELEGRAM_BOT_USERNAME`
 - `TELEGRAM_GROUP_ID`
 - `TELEGRAM_WEBAPP_URL`
-- `HI_EVENTS_BASE_URL`
-- `HI_EVENTS_API_KEY`
-- `HI_EVENTS_WEBHOOK_SECRET`
-- `HI_EVENTS_CHECKOUT_URL_TEMPLATE`
 - `APP_BASE_URL`
 - `SOURCE_CODE_URL`
 - `ARF_POSTGRES_DB`
@@ -60,17 +52,11 @@ cloudflared:
 
 - `TUNNEL_TOKEN` or mounted tunnel credentials, depending on tunnel management mode.
 
-Hi.Events:
-
-- Use upstream required environment variables.
-- Stripe configuration remains inside Hi.Events.
-
 ## Backups
 
 Backups should include:
 
 - ARF Postgres database.
-- Hi.Events database.
 - Uploaded files or persistent app volumes.
 - cloudflared configuration if locally managed.
 - Compose configuration and environment templates, without secrets.
@@ -87,7 +73,6 @@ The current Compose scaffold includes a manual ARF Postgres backup tool profile.
 
 - `arf.kurue.com` loads the ARF app over HTTPS.
 - Telegram Mini App can launch `arf.kurue.com`.
-- `events.arf.kurue.com` loads Hi.Events over HTTPS.
 - ARF admin routes require Cloudflare Access and app admin role.
 - Direct database and internal service ports are not internet-exposed.
 - Backups can be listed and restored in a test environment.

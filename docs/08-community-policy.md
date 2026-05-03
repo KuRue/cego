@@ -31,13 +31,12 @@ ARF should explain that it uses Telegram identity to manage event access and sto
 The notice should name the major processors:
 
 - Telegram for chat, identity, and bot notifications.
-- Hi.Events for annual retreat tickets and checkout.
-- Stripe through Hi.Events for payment processing.
+- Stripe for payment processing if direct ARF-owned payments are added later.
 - Cloudflare for DNS, tunnel ingress, access controls, and security.
 
 ## Payment And Refund Policy Placeholder
 
-Annual retreat payments are handled through Hi.Events and Stripe. Before paid registration opens, organizers should publish:
+Annual retreat payment handling is deferred. Before paid registration opens, organizers should publish:
 
 - What payment covers.
 - Whether payments are deposits or full tickets.

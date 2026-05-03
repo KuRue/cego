@@ -40,13 +40,11 @@ Required fields:
 - `location_text`
 - `capacity`
 - `status`: `draft`, `open`, `full`, `closed`, `archived`
-- `hi_events_event_id`
 - `created_at`
 - `updated_at`
 
 Notes:
 
-- `hi_events_event_id` is optional and expected mainly for annual retreats.
 - Exact rental addresses should be treated as sensitive and shown only to approved attendees when appropriate.
 
 ## `rsvps`
@@ -58,10 +56,7 @@ Required fields:
 - `id`
 - `member_id`
 - `event_id`
-- `status`: `confirmed`, `waitlisted`, `approved_to_pay`, `paid_registered`, `cancelled`
-- `hi_events_checkout_url`
-- `hi_events_order_id`
-- `hi_events_attendee_id`
+- `status`: `confirmed`, `waitlisted`, `cancelled`
 - `ticket_type`
 - `checked_in_at`
 - `created_at`
@@ -72,34 +67,9 @@ Rules:
 - A member can have at most one active RSVP per event.
 - Under-cap RSVPs become `confirmed`.
 - Over-cap RSVPs become `waitlisted`.
-- Annual retreat payment eligibility is represented by `approved_to_pay`.
-- `confirmed`, `approved_to_pay`, and `paid_registered` count against capacity.
-- Hi.Events webhook completion moves annual retreat RSVP to `paid_registered`.
-- Mini retreats do not require `paid_registered` in v1.
-
-## `hi_events_webhook_logs`
-
-Audits inbound Hi.Events webhook processing.
-
-Required fields:
-
-- `id`
-- `event_id`
-- `rsvp_id`
-- `hi_events_event_id`
-- `hi_events_order_id`
-- `hi_events_attendee_id`
-- `event_type`
-- `status`: `processed`, `ignored`, `failed`
-- `payload_json`
-- `error_message`
-- `created_at`
-
-Rules:
-
-- Logs are operational audit records for organizers and maintainers.
-- `payload_json` should not be used for long-term storage of payment details beyond what Hi.Events already sends.
-- Failed logs indicate manual review is needed, usually because a webhook could not be matched to exactly one RSVP.
+- `confirmed` counts against capacity.
+- `cancelled` does not auto-promote another waitlisted member.
+- Future direct Stripe work should add ARF-native payment tables and store only operational payment status and Stripe IDs needed for reconciliation, never payment method data.
 
 ## `surveys`
 

@@ -43,10 +43,8 @@ export default async function DashboardPage() {
     getDashboardEvents(member.id),
     getDashboardSurveys(member.id),
   ]);
-  const capacityCount = eventStates.filter(({ rsvp }) =>
-    ["confirmed", "approved_to_pay", "paid_registered"].includes(
-      rsvp?.status ?? "",
-    ),
+  const capacityCount = eventStates.filter(
+    ({ rsvp }) => rsvp?.status === "confirmed",
   ).length;
   const waitlistedCount = eventStates.filter(
     ({ rsvp }) => rsvp?.status === "waitlisted",
@@ -74,9 +72,8 @@ export default async function DashboardPage() {
               Contact email
             </h2>
             <p className="mt-2 max-w-2xl leading-7 text-[#4e5b57]">
-              Annual retreat payment approval requires an email so Hi.Events
-              registration can be linked back to your ARF profile. Use this
-              same email at checkout.
+              Add an email so organizers have a reliable contact method for
+              retreat planning and future payment steps.
             </p>
           </div>
           <form action={updateCurrentMemberEmailAction} className="grid gap-2">
@@ -205,16 +202,10 @@ function DashboardShell({
 function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   const { event, confirmedCount, waitlistedCount, rsvp } = eventState;
   const isCancelableRsvp =
-    rsvp?.status === "confirmed" ||
-    rsvp?.status === "waitlisted" ||
-    rsvp?.status === "approved_to_pay";
+    rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
   const canRsvp =
     (event.status === "open" || event.status === "full") &&
     (!rsvp || rsvp.status === "cancelled");
-  const canCheckout =
-    event.type === "annual_retreat" &&
-    rsvp?.status === "approved_to_pay" &&
-    Boolean(rsvp.hiEventsCheckoutUrl);
 
   return (
     <article className="border border-[#d7e3df] bg-white p-5">
@@ -245,35 +236,6 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
       </div>
 
       <div className="mt-5 border-t border-[#e3ece9] pt-5">
-        {rsvp?.status === "approved_to_pay" ? (
-          <div className="mb-4 border border-[#f0d487] bg-[#fff8df] p-4 text-sm text-[#6b4c00]">
-            <p className="font-semibold">Payment approved.</p>
-            <p className="mt-1">
-              Complete Hi.Events checkout with the email saved on this
-              dashboard so ARF can link the registration automatically.
-            </p>
-            {canCheckout ? (
-              <a
-                href={rsvp.hiEventsCheckoutUrl ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white sm:w-auto"
-              >
-                Open Hi.Events checkout
-              </a>
-            ) : (
-              <p className="mt-2">The checkout link is not available yet.</p>
-            )}
-          </div>
-        ) : null}
-
-        {rsvp?.status === "paid_registered" ? (
-          <div className="mb-4 border border-[#8bb5aa] bg-[#edf8f4] p-4 text-sm text-[#183f3c]">
-            <p className="font-semibold">Payment and registration complete.</p>
-            {rsvp.ticketType ? <p className="mt-1">{rsvp.ticketType}</p> : null}
-          </div>
-        ) : null}
-
         {canRsvp ? (
           <form action={rsvpForEventAction}>
             <input type="hidden" name="eventId" value={event.id} />
@@ -298,7 +260,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           </form>
         ) : null}
 
-        {!canRsvp && !isCancelableRsvp && !canCheckout ? (
+        {!canRsvp && !isCancelableRsvp ? (
           <p className="text-sm text-[#64706c]">
             {event.status === "closed"
               ? "This event is closed to new RSVPs."

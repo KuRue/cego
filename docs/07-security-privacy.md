@@ -33,13 +33,13 @@ Telegram group admin sync only updates ARF admin status after a successful Teleg
 Collect only data needed to run events:
 
 - Telegram identity.
-- Email for payment/ticketing needs.
+- Email for organizer contact and future payment needs.
 - RSVP status.
 - Rooming, dietary, accessibility, travel, and privacy preferences.
 - Survey responses.
 - Organizer notes in ARF.
 
-Avoid collecting unnecessary legal identity, address, or payment information in ARF. Payment method information belongs only in Stripe/Hi.Events.
+Avoid collecting unnecessary legal identity, address, or payment information in ARF. Payment method information should live only in Stripe if direct payments are added later.
 
 ## Sensitive Data
 

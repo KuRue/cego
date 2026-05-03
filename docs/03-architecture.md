@@ -7,7 +7,7 @@
 - Background work: ARF worker process or scheduled jobs in the app container.
 - Identity: Telegram Mini App signed init data.
 - Notifications: Telegram bot.
-- Ticketing/payment: Hi.Events with Stripe.
+- Ticketing/payment: ARF-owned approval and registration state, with direct Stripe checkout deferred until needed.
 - CRM-lite: ARF-owned member notes, tags, and attendance history.
 - Deployment: Docker Compose on a single VPS.
 - Public ingress: cloudflared.
@@ -21,23 +21,15 @@ flowchart LR
   BOT --> APP["ARF Mini App / Web"]
   APP --> API["ARF API"]
   API --> DB["ARF Postgres"]
-  API --> HE["Hi.Events"]
-  HE --> STRIPE["Stripe"]
-  HE --> API
   CF["cloudflared"] --> APP
   CF --> API
-  CF --> HE
 ```
 
 ## Ownership Boundaries
 
 ### ARF App
 
-ARF owns identity linking, group-membership checks, member profiles, event discovery, RSVP state, waitlists, surveys, Telegram notifications, organizer admin, and integration state.
-
-### Hi.Events
-
-Hi.Events owns annual retreat checkout after ARF approval, ticket inventory, Stripe payment, attendee/order records, QR check-in, refunds, and ticketing-related emails.
+ARF owns identity linking, group-membership checks, member profiles, event discovery, RSVP state, waitlists, surveys, organizer admin, CRM-lite context, and future registration/payment state.
 
 ### ARF CRM-lite
 
@@ -55,18 +47,14 @@ Cloudflare owns DNS, tunnel ingress, TLS termination, WAF-level protection, and 
 
 - `arf.kurue.com`: public site, Telegram Mini App, member dashboard, organizer admin.
 - `api.arf.kurue.com`: ARF backend routes and webhooks, unless folded into the Next.js app.
-- `events.arf.kurue.com`: Hi.Events.
 
 ## Runtime Shape
 
 The v1 Compose stack should run:
 
 - `arf-web`: Next.js app and API routes.
-- `arf-worker`: background jobs, webhook retries, CRM-lite reminders/rollups, Telegram notification queue.
+- `arf-worker`: background jobs, CRM-lite reminders/rollups, Telegram notification queue, and future payment reconciliation jobs.
 - `arf-postgres`: ARF database.
 - `arf-redis`: queues and short-lived cache if required by the app.
-- `hi-events`: Hi.Events application services.
-- `hievents-db`: Hi.Events database.
-- `hievents-redis`: Hi.Events queue/cache if required by upstream.
 - `cloudflared`: tunnel connector.
 - `backup`: scheduled database and upload backup job.

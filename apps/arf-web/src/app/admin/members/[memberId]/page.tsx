@@ -93,7 +93,7 @@ export default async function AdminMemberDetailPage({
                   name="email"
                   type="email"
                   defaultValue={detail.member.email ?? ""}
-                  placeholder="Used later where Hi.Events or Stripe require it"
+                  placeholder="Used for organizer contact and future payment steps"
                   className="h-10 rounded-md border border-[#b8cac5] px-3"
                 />
               </label>
@@ -254,29 +254,6 @@ export default async function AdminMemberDetailPage({
                       <p className="mt-2 text-sm text-[#64706c]">
                         Ticket: {rsvp.ticketType}
                       </p>
-                    ) : null}
-                    {rsvp.hiEventsOrderId || rsvp.hiEventsAttendeeId ? (
-                      <p className="mt-2 break-all text-sm text-[#64706c]">
-                        {rsvp.hiEventsOrderId
-                          ? `Hi.Events order ${rsvp.hiEventsOrderId}`
-                          : null}
-                        {rsvp.hiEventsOrderId && rsvp.hiEventsAttendeeId
-                          ? " - "
-                          : null}
-                        {rsvp.hiEventsAttendeeId
-                          ? `attendee ${rsvp.hiEventsAttendeeId}`
-                          : null}
-                      </p>
-                    ) : null}
-                    {rsvp.hiEventsCheckoutUrl ? (
-                      <a
-                        href={rsvp.hiEventsCheckoutUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 inline-flex text-sm font-semibold text-[#183f3c]"
-                      >
-                        Checkout link
-                      </a>
                     ) : null}
                   </article>
                 ))}

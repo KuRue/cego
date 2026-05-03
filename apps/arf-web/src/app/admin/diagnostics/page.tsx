@@ -291,7 +291,6 @@ function getConfigurationDiagnostics(): DiagnosticItem[] {
       invalidDetail: "Supergroup IDs usually start with -100.",
     }),
     envDiagnostic("SESSION_SECRET", process.env.SESSION_SECRET),
-    envDiagnostic("HI_EVENTS_WEBHOOK_SECRET", process.env.HI_EVENTS_WEBHOOK_SECRET),
   ];
 }
 

@@ -72,14 +72,12 @@ export const events = pgTable(
     locationText: text("location_text"),
     capacity: integer("capacity").notNull(),
     status: eventStatusEnum("status").default("draft").notNull(),
-    hiEventsEventId: text("hi_events_event_id"),
     ...lifecycleColumns,
   },
   (table) => [
     uniqueIndex("events_slug_idx").on(table.slug),
     index("events_status_idx").on(table.status),
     index("events_type_idx").on(table.type),
-    index("events_hi_events_event_id_idx").on(table.hiEventsEventId),
   ],
 );
 
@@ -94,9 +92,6 @@ export const rsvps = pgTable(
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
     status: rsvpStatusEnum("status").notNull(),
-    hiEventsCheckoutUrl: text("hi_events_checkout_url"),
-    hiEventsOrderId: text("hi_events_order_id"),
-    hiEventsAttendeeId: text("hi_events_attendee_id"),
     ticketType: text("ticket_type"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     ...lifecycleColumns,
@@ -104,43 +99,6 @@ export const rsvps = pgTable(
   (table) => [
     uniqueIndex("rsvps_member_event_idx").on(table.memberId, table.eventId),
     index("rsvps_event_status_idx").on(table.eventId, table.status),
-    index("rsvps_hi_events_checkout_url_idx").on(table.hiEventsCheckoutUrl),
-    index("rsvps_hi_events_order_id_idx").on(table.hiEventsOrderId),
-    index("rsvps_hi_events_attendee_id_idx").on(table.hiEventsAttendeeId),
-  ],
-);
-
-export const hiEventsWebhookLogs = pgTable(
-  "hi_events_webhook_logs",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    eventId: uuid("event_id").references(() => events.id, {
-      onDelete: "set null",
-    }),
-    rsvpId: uuid("rsvp_id").references(() => rsvps.id, {
-      onDelete: "set null",
-    }),
-    hiEventsEventId: text("hi_events_event_id"),
-    hiEventsOrderId: text("hi_events_order_id"),
-    hiEventsAttendeeId: text("hi_events_attendee_id"),
-    eventType: text("event_type").notNull(),
-    status: text("status").notNull(),
-    payloadJson: jsonb("payload_json"),
-    errorMessage: text("error_message"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [
-    index("hi_events_webhook_logs_event_id_idx").on(table.eventId),
-    index("hi_events_webhook_logs_rsvp_id_idx").on(table.rsvpId),
-    index("hi_events_webhook_logs_hi_events_event_id_idx").on(
-      table.hiEventsEventId,
-    ),
-    index("hi_events_webhook_logs_hi_events_order_id_idx").on(
-      table.hiEventsOrderId,
-    ),
-    index("hi_events_webhook_logs_status_idx").on(table.status),
   ],
 );
 
@@ -280,8 +238,6 @@ export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type Rsvp = typeof rsvps.$inferSelect;
 export type NewRsvp = typeof rsvps.$inferInsert;
-export type HiEventsWebhookLog = typeof hiEventsWebhookLogs.$inferSelect;
-export type NewHiEventsWebhookLog = typeof hiEventsWebhookLogs.$inferInsert;
 export type Survey = typeof surveys.$inferSelect;
 export type NewSurvey = typeof surveys.$inferInsert;
 export type SurveyResponse = typeof surveyResponses.$inferSelect;

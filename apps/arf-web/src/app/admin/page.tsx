@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  approveRsvpForPaymentAction,
   createEventAction,
   updateEventAction,
   updateRsvpStatusAction,
@@ -271,23 +270,7 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
                   ) : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge>{rsvp.status}</Badge>
-                    {rsvp.hiEventsOrderId ? (
-                      <Badge>order {rsvp.hiEventsOrderId}</Badge>
-                    ) : null}
-                    {rsvp.hiEventsAttendeeId ? (
-                      <Badge>attendee {rsvp.hiEventsAttendeeId}</Badge>
-                    ) : null}
                   </div>
-                  {rsvp.hiEventsCheckoutUrl ? (
-                    <a
-                      href={rsvp.hiEventsCheckoutUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex text-sm font-semibold text-[#183f3c]"
-                    >
-                      Checkout link
-                    </a>
-                  ) : null}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-[auto_auto] lg:justify-end">
                   <form
@@ -302,8 +285,6 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
                     >
                       <option value="confirmed">confirmed</option>
                       <option value="waitlisted">waitlisted</option>
-                      <option value="approved_to_pay">approved_to_pay</option>
-                      <option value="paid_registered">paid_registered</option>
                       <option value="cancelled">cancelled</option>
                     </select>
                     <button
@@ -313,11 +294,6 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
                       Update
                     </button>
                   </form>
-                  <PaymentApprovalControl
-                    event={event}
-                    memberEmail={member.email}
-                    rsvp={rsvp}
-                  />
                 </div>
               </div>
             ))}
@@ -325,58 +301,6 @@ function AdminEventCard({ overview }: { overview: AdminEventWithRsvps }) {
         )}
       </div>
     </article>
-  );
-}
-
-function PaymentApprovalControl({
-  event,
-  memberEmail,
-  rsvp,
-}: {
-  event: AdminEventWithRsvps["event"];
-  memberEmail: string | null;
-  rsvp: AdminEventWithRsvps["rsvps"][number]["rsvp"];
-}) {
-  if (event.type !== "annual_retreat") {
-    return null;
-  }
-
-  if (rsvp.status === "paid_registered") {
-    return (
-      <p className="text-sm font-semibold text-[#183f3c]">Paid and registered</p>
-    );
-  }
-
-  if (!["confirmed", "waitlisted", "approved_to_pay"].includes(rsvp.status)) {
-    return null;
-  }
-
-  if (!event.hiEventsEventId) {
-    return (
-      <p className="max-w-64 text-sm text-[#64706c]">
-        Set the Hi.Events event ID before payment approval.
-      </p>
-    );
-  }
-
-  if (!memberEmail) {
-    return (
-      <p className="max-w-64 text-sm text-[#64706c]">
-        Add this member&apos;s email before payment approval.
-      </p>
-    );
-  }
-
-  return (
-    <form action={approveRsvpForPaymentAction}>
-      <input type="hidden" name="rsvpId" value={rsvp.id} />
-      <button
-        type="submit"
-        className="h-10 rounded-md border border-[#b8cac5] px-4 text-sm font-semibold text-[#183f3c]"
-      >
-        {rsvp.status === "approved_to_pay" ? "Regenerate link" : "Approve payment"}
-      </button>
-    </form>
   );
 }
 
@@ -576,15 +500,6 @@ function EventForm({
         <input
           name="locationText"
           defaultValue={event?.locationText ?? ""}
-          className="h-10 rounded-md border border-[#b8cac5] px-3"
-        />
-      </label>
-
-      <label className="grid gap-1 text-sm">
-        <span className="font-medium">Hi.Events event ID</span>
-        <input
-          name="hiEventsEventId"
-          defaultValue={event?.hiEventsEventId ?? ""}
           className="h-10 rounded-md border border-[#b8cac5] px-3"
         />
       </label>

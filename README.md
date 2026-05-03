@@ -2,11 +2,11 @@
 
 Anthro Retreat Florida, or ARF, is a Telegram-first event and member system for an annual Florida short-term-rental retreat and smaller local mini retreats.
 
-This repository starts as a documentation-first project. The implementation target is an open source, self-hosted stack built around a custom ARF app, Telegram Mini App and browser Telegram SSO authentication, built-in member CRM-lite tools, Hi.Events for ticketing/payment, Docker Compose, cloudflared, and Cloudflare Access.
+This repository started as a documentation-first project. The implementation target is an open source, self-hosted stack built around a custom ARF app, Telegram Mini App and browser Telegram SSO authentication, built-in member CRM-lite tools, ARF-owned event registration flows, Docker Compose, cloudflared, and Cloudflare Access.
 
 ## Status
 
-Working MVP scaffold. The repository includes the documentation pack, a Next.js TypeScript ARF app, Telegram Mini App and Telegram Login Widget session persistence, event/RSVP management, built-in surveys, CRM-lite member admin, organizer admin views, Hi.Events payment webhook handling, and Docker development/production infrastructure for ARF-owned services.
+Working MVP scaffold. The repository includes the documentation pack, a Next.js TypeScript ARF app, Telegram Mini App and Telegram Login Widget session persistence, event/RSVP management, built-in surveys, CRM-lite member admin, organizer admin views, and Docker development/production infrastructure for ARF-owned services.
 
 ## Development
 
@@ -46,7 +46,7 @@ npm run docker:prod:config
 - Telegram group membership gates event access.
 - Events accept group-member RSVPs until the capacity cap is reached.
 - After capacity, new requests go to a manual waitlist.
-- Annual retreat registration starts as RSVP, then moves to Hi.Events payment/registration after organizer approval.
+- Annual retreat registration starts as RSVP and organizer approval, with ARF-native payment work deferred until needed.
 - Mini retreats use free RSVP in v1.
 - ARF owns surveys and preferences.
 - Telegram bot notifications are the primary communication channel.
@@ -69,12 +69,8 @@ npm run docker:prod:config
 
 - `arf.kurue.com`: public site, Telegram Mini App, member dashboard, organizer admin
 - `api.arf.kurue.com`: ARF backend routes and webhooks, unless folded into the Next.js app
-- `events.arf.kurue.com`: Hi.Events
-
 ## Primary References
 
-- [Hi.Events](https://github.com/HiEventsDev/hi.events)
-- [Hi.Events webhooks](https://hi.events/docs/help-center/customization-and-settings/webhooks)
 - [Telegram Mini Apps](https://docs.telegram-mini-apps.com/)
 - [Telegram Login Widget](https://core.telegram.org/widgets/login)
 - [Cloudflare Tunnel](https://developers.cloudflare.com/tunnel/)

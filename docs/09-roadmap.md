@@ -42,15 +42,14 @@
 - Surface relevant preference summaries in ARF admin.
 - Add Telegram confirmation, waitlist, and survey reminder notifications.
 
-## Phase 5: Hi.Events Integration
+## Phase 5: ARF-Native Registration And Payment
 
-- Deploy Hi.Events under `events.arf.kurue.com`.
-- Link annual retreat records to Hi.Events event IDs.
-- Add organizer action to mark members `approved_to_pay`.
-- Send Hi.Events checkout links by Telegram.
-- Receive Hi.Events completed order webhook.
-- Link order/attendee IDs to ARF RSVP.
-- Mark completed annual retreat registrations `paid_registered`.
+- Design an ARF-owned annual retreat registration state model.
+- Add organizer approval states only if paid registration needs them.
+- Add direct Stripe Checkout when payment collection is needed.
+- Store Stripe IDs needed for reconciliation and refunds.
+- Send ARF-hosted payment links by Telegram.
+- Keep payment and registration status visible inside ARF.
 
 ## Phase 6: Internal CRM Admin
 
@@ -66,7 +65,7 @@
 - Test full Mini App RSVP flow with a small Telegram group.
 - Test under-cap and over-cap event behavior.
 - Test organizer waitlist promotion.
-- Test annual retreat payment webhook in a Hi.Events/Stripe test mode environment.
+- Test annual retreat payment flow in Stripe test mode if direct payment is added.
 - Test backups and restore.
 - Publish privacy, conduct, and refund policy drafts.
 

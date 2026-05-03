@@ -74,12 +74,7 @@ export async function submitSurveyResponseAction(formData: FormData) {
         and(
           eq(rsvps.memberId, member.id),
           eq(rsvps.eventId, survey.eventId),
-          inArray(rsvps.status, [
-            "confirmed",
-            "waitlisted",
-            "approved_to_pay",
-            "paid_registered",
-          ]),
+          inArray(rsvps.status, ["confirmed", "waitlisted"]),
         ),
       )
       .limit(1);
