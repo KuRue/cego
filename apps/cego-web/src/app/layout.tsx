@@ -78,31 +78,37 @@ export default async function RootLayout({
               <div
                 className="bg-layer-blob"
                 style={{
-                  width: "900px",
-                  height: "600px",
-                  top: "-10%",
-                  left: "5%",
-                  background: "var(--color-accent)",
+                  width: "60vw",
+                  height: "60vw",
+                  maxWidth: "800px",
+                  maxHeight: "800px",
+                  top: "-15%",
+                  left: "-10%",
+                  background: "radial-gradient(circle, color-mix(in srgb, var(--color-accent) 30%, transparent) 0%, transparent 70%)",
                 }}
               />
               <div
                 className="bg-layer-blob"
                 style={{
-                  width: "700px",
-                  height: "700px",
-                  bottom: "-5%",
-                  right: "5%",
-                  background: "var(--color-highlight)",
+                  width: "50vw",
+                  height: "50vw",
+                  maxWidth: "700px",
+                  maxHeight: "700px",
+                  bottom: "-10%",
+                  right: "-5%",
+                  background: "radial-gradient(circle, color-mix(in srgb, var(--color-highlight) 25%, transparent) 0%, transparent 70%)",
                 }}
               />
               <div
                 className="bg-layer-blob"
                 style={{
-                  width: "500px",
-                  height: "400px",
-                  top: "40%",
-                  left: "35%",
-                  background: "var(--color-accent-light)",
+                  width: "40vw",
+                  height: "40vw",
+                  maxWidth: "500px",
+                  maxHeight: "500px",
+                  top: "35%",
+                  left: "30%",
+                  background: "radial-gradient(circle, color-mix(in srgb, var(--color-accent-light) 20%, transparent) 0%, transparent 70%)",
                 }}
               />
             </>

@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
-import { requireAdminMember } from "@/lib/session";
+import { getCurrentMember } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -10,7 +10,11 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 export async function POST(request: Request) {
-  await requireAdminMember();
+  const member = await getCurrentMember();
+
+  if (!member || !member.isAdmin) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
 
   const formData = await request.formData();
   const file = formData.get("background");
@@ -33,12 +37,27 @@ export async function POST(request: Request) {
     );
   }
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
+  try {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+  } catch {
+    return NextResponse.json(
+      { error: "Could not create upload directory." },
+      { status: 500 },
+    );
+  }
 
   const ext = file.type.split("/")[1];
   const filename = `background.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(join(UPLOAD_DIR, filename), buffer);
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(join(UPLOAD_DIR, filename), buffer);
+  } catch {
+    return NextResponse.json(
+      { error: "Could not save file." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ url: `/uploads/${filename}` });
 }

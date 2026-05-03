@@ -126,14 +126,6 @@ body {
 .bg-layer-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
-}
-
-@media (prefers-color-scheme: dark) {
-  .bg-layer-blob {
-    opacity: 0.2;
-  }
 }
 
 * {

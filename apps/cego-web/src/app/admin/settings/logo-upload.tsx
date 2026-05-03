@@ -6,14 +6,19 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(currentLogoUrl);
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setError("Select a file first.");
+      return;
+    }
 
     setUploading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const form = new FormData();
@@ -22,23 +27,23 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
       const res = await fetch("/api/admin/upload-logo", {
         method: "POST",
         body: form,
-        credentials: "include",
       });
 
       const body = await res.json();
 
       if (!res.ok) {
-        setError(body.error || "Upload failed.");
+        setError(body.error || `Upload failed (${res.status}).`);
         return;
       }
 
       setLogoUrl(body.url);
+      setSuccess("Logo uploaded.");
       const hiddenInput = document.querySelector<HTMLInputElement>('input[name="logoUrl"]');
       if (hiddenInput) {
         hiddenInput.setAttribute("value", body.url);
       }
-    } catch {
-      setError("Upload failed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
@@ -66,10 +71,8 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
       >
         {uploading ? "Uploading..." : "Upload"}
       </button>
-      {logoUrl ? (
-        <span className="text-sm" style={{ color: "var(--color-success)" }}>
-          Saved. Submit the form to apply.
-        </span>
+      {success ? (
+        <span className="text-sm" style={{ color: "var(--color-success)" }}>{success}</span>
       ) : null}
       {error ? (
         <p className="text-sm" style={{ color: "var(--color-danger)" }}>{error}</p>
