@@ -25,6 +25,7 @@ Required bot responsibilities:
 
 - Provide a button or command that opens the ARF Mini App.
 - Check whether a Telegram user belongs to the configured ARF group.
+- Check the configured ARF group administrator list so Telegram group admins become ARF app admins.
 - Send RSVP confirmation notifications.
 - Send waitlist notifications.
 - Send annual retreat payment approval links.

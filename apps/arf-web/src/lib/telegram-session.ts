@@ -1,4 +1,5 @@
 import {
+  getTelegramChatAdministrators,
   getDevTelegramInitData,
   getTelegramGroupStatus,
   TelegramBotApiError,
@@ -37,6 +38,7 @@ export async function createTelegramSession({
     const member = await upsertTelegramMember({
       telegramUser: verifiedInitData.user,
       groupStatus: "member",
+      telegramGroupAdmin: null,
     });
 
     return {
@@ -64,9 +66,14 @@ export async function createTelegramSession({
     verifiedInitData.user,
     botToken,
   );
+  const telegramGroupAdmin = await resolveTelegramGroupAdminStatus(
+    verifiedInitData.user,
+    botToken,
+  );
   const member = await upsertTelegramMember({
     telegramUser: verifiedInitData.user,
     groupStatus,
+    telegramGroupAdmin,
   });
 
   return {
@@ -97,9 +104,14 @@ export async function createTelegramLoginWidgetSession(
     verifiedLoginData.user,
     botToken,
   );
+  const telegramGroupAdmin = await resolveTelegramGroupAdminStatus(
+    verifiedLoginData.user,
+    botToken,
+  );
   const member = await upsertTelegramMember({
     telegramUser: verifiedLoginData.user,
     groupStatus,
+    telegramGroupAdmin,
   });
 
   return {
@@ -148,6 +160,41 @@ async function resolveTelegramGroupStatus(
         reason: error.message,
       });
       return "unknown";
+    }
+
+    throw error;
+  }
+}
+
+async function resolveTelegramGroupAdminStatus(
+  telegramUser: Pick<TelegramDisplayUser, "id">,
+  botToken: string,
+): Promise<boolean | null> {
+  const chatId = process.env.TELEGRAM_GROUP_ID;
+
+  if (!chatId) {
+    return null;
+  }
+
+  const telegramId = String(telegramUser.id);
+
+  try {
+    const administrators = await getTelegramChatAdministrators({
+      botToken,
+      chatId,
+    });
+
+    return administrators.some(
+      (administrator) => String(administrator.user.id) === telegramId,
+    );
+  } catch (error) {
+    if (error instanceof TelegramBotApiError) {
+      console.warn("Telegram group admin lookup failed.", {
+        chatId,
+        telegramId,
+        reason: error.message,
+      });
+      return null;
     }
 
     throw error;

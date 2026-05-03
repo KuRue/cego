@@ -2,6 +2,7 @@ import Link from "next/link";
 import { count, getDb, members } from "@arf/db";
 import {
   getTelegramBotInfo,
+  getTelegramChatAdministrators,
   getTelegramGroupStatus,
   TelegramBotApiError,
 } from "@arf/telegram";
@@ -25,12 +26,13 @@ interface DiagnosticItem {
 
 export default async function AdminDiagnosticsPage() {
   const currentMember = await requireAdminMember();
-  const [database, publicHealth, telegramBot, telegramGroup] =
+  const [database, publicHealth, telegramBot, telegramGroup, telegramAdmins] =
     await Promise.all([
       checkDatabase(),
       checkPublicHealth(),
       checkTelegramBot(),
       checkTelegramGroup(currentMember.telegramId),
+      checkTelegramAdministrators(currentMember.telegramId),
     ]);
 
   const configuration = getConfigurationDiagnostics();
@@ -83,7 +85,10 @@ export default async function AdminDiagnosticsPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <DiagnosticPanel title="Runtime" items={[database, publicHealth]} />
-          <DiagnosticPanel title="Telegram" items={[telegramBot, telegramGroup]} />
+          <DiagnosticPanel
+            title="Telegram"
+            items={[telegramBot, telegramGroup, telegramAdmins]}
+          />
           <DiagnosticPanel title="Configuration" items={configuration} />
           <DiagnosticPanel title="Current Session" items={currentMemberDiagnostics} />
         </div>
@@ -140,6 +145,50 @@ async function checkPublicHealth(): Promise<DiagnosticItem> {
       label: "Public app URL",
       status: "warn",
       value: healthUrl.origin,
+      detail: getErrorMessage(error),
+    };
+  }
+}
+
+async function checkTelegramAdministrators(
+  telegramId: string,
+): Promise<DiagnosticItem> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_GROUP_ID;
+
+  if (!botToken || !chatId) {
+    return {
+      label: "Telegram admin sync",
+      status: "fail",
+      value: "missing configuration",
+      detail: "Set TELEGRAM_BOT_TOKEN and TELEGRAM_GROUP_ID.",
+    };
+  }
+
+  try {
+    const administrators = await getTelegramChatAdministrators({
+      botToken,
+      chatId,
+    });
+    const currentMemberIsTelegramAdmin = administrators.some(
+      (administrator) => String(administrator.user.id) === telegramId,
+    );
+
+    return {
+      label: "Telegram admin sync",
+      status: currentMemberIsTelegramAdmin ? "pass" : "warn",
+      value: currentMemberIsTelegramAdmin
+        ? "current member is admin"
+        : "current member not listed",
+      detail: `${administrators.length} human admin${
+        administrators.length === 1 ? "" : "s"
+      } returned by Telegram`,
+    };
+  } catch (error) {
+    return {
+      label: "Telegram admin sync",
+      status: "fail",
+      value: "getChatAdministrators failed",
       detail: getErrorMessage(error),
     };
   }

@@ -17,6 +17,19 @@ interface TelegramChatMember {
   is_member?: boolean;
 }
 
+interface TelegramUser {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+}
+
+interface TelegramChatAdministrator {
+  status: "creator" | "administrator";
+  user: TelegramUser;
+}
+
 export interface TelegramBotInfo {
   id: number;
   is_bot: boolean;
@@ -49,6 +62,44 @@ export async function getTelegramBotInfo({
 
   if (!response.ok || !payload.ok || !payload.result) {
     throw new TelegramBotApiError(payload.description ?? "Telegram getMe failed.");
+  }
+
+  return payload.result;
+}
+
+export async function getTelegramChatAdministrators({
+  botToken,
+  chatId,
+}: {
+  botToken: string;
+  chatId: string;
+}): Promise<TelegramChatAdministrator[]> {
+  if (!botToken) {
+    throw new TelegramBotApiError("Telegram bot token is required.");
+  }
+
+  if (!chatId) {
+    throw new TelegramBotApiError("Telegram group ID is required.");
+  }
+
+  const endpoint = `https://api.telegram.org/bot${botToken}/getChatAdministrators`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+    }),
+  });
+  const payload = (await response.json()) as TelegramApiResponse<
+    TelegramChatAdministrator[]
+  >;
+
+  if (!response.ok || !payload.ok || !payload.result) {
+    throw new TelegramBotApiError(
+      payload.description ?? "Telegram getChatAdministrators failed.",
+    );
   }
 
   return payload.result;

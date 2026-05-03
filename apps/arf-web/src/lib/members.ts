@@ -6,15 +6,20 @@ import { isAdminTelegramId } from "@/lib/session";
 export interface UpsertTelegramMemberInput {
   telegramUser: TelegramDisplayUser;
   groupStatus: "member" | "not_member" | "unknown";
+  telegramGroupAdmin?: boolean | null;
 }
 
 export async function upsertTelegramMember({
   telegramUser,
   groupStatus,
+  telegramGroupAdmin,
 }: UpsertTelegramMemberInput): Promise<Member> {
   const db = getDb();
   const telegramId = String(telegramUser.id);
-  const isAdmin = isAdminTelegramId(telegramId);
+  const isBootstrapAdmin = isAdminTelegramId(telegramId);
+  const isAdmin = isBootstrapAdmin || telegramGroupAdmin === true;
+  const shouldUpdateAdmin =
+    isBootstrapAdmin || telegramGroupAdmin === true || telegramGroupAdmin === false;
   const profileValues = {
     telegramId,
     telegramUsername: telegramUser.username,
@@ -33,7 +38,7 @@ export async function upsertTelegramMember({
       target: members.telegramId,
       set: {
         ...profileValues,
-        ...(isAdmin ? { isAdmin: true } : {}),
+        ...(shouldUpdateAdmin ? { isAdmin } : {}),
         updatedAt: new Date(),
       },
     })

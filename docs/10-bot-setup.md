@@ -26,6 +26,8 @@ ARF_ADMIN_TELEGRAM_IDS=123456789
 
 `ARF_ADMIN_TELEGRAM_IDS` is a comma or whitespace separated list of Telegram IDs that should become ARF admins when their member profile is created or updated.
 
+ARF also promotes Telegram group administrators to ARF admins during sign-in by calling `getChatAdministrators` for `TELEGRAM_GROUP_ID`. Keep `ARF_ADMIN_TELEGRAM_IDS` as the bootstrap override in case Telegram admin lookup is unavailable.
+
 ## Sign-In Paths
 
 - Browser users open `/sign-in`, use Telegram Login Widget, and return through `/api/telegram/login`.

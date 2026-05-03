@@ -21,6 +21,13 @@ Admin access uses two layers:
 
 Cloudflare Access protects the perimeter. App roles protect actions and records after login.
 
+ARF grants app admin access when either:
+
+- The member Telegram ID is listed in `ARF_ADMIN_TELEGRAM_IDS`.
+- The member appears in Telegram `getChatAdministrators` for the configured `TELEGRAM_GROUP_ID` during sign-in.
+
+Telegram group admin sync only updates ARF admin status after a successful Telegram administrator lookup. If Telegram admin lookup fails, ARF keeps the previous stored admin value instead of guessing.
+
 ## Data Handling
 
 Collect only data needed to run events:
