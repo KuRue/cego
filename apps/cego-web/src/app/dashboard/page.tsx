@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Badge, StatusBadge } from "@/components/badge";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
             <Link
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-              style={{ background: "var(--color-accent)", color: "#fff" }}
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Sign in with Telegram
             </Link>
@@ -66,7 +67,7 @@ export default async function DashboardPage() {
             <Link
               href="/sign-in"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-              style={{ background: "var(--color-accent)", color: "#fff" }}
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               Refresh access
             </Link>
@@ -155,7 +156,7 @@ export default async function DashboardPage() {
                 <button
                   type="submit"
                   className="h-10 rounded-xl px-5 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "#fff" }}
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
                 >
                   Save
                 </button>
@@ -195,7 +196,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           >
             <span
               className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold"
-              style={{ background: "var(--color-accent)", color: "#fff" }}
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               {event.title.charAt(0).toUpperCase()}
             </span>
@@ -204,15 +205,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-                style={{
-                  background: "var(--color-badge-bg)",
-                  color: "var(--color-badge-text)",
-                }}
-              >
-                {event.type === "major_event" ? "Major" : "Local"}
-              </span>
+              <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
               <StatusBadge status={event.status} />
               {rsvp ? <StatusBadge status={rsvp.status} /> : null}
             </div>
@@ -243,7 +236,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 <button
                   type="submit"
                   className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "#fff" }}
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
                 >
                   RSVP
                 </button>
@@ -281,28 +274,6 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const toneMap: Record<string, { bg: string; text: string }> = {
-    open: { bg: "rgba(34, 197, 94, 0.12)", text: "#16a34a" },
-    full: { bg: "rgba(234, 179, 8, 0.12)", text: "#ca8a04" },
-    closed: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
-    draft: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
-    confirmed: { bg: "rgba(34, 197, 94, 0.12)", text: "#16a34a" },
-    waitlisted: { bg: "rgba(234, 179, 8, 0.12)", text: "#ca8a04" },
-    cancelled: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
-  };
-  const tone = toneMap[status] ?? { bg: "var(--color-surface-hover)", text: "var(--color-muted)" };
-
-  return (
-    <span
-      className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-      style={{ background: tone.bg, color: tone.text }}
-    >
-      {status}
-    </span>
-  );
-}
-
 function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
   const { survey, event, schema, response } = surveyState;
   const hasQuestions = schema.questions.length > 0;
@@ -310,23 +281,8 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
   return (
     <article className="glass rounded-2xl p-5">
       <div className="flex flex-wrap items-center gap-2">
-        <span
-          className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-          style={{
-            background: "var(--color-badge-bg)",
-            color: "var(--color-badge-text)",
-          }}
-        >
-          {event ? "Event survey" : "Member survey"}
-        </span>
-        {response ? (
-          <span
-            className="rounded-lg px-2.5 py-1 text-xs font-semibold"
-            style={{ background: "rgba(34, 197, 94, 0.12)", color: "#16a34a" }}
-          >
-            submitted
-          </span>
-        ) : null}
+        <Badge>{event ? "Event survey" : "Member survey"}</Badge>
+        {response ? <StatusBadge status="submitted" /> : null}
       </div>
       <h3 className="mt-3 text-lg font-semibold">{survey.title}</h3>
       {survey.description ? (
@@ -377,7 +333,7 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
           className="inline-flex h-10 w-full items-center justify-center rounded-xl px-6 text-sm font-semibold transition sm:w-auto"
           style={{
             background: "var(--color-accent)",
-            color: "#fff",
+            color: "var(--color-on-accent)",
             opacity: hasQuestions ? 1 : 0.5,
           }}
         >

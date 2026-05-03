@@ -10,6 +10,8 @@ import {
 import { getAdminMemberDetail } from "@/lib/member-admin";
 import { getCurrentMember } from "@/lib/session";
 import { formatSurveyAnswer, parseSurveySchema } from "@/lib/surveys";
+import { Badge, StatusBadge } from "@/components/badge";
+import Navbar from "@/components/navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +28,24 @@ export default async function AdminMemberDetailPage({
 
   if (!currentMember || !currentMember.isAdmin) {
     return (
-      <MemberProfileShell>
-        <AccessRequired />
-      </MemberProfileShell>
+      <>
+        <Navbar />
+        <main className="mx-auto max-w-6xl px-5 py-16">
+          <div className="glass-lg mx-auto max-w-md rounded-2xl p-8 text-center">
+            <h1 className="text-xl font-semibold">Organizer access required</h1>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Sign in with an admin-listed Telegram ID to manage members.
+            </p>
+            <Link
+              href="/sign-in"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+            >
+              Sign in
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
@@ -44,318 +61,301 @@ export default async function AdminMemberDetailPage({
     (tag) => !assignedTagIds.has(tag.id),
   );
 
+  const inputStyle = {
+    background: "var(--color-surface-hover)",
+    border: "1px solid var(--color-surface-border)",
+    color: "var(--color-foreground)",
+  };
+
   return (
-    <MemberProfileShell memberName={currentMember.telegramDisplayName}>
-      <section className="border border-white/15 bg-white p-5 text-[#1d2523]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <Badge>{detail.member.groupStatus}</Badge>
-              {detail.member.isAdmin ? <Badge>admin</Badge> : null}
-            </div>
-            <h2 className="mt-4 text-3xl font-semibold">
-              {detail.member.telegramDisplayName}
-            </h2>
-            <p className="mt-2 text-sm text-[#64706c]">
-              {detail.member.telegramUsername
-                ? `@${detail.member.telegramUsername}`
-                : "No username"}{" "}
-              - Telegram ID {detail.member.telegramId}
-            </p>
-          </div>
-          <Link
-            href="/admin/members"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-[#b8cac5] px-4 text-sm font-semibold text-[#183f3c]"
-          >
-            Back to members
-          </Link>
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <Metric label="RSVPs" value={String(detail.rsvps.length)} />
-          <Metric
-            label="Surveys"
-            value={String(detail.surveyResponses.length)}
-          />
-          <Metric label="Notes" value={String(detail.notes.length)} />
-          <Metric label="Tags" value={String(detail.tags.length)} />
-        </div>
-      </section>
-
-      <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="grid gap-5">
-          <Panel title="Contact">
-            <form action={updateMemberEmailAction} className="grid gap-3">
-              <input type="hidden" name="memberId" value={detail.member.id} />
-              <label className="grid gap-1 text-sm">
-                <span className="font-medium">Email</span>
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={detail.member.email ?? ""}
-                  placeholder="Used for organizer contact and future payment steps"
-                  className="h-10 rounded-md border border-[#b8cac5] px-3"
-                />
-              </label>
-              <button
-                type="submit"
-                className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
-              >
-                Save contact
-              </button>
-            </form>
-          </Panel>
-
-          <Panel title="Tags">
-            {detail.tags.length === 0 ? (
-              <p className="text-sm text-[#64706c]">No tags assigned.</p>
-            ) : (
+    <>
+      <Navbar
+        member={{
+          telegramDisplayName: currentMember.telegramDisplayName,
+          telegramPhotoUrl: currentMember.telegramPhotoUrl,
+          isAdmin: currentMember.isAdmin,
+        }}
+      />
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+        <section className="glass-lg rounded-2xl p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
               <div className="flex flex-wrap gap-2">
-                {detail.tags.map((tag) => (
-                  <form key={tag.id} action={removeMemberTagAction}>
-                    <input
-                      type="hidden"
-                      name="memberId"
-                      value={detail.member.id}
-                    />
-                    <input type="hidden" name="tagId" value={tag.id} />
-                    <button type="submit" className="max-w-full text-left">
-                      <TagBadge tag={tag} suffix="x" />
-                    </button>
-                  </form>
-                ))}
+                <Badge>{detail.member.groupStatus}</Badge>
+                {detail.member.isAdmin ? <Badge>admin</Badge> : null}
               </div>
-            )}
-
-            <form action={assignExistingMemberTagAction} className="mt-4 grid gap-3">
-              <input type="hidden" name="memberId" value={detail.member.id} />
-              <label className="grid gap-1 text-sm">
-                <span className="font-medium">Assign existing tag</span>
-                <select
-                  name="tagId"
-                  disabled={assignableTags.length === 0}
-                  className="h-10 rounded-md border border-[#b8cac5] bg-white px-3 disabled:bg-[#eef3f1]"
-                >
-                  <option value="">
-                    {assignableTags.length === 0
-                      ? "No available tags"
-                      : "Choose tag"}
-                  </option>
-                  {assignableTags.map((tag) => (
-                    <option key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="submit"
-                disabled={assignableTags.length === 0}
-                className="h-10 rounded-md border border-[#b8cac5] px-4 text-sm font-semibold text-[#183f3c] disabled:cursor-not-allowed disabled:text-[#8a9692]"
-              >
-                Assign tag
-              </button>
-            </form>
-
-            <form
-              action={createAndAssignMemberTagAction}
-              className="mt-4 grid gap-3"
+              <h2 className="mt-4 text-3xl font-semibold">
+                {detail.member.telegramDisplayName}
+              </h2>
+              <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                {detail.member.telegramUsername
+                  ? `@${detail.member.telegramUsername}`
+                  : "No username"}{" "}
+                - Telegram ID {detail.member.telegramId}
+              </p>
+            </div>
+            <Link
+              href="/admin/members"
+              className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+              style={{
+                border: "1px solid var(--color-surface-border)",
+                color: "var(--color-foreground)",
+              }}
             >
-              <input type="hidden" name="memberId" value={detail.member.id} />
-              <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr]">
+              Back to members
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            <Metric label="RSVPs" value={String(detail.rsvps.length)} />
+            <Metric
+              label="Surveys"
+              value={String(detail.surveyResponses.length)}
+            />
+            <Metric label="Notes" value={String(detail.notes.length)} />
+            <Metric label="Tags" value={String(detail.tags.length)} />
+          </div>
+        </section>
+
+        <section className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-5">
+            <Panel title="Contact">
+              <form action={updateMemberEmailAction} className="grid gap-3">
+                <input type="hidden" name="memberId" value={detail.member.id} />
                 <label className="grid gap-1 text-sm">
-                  <span className="font-medium">New tag</span>
+                  <span className="font-medium">Email</span>
                   <input
-                    name="tagName"
-                    placeholder="rooming, staff, accessibility"
-                    className="h-10 rounded-md border border-[#b8cac5] px-3"
+                    name="email"
+                    type="email"
+                    defaultValue={detail.member.email ?? ""}
+                    placeholder="Used for organizer contact and future payment steps"
+                    className="h-10 rounded-xl px-3 text-sm outline-none"
+                    style={inputStyle}
                   />
                 </label>
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  Save contact
+                </button>
+              </form>
+            </Panel>
+
+            <Panel title="Tags">
+              {detail.tags.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>No tags assigned.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {detail.tags.map((tag) => (
+                    <form key={tag.id} action={removeMemberTagAction}>
+                      <input
+                        type="hidden"
+                        name="memberId"
+                        value={detail.member.id}
+                      />
+                      <input type="hidden" name="tagId" value={tag.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex max-w-full items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                        style={{ background: "var(--color-surface-hover)", color: "var(--color-foreground)" }}
+                      >
+                        {tag.name}
+                        <span className="font-mono opacity-60">x</span>
+                      </button>
+                    </form>
+                  ))}
+                </div>
+              )}
+
+              <form action={assignExistingMemberTagAction} className="mt-4 grid gap-3">
+                <input type="hidden" name="memberId" value={detail.member.id} />
                 <label className="grid gap-1 text-sm">
-                  <span className="font-medium">Color</span>
+                  <span className="font-medium">Assign existing tag</span>
                   <select
-                    name="color"
-                    defaultValue="gray"
-                    className="h-10 rounded-md border border-[#b8cac5] bg-white px-3"
+                    name="tagId"
+                    disabled={assignableTags.length === 0}
+                    className="h-10 rounded-xl px-3 text-sm outline-none disabled:opacity-50"
+                    style={inputStyle}
                   >
-                    <option value="gray">gray</option>
-                    <option value="green">green</option>
-                    <option value="gold">gold</option>
-                    <option value="red">red</option>
-                    <option value="blue">blue</option>
+                    <option value="">
+                      {assignableTags.length === 0
+                        ? "No available tags"
+                        : "Choose tag"}
+                    </option>
+                    {assignableTags.map((tag) => (
+                      <option key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </option>
+                    ))}
                   </select>
                 </label>
-              </div>
-              <button
-                type="submit"
-                className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
+                <button
+                  type="submit"
+                  disabled={assignableTags.length === 0}
+                  className="h-10 rounded-xl px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    border: "1px solid var(--color-surface-border)",
+                    color: "var(--color-foreground)",
+                  }}
+                >
+                  Assign tag
+                </button>
+              </form>
+
+              <form
+                action={createAndAssignMemberTagAction}
+                className="mt-4 grid gap-3"
               >
-                Create and assign
-              </button>
-            </form>
-          </Panel>
+                <input type="hidden" name="memberId" value={detail.member.id} />
+                <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr]">
+                  <label className="grid gap-1 text-sm">
+                    <span className="font-medium">New tag</span>
+                    <input
+                      name="tagName"
+                      placeholder="rooming, staff, accessibility"
+                      className="h-10 rounded-xl px-3 text-sm outline-none"
+                      style={inputStyle}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    <span className="font-medium">Color</span>
+                    <select
+                      name="color"
+                      defaultValue="gray"
+                      className="h-10 rounded-xl px-3 text-sm outline-none"
+                      style={inputStyle}
+                    >
+                      <option value="gray">gray</option>
+                      <option value="green">green</option>
+                      <option value="gold">gold</option>
+                      <option value="red">red</option>
+                      <option value="blue">blue</option>
+                    </select>
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  Create and assign
+                </button>
+              </form>
+            </Panel>
 
-          <Panel title="Internal Notes">
-            <form action={createMemberNoteAction} className="grid gap-3">
-              <input type="hidden" name="memberId" value={detail.member.id} />
-              <textarea
-                name="body"
-                required
-                rows={4}
-                placeholder="Organizer-only note"
-                className="min-h-28 rounded-md border border-[#b8cac5] px-3 py-2 leading-6"
-              />
-              <button
-                type="submit"
-                className="h-10 rounded-md bg-[#183f3c] px-4 text-sm font-semibold text-white"
-              >
-                Add note
-              </button>
-            </form>
+            <Panel title="Internal Notes">
+              <form action={createMemberNoteAction} className="grid gap-3">
+                <input type="hidden" name="memberId" value={detail.member.id} />
+                <textarea
+                  name="body"
+                  required
+                  rows={4}
+                  placeholder="Organizer-only note"
+                  className="min-h-28 rounded-xl px-3 py-2 text-sm leading-6 outline-none"
+                  style={inputStyle}
+                />
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  Add note
+                </button>
+              </form>
 
-            {detail.notes.length === 0 ? (
-              <p className="mt-4 text-sm text-[#64706c]">No notes yet.</p>
-            ) : (
-              <div className="mt-4 grid gap-3">
-                {detail.notes.map(({ note, author }) => (
-                  <article key={note.id} className="border border-[#d7e3df] p-4">
-                    <p className="whitespace-pre-wrap leading-6">{note.body}</p>
-                    <p className="mt-3 text-xs text-[#64706c]">
-                      {author?.telegramDisplayName ?? "Unknown organizer"} on{" "}
-                      {formatDate(note.createdAt)}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </Panel>
-        </div>
-
-        <div className="grid gap-5">
-          <Panel title="RSVP History">
-            {detail.rsvps.length === 0 ? (
-              <p className="text-sm text-[#64706c]">No RSVPs yet.</p>
-            ) : (
-              <div className="grid gap-3">
-                {detail.rsvps.map(({ rsvp, event }) => (
-                  <article key={rsvp.id} className="border border-[#d7e3df] p-4">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge>{rsvp.status}</Badge>
-                      <Badge>
-                        {event.type === "major_event" ? "major" : "local"}
-                      </Badge>
-                      <Badge>{event.status}</Badge>
-                    </div>
-                    <h3 className="mt-3 font-semibold">{event.title}</h3>
-                    <p className="mt-1 text-sm text-[#64706c]">
-                      {formatDate(event.startsAt)}
-                    </p>
-                    {rsvp.ticketType ? (
-                      <p className="mt-2 text-sm text-[#64706c]">
-                        Ticket: {rsvp.ticketType}
+              {detail.notes.length === 0 ? (
+                <p className="mt-4 text-sm" style={{ color: "var(--color-muted)" }}>No notes yet.</p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {detail.notes.map(({ note, author }) => (
+                    <article key={note.id} className="glass rounded-xl p-4">
+                      <p className="whitespace-pre-wrap leading-6">{note.body}</p>
+                      <p className="mt-3 text-xs" style={{ color: "var(--color-muted)" }}>
+                        {author?.telegramDisplayName ?? "Unknown organizer"} on{" "}
+                        {formatDate(note.createdAt)}
                       </p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-            )}
-          </Panel>
-
-          <Panel title="Survey Responses">
-            {detail.surveyResponses.length === 0 ? (
-              <p className="text-sm text-[#64706c]">No survey responses yet.</p>
-            ) : (
-              <div className="grid gap-3">
-                {detail.surveyResponses.map(({ response, survey, event }) => (
-                  <article
-                    key={response.id}
-                    className="border border-[#d7e3df] p-4"
-                  >
-                    <h3 className="font-semibold">{survey.title}</h3>
-                    {event ? (
-                      <p className="mt-1 text-sm text-[#64706c]">
-                        Linked to {event.title}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 text-sm text-[#64706c]">
-                      Updated {formatDate(response.updatedAt)}
-                    </p>
-                    <dl className="mt-4 grid gap-3">
-                      {formatSurveyResponse(
-                        response.answersJson,
-                        survey.schemaJson,
-                      ).map(({ label, answer }) => (
-                        <div key={label}>
-                          <dt className="text-xs uppercase tracking-[0.14em] text-[#6b746f]">
-                            {label}
-                          </dt>
-                          <dd className="mt-1 whitespace-pre-wrap leading-6">
-                            {answer}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </article>
-                ))}
-              </div>
-            )}
-          </Panel>
-        </div>
-      </section>
-    </MemberProfileShell>
-  );
-}
-
-function MemberProfileShell({
-  children,
-  memberName,
-}: {
-  children: React.ReactNode;
-  memberName?: string;
-}) {
-  return (
-    <main className="min-h-screen bg-[#14211f] px-5 py-8 text-white">
-      <section className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="font-semibold">
-            cego
-          </Link>
-          <div className="flex flex-wrap items-center justify-end gap-4 text-sm text-white/70">
-            {memberName ? <span>{memberName}</span> : null}
-            <Link href="/admin/diagnostics">Diagnostics</Link>
-            <Link href="/admin/members">Members</Link>
-            <Link href="/dashboard">Dashboard</Link>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </Panel>
           </div>
-        </div>
-        <div className="mt-12 max-w-3xl">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#d8b35a]">
-            Member profile
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">
-            CRM-lite details for cego organizers.
-          </h1>
-        </div>
-        <div className="mt-8">{children}</div>
-      </section>
-    </main>
-  );
-}
 
-function AccessRequired() {
-  return (
-    <div className="border border-white/15 bg-white/5 p-6">
-      <h1 className="text-3xl font-semibold">Organizer access required.</h1>
-      <p className="mt-3 max-w-2xl leading-7 text-white/70">
-        Sign in through Telegram with an admin-listed Telegram ID to manage
-        members.
-      </p>
-      <Link
-        href="/sign-in"
-        className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-white px-5 text-sm font-semibold text-[#14211f]"
-      >
-        Sign in with Telegram
-      </Link>
-    </div>
+          <div className="grid gap-5">
+            <Panel title="RSVP History">
+              {detail.rsvps.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {detail.rsvps.map(({ rsvp, event }) => (
+                    <article key={rsvp.id} className="glass rounded-xl p-4">
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge status={rsvp.status} />
+                        <Badge>
+                          {event.type === "major_event" ? "major" : "local"}
+                        </Badge>
+                        <StatusBadge status={event.status} />
+                      </div>
+                      <h3 className="mt-3 font-semibold">{event.title}</h3>
+                      <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                        {formatDate(event.startsAt)}
+                      </p>
+                      {rsvp.ticketType ? (
+                        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                          Ticket: {rsvp.ticketType}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            <Panel title="Survey Responses">
+              {detail.surveyResponses.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>No survey responses yet.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {detail.surveyResponses.map(({ response, survey, event }) => (
+                    <article
+                      key={response.id}
+                      className="glass rounded-xl p-4"
+                    >
+                      <h3 className="font-semibold">{survey.title}</h3>
+                      {event ? (
+                        <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                          Linked to {event.title}
+                        </p>
+                      ) : null}
+                      <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                        Updated {formatDate(response.updatedAt)}
+                      </p>
+                      <dl className="mt-4 grid gap-3">
+                        {formatSurveyResponse(
+                          response.answersJson,
+                          survey.schemaJson,
+                        ).map(({ label, answer }) => (
+                          <div key={label}>
+                            <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                              {label}
+                            </dt>
+                            <dd className="mt-1 whitespace-pre-wrap leading-6">
+                              {answer}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
 
@@ -367,7 +367,7 @@ function Panel({
   title: string;
 }) {
   return (
-    <section className="border border-white/15 bg-white p-5 text-[#1d2523]">
+    <section className="glass-lg rounded-2xl p-5">
       <h2 className="text-2xl font-semibold">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
@@ -376,55 +376,13 @@ function Panel({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-[#e3ece9] bg-[#f8fbff] p-3 text-[#1d2523]">
-      <p className="text-xs uppercase tracking-[0.14em] text-[#6b746f]">
+    <div className="glass rounded-xl p-3">
+      <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
         {label}
       </p>
-      <p className="mt-2 font-semibold text-[#183f3c]">{value}</p>
+      <p className="mt-2 font-semibold">{value}</p>
     </div>
   );
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-md bg-[#eef3f1] px-3 py-1 text-xs font-semibold text-[#4e5b57]">
-      {children}
-    </span>
-  );
-}
-
-function TagBadge({
-  suffix,
-  tag,
-}: {
-  suffix?: string;
-  tag: { name: string; color: string };
-}) {
-  return (
-    <span
-      className={`inline-block max-w-full break-all rounded-md px-3 py-1 text-xs font-semibold ${tagToneClass(
-        tag.color,
-      )}`}
-    >
-      {tag.name}
-      {suffix ? <span className="ml-2 font-mono">{suffix}</span> : null}
-    </span>
-  );
-}
-
-function tagToneClass(color: string): string {
-  switch (color) {
-    case "green":
-      return "bg-[#dbe9e5] text-[#183f3c]";
-    case "gold":
-      return "bg-[#f7e9c0] text-[#6b4c00]";
-    case "red":
-      return "bg-[#fde1da] text-[#7c2f20]";
-    case "blue":
-      return "bg-[#dce8f7] text-[#24476b]";
-    default:
-      return "bg-[#eef3f1] text-[#4e5b57]";
-  }
 }
 
 function formatDate(date: Date): string {

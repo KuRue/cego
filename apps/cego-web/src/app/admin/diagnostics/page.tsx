@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { count, getDb, members } from "@cego/db";
 import {
   getTelegramBotInfo,
@@ -6,6 +5,8 @@ import {
   getTelegramGroupStatus,
   TelegramBotApiError,
 } from "@cego/telegram";
+import { StatusBadge } from "@/components/badge";
+import Navbar from "@/components/navbar";
 import { getPublicUrl } from "@/lib/public-url";
 import { requireAdminMember } from "@/lib/session";
 
@@ -56,44 +57,28 @@ export default async function AdminDiagnosticsPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#14211f] px-4 py-8 text-white sm:px-5">
-      <section className="mx-auto w-full max-w-6xl">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/admin" className="font-semibold">
-            cego admin
-          </Link>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
-            <Link href="/admin">Events</Link>
-            <Link href="/admin/members">Members</Link>
-            <Link href="/dashboard">Dashboard</Link>
-          </div>
-        </div>
-
-        <div className="mt-12 max-w-3xl">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#d8b35a]">
-            Organizer admin
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">
-            Deployment diagnostics.
-          </h1>
-          <p className="mt-4 leading-7 text-white/70">
-            Checks runtime setup without printing secrets. Use this when
-            Telegram, Cloudflare Tunnel, database, or admin access behavior
-            looks wrong.
-          </p>
-        </div>
+    <>
+      <Navbar
+        member={{
+          telegramDisplayName: currentMember.telegramDisplayName,
+          telegramPhotoUrl: currentMember.telegramPhotoUrl,
+          isAdmin: currentMember.isAdmin,
+        }}
+      />
+      <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
+        <h1 className="text-3xl font-semibold">Diagnostics</h1>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          Runtime checks without printing secrets. Use this when Telegram, database, or admin access looks wrong.
+        </p>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <DiagnosticPanel title="Runtime" items={[database, publicHealth]} />
-          <DiagnosticPanel
-            title="Telegram"
-            items={[telegramBot, telegramGroup, telegramAdmins]}
-          />
+          <DiagnosticPanel title="Telegram" items={[telegramBot, telegramGroup, telegramAdmins]} />
           <DiagnosticPanel title="Configuration" items={configuration} />
           <DiagnosticPanel title="Current Session" items={currentMemberDiagnostics} />
         </div>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -335,24 +320,22 @@ function DiagnosticPanel({
   title: string;
 }) {
   return (
-    <section className="border border-white/15 bg-white p-5 text-[#1d2523]">
+    <section className="glass-lg rounded-2xl p-5">
       <h2 className="text-2xl font-semibold">{title}</h2>
       <div className="mt-4 grid gap-3">
         {items.map((item) => (
-          <div key={item.label} className="border border-[#d7e3df] p-4">
+          <div key={item.label} className="glass rounded-xl p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-[#14211f]">
-                  {item.label}
-                </p>
-                <p className="mt-1 break-all font-mono text-sm text-[#4e5b57]">
+                <p className="text-sm font-semibold">{item.label}</p>
+                <p className="mt-1 break-all font-mono text-sm" style={{ color: "var(--color-muted)" }}>
                   {item.value}
                 </p>
               </div>
               <StatusBadge status={item.status} />
             </div>
             {item.detail ? (
-              <p className="mt-3 break-words text-sm leading-6 text-[#64706c]">
+              <p className="mt-3 break-words text-sm leading-6" style={{ color: "var(--color-muted)" }}>
                 {item.detail}
               </p>
             ) : null}
@@ -360,21 +343,6 @@ function DiagnosticPanel({
         ))}
       </div>
     </section>
-  );
-}
-
-function StatusBadge({ status }: { status: DiagnosticStatus }) {
-  const className =
-    status === "pass"
-      ? "bg-[#dbe9e5] text-[#183f3c]"
-      : status === "warn"
-        ? "bg-[#f7e9c0] text-[#6b4c00]"
-        : "bg-[#fde1da] text-[#7c2f20]";
-
-  return (
-    <span className={`rounded-md px-3 py-1 text-xs font-semibold ${className}`}>
-      {status}
-    </span>
   );
 }
 

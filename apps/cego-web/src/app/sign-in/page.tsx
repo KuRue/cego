@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import Navbar from "@/components/navbar";
 import { getPublicUrl } from "@/lib/public-url";
 import TelegramLoginWidget from "./telegram-login-widget";
 
@@ -20,73 +21,78 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const authUrl = await getTelegramAuthUrl();
 
   return (
-    <main className="min-h-screen bg-[#f3f8f6] px-5 py-6 text-[#1d2523]">
-      <section className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-xl flex-col justify-between border border-[#cadbd7] bg-white p-5 shadow-[0_20px_60px_rgba(29,37,35,0.1)]">
-        <div>
-          <Link href="/" className="text-sm font-semibold text-[#183f3c]">
-            cego
-          </Link>
-          <p className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
-            Telegram SSO
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">
-            Sign in with the Telegram account you use in the community group.
-          </h1>
-          <p className="mt-4 leading-7 text-[#4e5b57]">
-            cego uses Telegram as the account system. After Telegram verifies the
-            login, cego checks group membership and opens the member dashboard.
+    <>
+      <Navbar />
+      <main className="mx-auto flex min-h-[calc(100vh-60px)] max-w-lg flex-col justify-center px-5 py-16">
+        <div className="glass-lg rounded-2xl p-8">
+          <h1 className="text-3xl font-semibold">Sign in</h1>
+          <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
+            Use your Telegram account to sign in. cego checks group membership
+            and opens the member dashboard.
           </p>
 
           {hasTelegramError ? (
-            <div className="mt-8 border border-[#e0b6a9] bg-[#fff6f3] p-5">
-              <p className="font-semibold text-[#7c2f20]">
-                Telegram sign-in did not complete.
+            <div
+              className="mt-6 rounded-xl p-4"
+              style={{
+                background: "var(--color-danger-bg)",
+                border: "1px solid var(--color-danger-border)",
+              }}
+            >
+              <p className="font-semibold" style={{ color: "var(--color-danger)" }}>
+                Sign-in did not complete.
               </p>
-              <p className="mt-2 text-sm leading-6 text-[#4e5b57]">
-                The login link was invalid or expired. Start a new Telegram
-                sign-in from this page.
+              <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                The login link was invalid or expired. Try again below.
               </p>
             </div>
           ) : null}
 
-          <div className="mt-8 border border-[#dfe9e6] bg-[#f8fbff] p-5">
-            <p className="font-semibold text-[#183f3c]">
-              Browser sign-in
+          <div className="mt-6 glass rounded-xl p-5">
+            <p className="font-semibold">Browser sign-in</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              Use this when opening cego from a normal browser.
             </p>
-            <p className="mt-2 text-sm leading-6 text-[#4e5b57]">
-              Use this when opening cego from a normal browser link.
-            </p>
-            <div className="mt-5">
+            <div className="mt-4">
               {botUsername ? (
                 <TelegramLoginWidget
                   authUrl={authUrl}
                   botUsername={botUsername}
                 />
               ) : (
-                <p className="border border-[#e0b6a9] bg-[#fff6f3] p-4 text-sm text-[#7c2f20]">
-                  TELEGRAM_BOT_USERNAME is not configured, so browser sign-in
-                  cannot render yet.
-                </p>
+                <div
+                  className="rounded-xl p-4 text-sm"
+                  style={{
+                    background: "var(--color-danger-bg)",
+                    border: "1px solid var(--color-danger-border)",
+                    color: "var(--color-danger)",
+                  }}
+                >
+                  TELEGRAM_BOT_USERNAME is not configured.
+                </div>
               )}
             </div>
           </div>
 
-          <div className="mt-4 border border-[#dfe9e6] p-5">
-            <p className="font-semibold text-[#183f3c]">Inside Telegram</p>
-            <p className="mt-2 text-sm leading-6 text-[#4e5b57]">
-              The Mini App still uses Telegram.WebApp init data and the same cego
-              session cookie.
+          <div className="mt-4 glass rounded-xl p-5">
+            <p className="font-semibold">Inside Telegram</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              Open the Mini App for automatic sign-in.
             </p>
             <Link
               href="/mini-app"
-              className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md border border-[#b8cac5] px-5 text-sm font-semibold text-[#183f3c] transition hover:border-[#183f3c]"
+              className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+              style={{
+                background: "var(--color-surface-hover)",
+                border: "1px solid var(--color-surface-border)",
+              }}
             >
-              Open Mini App flow
+              Open Mini App
             </Link>
           </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }
 

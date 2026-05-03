@@ -51,7 +51,7 @@ export default function Navbar({ member }: NavbarProps) {
         <Link href="/" className="flex items-center gap-2">
           <span
             className="grid h-8 w-8 place-items-center rounded-lg font-bold"
-            style={{ background: "var(--color-accent)", color: "#fff" }}
+            style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
           >
             c
           </span>
@@ -132,7 +132,7 @@ export default function Navbar({ member }: NavbarProps) {
             className="rounded-lg px-4 py-2 text-sm font-medium transition"
             style={{
               background: "var(--color-accent)",
-              color: "#fff",
+              color: "var(--color-on-accent)",
             }}
           >
             Sign in
