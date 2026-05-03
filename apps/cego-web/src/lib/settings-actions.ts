@@ -22,6 +22,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
     heroTitle: readText(formData, "heroTitle") || "",
     heroBody: readText(formData, "heroBody") || "",
     footerText: readText(formData, "footerText") || "",
+    eventTypes: readEventTypes(formData, "eventTypes"),
     updatedAt: new Date(),
   };
 
@@ -58,4 +59,16 @@ function readReturnPath(formData: FormData, key: string): string | null {
   }
 
   return value;
+}
+
+function readEventTypes(formData: FormData, key: string): string {
+  const value = readText(formData, key);
+  if (!value) return '["major_event","local_event"]';
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return JSON.stringify(parsed.filter((t: unknown) => typeof t === "string" && t.trim()));
+    }
+  } catch {}
+  return '["major_event","local_event"]';
 }

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Script from "next/script";
 import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
-import { Badge, StatusBadge } from "@/components/badge";
+import { StatusBadge } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
 import { getPublicEvents } from "@/lib/events";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
@@ -123,7 +123,6 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount }: { event: im
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
               <StatusBadge status={event.status} />
               {isFull ? (
                 <span

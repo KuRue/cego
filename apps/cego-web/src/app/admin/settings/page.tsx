@@ -7,6 +7,7 @@ import { Badge } from "@/components/badge";
 import { getNavbarBrand } from "@/lib/settings";
 import LogoUpload from "./logo-upload";
 import BackgroundUpload from "./background-upload";
+import EventTypeEditor from "./event-type-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,14 @@ export default async function AdminSettingsPage() {
               <BackgroundUpload currentUrl={settings.backgroundUrl} />
             </div>
             <input type="hidden" name="backgroundUrl" defaultValue={settings.backgroundUrl ?? ""} />
+          </section>
+
+          <section className="glass-lg rounded-2xl p-5">
+            <h2 className="text-lg font-semibold">Event types</h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              Custom templates for organizing events. Not shown to members.
+            </p>
+            <EventTypeEditor types={settings.eventTypes} />
           </section>
 
           <section className="glass-lg rounded-2xl p-5">

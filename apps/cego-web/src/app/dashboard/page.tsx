@@ -209,7 +209,6 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
               <StatusBadge status={event.status} />
               {rsvp ? <StatusBadge status={rsvp.status} /> : null}
             </div>

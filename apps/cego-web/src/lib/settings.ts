@@ -8,6 +8,7 @@ export interface BrandSettings {
   highlightColor: string;
   logoUrl: string | null;
   backgroundUrl: string | null;
+  eventTypes: string[];
   heroTitle: string;
   heroBody: string;
   footerText: string;
@@ -21,6 +22,7 @@ const defaults: BrandSettings = {
   highlightColor: "#d8b35a",
   logoUrl: null,
   backgroundUrl: null,
+  eventTypes: ["major_event", "local_event"],
   heroTitle: "Run community events without turning the group chat into a spreadsheet.",
   heroBody:
     "cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.",
@@ -67,8 +69,18 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     highlightColor: row.highlightColor || defaults.highlightColor,
     logoUrl: row.logoUrl,
     backgroundUrl: row.backgroundUrl,
+    eventTypes: parseEventTypes(row.eventTypes),
     heroTitle: row.heroTitle || defaults.heroTitle,
     heroBody: row.heroBody || defaults.heroBody,
     footerText: row.footerText || defaults.footerText,
   };
+}
+
+function parseEventTypes(value: string | null): string[] {
+  if (!value) return defaults.eventTypes;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch {}
+  return defaults.eventTypes;
 }

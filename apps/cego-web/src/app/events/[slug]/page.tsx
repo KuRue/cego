@@ -1,7 +1,7 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
-import { Badge, StatusBadge } from "@/components/badge";
+import { StatusBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEventBySlug, type EventWithRsvpState } from "@/lib/events";
@@ -126,7 +126,6 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            <Badge>{event.type === "major_event" ? "Major event" : "Local event"}</Badge>
             <StatusBadge status={event.status} />
             {rsvp ? <StatusBadge status={rsvp.status} /> : null}
           </div>

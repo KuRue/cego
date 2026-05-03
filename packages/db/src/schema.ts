@@ -13,7 +13,6 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   eventStatuses,
-  eventTypes,
   memberGroupStatuses,
   notificationStatuses,
   rsvpStatuses,
@@ -33,7 +32,6 @@ export const memberGroupStatusEnum = pgEnum(
   "member_group_status",
   memberGroupStatuses,
 );
-export const eventTypeEnum = pgEnum("event_type", eventTypes);
 export const eventStatusEnum = pgEnum("event_status", eventStatuses);
 export const rsvpStatusEnum = pgEnum("rsvp_status", rsvpStatuses);
 export const surveyStatusEnum = pgEnum("survey_status", surveyStatuses);
@@ -64,7 +62,7 @@ export const events = pgTable(
   "events",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    type: eventTypeEnum("type").notNull(),
+    type: text("type").notNull(),
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
@@ -253,6 +251,7 @@ export const siteSettings = pgTable("site_settings", {
   heroTitle: text("hero_title").default("Run community events without turning the group chat into a spreadsheet.").notNull(),
   heroBody: text("hero_body").default("cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.").notNull(),
   footerText: text("footer_text").default("AGPLv3. Self-hosted.").notNull(),
+  eventTypes: text("event_types").default('["major_event","local_event"]').notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

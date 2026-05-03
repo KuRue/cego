@@ -7,13 +7,11 @@ import {
   count,
   eq,
   eventStatuses,
-  eventTypes,
   events,
   getDb,
   inArray,
   rsvps,
   type EventStatus,
-  type EventType,
   type RsvpStatus,
 } from "@cego/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
@@ -185,7 +183,7 @@ function parseEventForm(formData: FormData) {
   const slug = slugify(readText(formData, "slug") || title);
 
   return {
-    type: readEnum(formData, "type", eventTypes) satisfies EventType,
+    type: readText(formData, "type") || "local_event",
     title,
     slug,
     description: readOptionalText(formData, "description"),

@@ -7,7 +7,7 @@ import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { Badge, StatusBadge } from "@/components/badge";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
 import { Suspense } from "react";
@@ -21,6 +21,7 @@ export const metadata = {
 export default async function AdminEventsPage() {
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
   const eventOverviews = await getAdminEvents();
 
   return (
@@ -54,7 +55,7 @@ export default async function AdminEventsPage() {
             </div>
           ) : (
             eventOverviews.map((overview) => (
-              <EventRow key={overview.event.id} overview={overview} />
+              <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} />
             ))
           )}
         </div>
@@ -83,7 +84,7 @@ function CreateEventButton() {
   );
 }
 
-function EventRow({ overview }: { overview: AdminEventWithRsvps }) {
+function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eventTypes: string[] }) {
   const { event, confirmedCount, waitlistedCount, rsvps } = overview;
 
   return (
@@ -120,7 +121,7 @@ function EventRow({ overview }: { overview: AdminEventWithRsvps }) {
         <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
           Edit event
         </summary>
-        <EventForm action={updateEventAction} submitLabel="Save event" event={event} />
+        <EventForm action={updateEventAction} submitLabel="Save event" event={event} eventTypes={eventTypes} />
       </details>
 
       {rsvps.length > 0 ? (
@@ -176,19 +177,22 @@ function EventForm({
   action,
   submitLabel,
   event,
+  eventTypes,
 }: {
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
   event?: AdminEventWithRsvps["event"];
+  eventTypes?: string[];
 }) {
   return (
     <form action={action} className="mt-4 grid gap-4">
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type">
-          <select name="type" defaultValue={event?.type ?? "local_event"} className="form-select">
-            <option value="major_event">major_event</option>
-            <option value="local_event">local_event</option>
+          <select name="type" defaultValue={event?.type ?? (eventTypes?.[0] ?? "local_event")} className="form-select">
+            {(eventTypes ?? ["local_event"]).map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
           </select>
         </Field>
         <Field label="Status">

@@ -1,9 +1,6 @@
 export const memberGroupStatuses = ["unknown", "member", "not_member"] as const;
 export type MemberGroupStatus = (typeof memberGroupStatuses)[number];
 
-export const eventTypes = ["major_event", "local_event"] as const;
-export type EventType = (typeof eventTypes)[number];
-
 export const eventStatuses = [
   "draft",
   "open",
