@@ -24,13 +24,6 @@ interface SessionResponse {
   error?: string;
 }
 
-const steps = [
-  "Read Telegram.WebApp.initData from the Mini App shell.",
-  "Send the signed payload to the cego backend.",
-  "Verify Telegram signature and freshness server-side.",
-  "Check Telegram group membership before RSVP access.",
-];
-
 export default function MiniAppSession() {
   const [state, setState] = useState<SessionState>({ status: "idle" });
 
@@ -98,6 +91,8 @@ export default function MiniAppSession() {
       member: body.member,
       mode: body.status === "dev_mock" ? "dev" : "telegram",
     });
+
+    window.location.replace("/dashboard");
   }, []);
 
   useEffect(() => {
@@ -128,126 +123,61 @@ export default function MiniAppSession() {
   }, [createSession]);
 
   return (
-    <main className="min-h-screen bg-[#f3f8f6] px-5 py-6 text-[#1d2523]">
-      <section className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-xl flex-col justify-between border border-[#cadbd7] bg-white p-5 shadow-[0_20px_60px_rgba(29,37,35,0.1)]">
-        <div>
-          <Link href="/" className="text-sm font-semibold text-[#183f3c]">
-            cego
-          </Link>
-          <p className="mt-8 font-mono text-xs uppercase tracking-[0.2em] text-[#b4573f]">
-            Telegram Mini App
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">
-            Your Telegram identity becomes your cego account.
-          </h1>
-          <p className="mt-4 leading-7 text-[#4e5b57]">
-            cego validates the signed Telegram payload on the server, checks the
-            configured group gate, then opens the member flow for approved group
-            members.
-          </p>
+    <main className="flex min-h-screen items-center justify-center px-5 py-6">
+      <div className="glass-lg mx-auto w-full max-w-md rounded-2xl p-6">
+        <Link href="/" className="text-sm font-semibold">
+          cego
+        </Link>
 
-          <div className="mt-8 space-y-3">
-            {steps.map((step, index) => (
-              <div key={step} className="flex gap-3 border border-[#dfe9e6] p-4">
-                <span className="font-mono text-sm text-[#b4573f]">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="text-sm text-[#3a4642]">{step}</span>
-              </div>
-            ))}
+        {state.status === "checking" ? (
+          <div className="mt-6 text-center">
+            <p className="font-semibold">Verifying your account.</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Checking Telegram identity and group access...
+            </p>
           </div>
+        ) : null}
 
-          <SessionPanel
-            state={state}
-            hasTelegramInitData={state.status !== "idle"}
-            onDevMock={() => createSession({ useDevMock: true })}
-          />
-        </div>
-      </section>
+        {state.status === "accepted" ? (
+          <div className="mt-6 text-center">
+            <p className="font-semibold">Welcome, {state.member.telegramDisplayName}.</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Redirecting to dashboard...
+            </p>
+          </div>
+        ) : null}
+
+        {state.status === "blocked" ? (
+          <div className="mt-6 text-center">
+            <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Group access required.</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              This Telegram account is verified, but is not a member of the
+              configured Telegram group.
+            </p>
+          </div>
+        ) : null}
+
+        {state.status === "error" ? (
+          <div className="mt-6 text-center">
+            <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Session unavailable.</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              {state.message}
+            </p>
+            <DevMockButton onDevMock={() => createSession({ useDevMock: true })} />
+          </div>
+        ) : null}
+
+        {state.status === "idle" ? (
+          <div className="mt-6 text-center">
+            <p className="font-semibold">Waiting for Telegram...</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+              Open this page inside Telegram to sign in automatically.
+            </p>
+            <DevMockButton onDevMock={() => createSession({ useDevMock: true })} />
+          </div>
+        ) : null}
+      </div>
     </main>
-  );
-}
-
-function SessionPanel({
-  state,
-  hasTelegramInitData,
-  onDevMock,
-}: {
-  state: SessionState;
-  hasTelegramInitData: boolean;
-  onDevMock: () => void;
-}) {
-  if (state.status === "checking") {
-    return (
-      <div className="mt-8 border border-[#cadbd7] bg-[#f8fbff] p-5">
-        <p className="font-semibold text-[#183f3c]">Checking Telegram session.</p>
-        <p className="mt-2 text-sm text-[#4e5b57]">
-          cego is validating identity and group access.
-        </p>
-      </div>
-    );
-  }
-
-  if (state.status === "accepted") {
-    return (
-      <div className="mt-8 border border-[#8bb5aa] bg-[#edf8f4] p-5">
-        <p className="font-semibold text-[#183f3c]">
-          Access ready for {state.member.telegramDisplayName}.
-        </p>
-        <p className="mt-2 text-sm text-[#4e5b57]">
-          Mode: {state.mode === "dev" ? "local dev mock" : "Telegram verified"}.
-          Group status: {state.member.groupStatus}.
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.assign("/dashboard")}
-          className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md bg-[#183f3c] px-5 text-sm font-semibold text-white"
-        >
-          Continue to dashboard
-        </button>
-      </div>
-    );
-  }
-
-  if (state.status === "blocked") {
-    return (
-      <div className="mt-8 border border-[#e0b6a9] bg-[#fff6f3] p-5">
-        <p className="font-semibold text-[#7c2f20]">Group access required.</p>
-        <p className="mt-2 text-sm text-[#4e5b57]">
-          This Telegram account was verified, but it is not currently approved
-          for cego event flows.
-        </p>
-      </div>
-    );
-  }
-
-  if (state.status === "error") {
-    return (
-      <div className="mt-8 border border-[#e0b6a9] bg-[#fff6f3] p-5">
-        <p className="font-semibold text-[#7c2f20]">Session unavailable.</p>
-        <p className="mt-2 text-sm text-[#4e5b57]">{state.message}</p>
-        <p className="mt-2 text-sm text-[#4e5b57]">
-          Close and reopen the Mini App after checking the BotFather Mini App
-          URL and the server logs.
-        </p>
-        <DevMockButton onDevMock={onDevMock} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-8 border border-[#cadbd7] bg-[#f8fbff] p-5">
-      <p className="font-semibold text-[#183f3c]">
-        {hasTelegramInitData
-          ? "Telegram data found."
-          : "Open this route inside Telegram to sign in."}
-      </p>
-      <p className="mt-2 text-sm text-[#4e5b57]">
-        Local development can use the explicit dev mock once
-        `CEGO_DEV_TELEGRAM_MOCK=true` is set.
-      </p>
-      <DevMockButton onDevMock={onDevMock} />
-    </div>
   );
 }
 
@@ -256,7 +186,12 @@ function DevMockButton({ onDevMock }: { onDevMock: () => void }) {
     <button
       type="button"
       onClick={onDevMock}
-      className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-md border border-[#b8cac5] px-5 text-sm font-semibold text-[#183f3c] transition hover:border-[#183f3c]"
+      className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+      style={{
+        background: "var(--color-surface-hover)",
+        border: "1px solid var(--color-surface-border)",
+        color: "var(--color-foreground)",
+      }}
     >
       Try local dev mock
     </button>

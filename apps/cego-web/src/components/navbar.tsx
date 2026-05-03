@@ -15,6 +15,7 @@ interface NavbarProps {
 export default function Navbar({ member }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const isMiniApp = typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,7 +46,7 @@ export default function Navbar({ member }: NavbarProps) {
   }, [menuOpen]);
 
   return (
-    <header className="glass sticky top-0 z-50">
+    <header className="glass sticky top-0 z-50" style={isMiniApp ? { paddingTop: "env(safe-area-inset-top, 48px)" } : undefined}>
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Link href="/" className="flex items-center gap-2">
           <span
