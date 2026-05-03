@@ -119,7 +119,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
                 </div>
                 <div className="py-1">
                   <Link
-                    href="/dashboard"
+                    href="/profile"
                     onClick={() => setMenuOpen(false)}
                     className="block px-4 py-2.5 text-sm transition"
                     style={{ color: "var(--color-foreground)" }}
