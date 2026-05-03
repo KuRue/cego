@@ -143,18 +143,20 @@ a {
 
 .glass {
   background: linear-gradient(135deg, var(--color-surface-strong), var(--color-surface));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
   box-shadow: var(--glass-inset), var(--glass-shadow);
+  isolation: isolate;
 }
 
 .glass-lg {
   background: linear-gradient(135deg, var(--color-surface-strong), var(--color-surface));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: var(--glass-border);
   box-shadow: var(--glass-inset), var(--glass-shadow-lg);
+  isolation: isolate;
 }
 
 .glass-hover:hover {
