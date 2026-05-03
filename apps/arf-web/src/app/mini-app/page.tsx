@@ -1,3 +1,4 @@
+import Script from "next/script";
 import MiniAppSession from "./session";
 
 export const metadata = {
@@ -5,6 +6,13 @@ export const metadata = {
 };
 
 export default function MiniAppPage() {
-  return <MiniAppSession />;
+  return (
+    <>
+      <Script
+        src="https://telegram.org/js/telegram-web-app.js"
+        strategy="beforeInteractive"
+      />
+      <MiniAppSession />
+    </>
+  );
 }
-
