@@ -1,6 +1,6 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
-import { Badge, StatusBadge } from "@/components/badge";
+import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import { cancelRsvpAction, rsvpForEventAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
@@ -209,8 +209,8 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={event.status} />
-              {rsvp ? <StatusBadge status={rsvp.status} /> : null}
+              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
+              {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
             </div>
             <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
             {event.description ? (

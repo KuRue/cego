@@ -2,7 +2,7 @@ import Image from "next/image";
 import Script from "next/script";
 import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
-import { StatusBadge } from "@/components/badge";
+import { StatusBadge, eventStatusLabel } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
 import { getPublicEvents } from "@/lib/events";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
@@ -91,7 +91,7 @@ export default async function Home() {
   );
 }
 
-function PublicEventCard({ event, confirmedCount, waitlistedCount }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number }) {
+function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number; rsvpMembers: Array<{ telegramDisplayName: string; telegramPhotoUrl: string | null }> }) {
   const spotsLeft = event.capacity - confirmedCount;
   const isFull = spotsLeft <= 0;
 
@@ -123,7 +123,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount }: { event: im
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={event.status} />
+              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
               {isFull ? (
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-medium"
@@ -157,6 +157,37 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount }: { event: im
                 </div>
               ) : null}
             </dl>
+
+            {rsvpMembers.length > 0 ? (
+              <div className="mt-4 flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {rsvpMembers.slice(0, 8).map((m, i) => (
+                    m.telegramPhotoUrl ? (
+                      <Image
+                        key={i}
+                        src={m.telegramPhotoUrl}
+                        alt={m.telegramDisplayName}
+                        width={28}
+                        height={28}
+                        className="h-7 w-7 rounded-full object-cover"
+                        style={{ border: "2px solid var(--color-background)" }}
+                      />
+                    ) : (
+                      <span
+                        key={i}
+                        className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-semibold"
+                        style={{ background: "var(--color-surface-hover)", border: "2px solid var(--color-background)", color: "var(--color-muted)" }}
+                      >
+                        {m.telegramDisplayName.charAt(0).toUpperCase()}
+                      </span>
+                    )
+                  ))}
+                </div>
+                <span className="text-xs" style={{ color: "var(--color-muted)" }}>
+                  {confirmedCount}{waitlistedCount > 0 ? ` +${waitlistedCount} waitlisted` : ""}
+                </span>
+              </div>
+            ) : null}
           </div>
           <div className="mt-4">
             <AppLink

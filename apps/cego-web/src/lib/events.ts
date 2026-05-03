@@ -24,6 +24,10 @@ export interface PublicEvent {
   event: Event;
   confirmedCount: number;
   waitlistedCount: number;
+  rsvpMembers: Array<{
+    telegramDisplayName: string;
+    telegramPhotoUrl: string | null;
+  }>;
 }
 
 export interface AdminEventWithRsvps {
@@ -177,8 +181,34 @@ export async function getPublicEvents(): Promise<{
   }
 
   const eventIds = eventRows.map((event) => event.id);
-  const countRows = await getRsvpCountRows(eventIds);
+  const [countRows, memberRows] = await Promise.all([
+    getRsvpCountRows(eventIds),
+    db
+      .select({
+        eventId: rsvps.eventId,
+        telegramDisplayName: members.telegramDisplayName,
+        telegramPhotoUrl: members.telegramPhotoUrl,
+      })
+      .from(rsvps)
+      .innerJoin(members, eq(rsvps.memberId, members.id))
+      .where(
+        and(
+          inArray(rsvps.eventId, eventIds),
+          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+        ),
+      ),
+  ]);
   const countsByEvent = toCountMap(countRows);
+
+  const membersByEvent = new Map<string, PublicEvent["rsvpMembers"]>();
+  for (const row of memberRows) {
+    const list = membersByEvent.get(row.eventId) ?? [];
+    list.push({
+      telegramDisplayName: row.telegramDisplayName,
+      telegramPhotoUrl: row.telegramPhotoUrl,
+    });
+    membersByEvent.set(row.eventId, list);
+  }
 
   const now = new Date();
   const upcoming: PublicEvent[] = [];
@@ -189,6 +219,7 @@ export async function getPublicEvents(): Promise<{
       event,
       confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
       waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
+      rsvpMembers: membersByEvent.get(event.id) ?? [],
     };
 
     if (event.endsAt ? event.endsAt < now : event.startsAt < now) {

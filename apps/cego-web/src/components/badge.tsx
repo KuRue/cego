@@ -9,7 +9,7 @@ export function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const map: Record<string, { bg: string; text: string }> = {
     open: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
     full: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
@@ -32,9 +32,35 @@ export function StatusBadge({ status }: { status: string }) {
       className="rounded-lg px-2.5 py-1 text-xs font-semibold"
       style={{ background: tone.bg, color: tone.text }}
     >
-      {status}
+      {label ?? status}
     </span>
   );
+}
+
+export function eventStatusLabel(status: string, startsAt?: Date | null): string {
+  switch (status) {
+    case "open": return "Accepting RSVPs";
+    case "full": return "RSVPs full — join waitlist";
+    case "closed": return "RSVPs closed";
+    case "draft": {
+      if (startsAt) {
+        const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(startsAt);
+        return `Opening for RSVPs ${date}`;
+      }
+      return "Coming soon";
+    }
+    case "archived": return "Archived";
+    default: return status;
+  }
+}
+
+export function rsvpStatusLabel(status: string): string {
+  switch (status) {
+    case "confirmed": return "RSVP confirmed";
+    case "waitlisted": return "On waitlist";
+    case "cancelled": return "RSVP cancelled";
+    default: return status;
+  }
 }
 
 export function TagBadge({ name, color }: { name: string; color: string }) {
