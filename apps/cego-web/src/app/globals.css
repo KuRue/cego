@@ -89,29 +89,51 @@
 
 body {
   position: relative;
-  isolation: isolate;
   overflow-x: hidden;
-  background:
-    radial-gradient(ellipse 900px 600px at 10% 15%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent),
-    radial-gradient(ellipse 700px 700px at 85% 65%, color-mix(in srgb, var(--color-highlight) 18%, transparent), transparent),
-    radial-gradient(ellipse 500px 400px at 45% 45%, color-mix(in srgb, var(--color-accent-light) 12%, transparent), transparent),
-    radial-gradient(ellipse 400px 300px at 70% 20%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent),
-    linear-gradient(180deg, var(--color-background), var(--color-background));
+  background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
 }
 
-body::before {
+.bg-layer {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
-  content: "";
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent 82%);
+  overflow: hidden;
+}
+
+.bg-layer-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-layer-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-layer-dim {
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.bg-layer-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-layer-blob {
+    opacity: 0.2;
+  }
 }
 
 * {

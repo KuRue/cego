@@ -50,16 +50,6 @@ export default async function RootLayout({
         --color-on-accent: ${isLightColor(settings.accentColorDark) ? "#1a1d23" : "#0f1117"};
       }
     }
-    ${settings.backgroundUrl ? `
-    body {
-      background-image: url('${settings.backgroundUrl}');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-    }
-    body::before { display: none; }
-    ` : ''}
   `;
 
   return (
@@ -73,7 +63,53 @@ export default async function RootLayout({
           <link rel="icon" href={settings.logoUrl} />
         ) : null}
       </head>
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        <div className="bg-layer">
+          {settings.backgroundUrl ? (
+            <>
+              <div
+                className="bg-layer-image"
+                style={{ backgroundImage: `url('${settings.backgroundUrl}')` }}
+              />
+              <div className="bg-layer-dim" />
+            </>
+          ) : (
+            <>
+              <div
+                className="bg-layer-blob"
+                style={{
+                  width: "900px",
+                  height: "600px",
+                  top: "-10%",
+                  left: "5%",
+                  background: "var(--color-accent)",
+                }}
+              />
+              <div
+                className="bg-layer-blob"
+                style={{
+                  width: "700px",
+                  height: "700px",
+                  bottom: "-5%",
+                  right: "5%",
+                  background: "var(--color-highlight)",
+                }}
+              />
+              <div
+                className="bg-layer-blob"
+                style={{
+                  width: "500px",
+                  height: "400px",
+                  top: "40%",
+                  left: "35%",
+                  background: "var(--color-accent-light)",
+                }}
+              />
+            </>
+          )}
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
