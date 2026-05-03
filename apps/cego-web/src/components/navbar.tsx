@@ -65,7 +65,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
               alt={siteName}
               width={32}
               height={32}
-              className="h-8 w-8 rounded-lg object-cover"
+              className="h-8 w-8 rounded-full object-cover"
             />
           ) : (
             <span
