@@ -58,8 +58,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
 
   return (
     <header
-      className="glass sticky top-0 z-50"
-      style={isMiniApp ? { paddingTop: "max(env(safe-area-inset-top, 0px), 56px)" } : undefined}
+      className={`glass sticky top-0 z-50 ${isMiniApp ? "mt-14" : ""}`}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <AppLink href="/" className="flex items-center gap-2">
