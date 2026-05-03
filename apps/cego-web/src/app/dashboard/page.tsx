@@ -3,7 +3,6 @@ import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
-import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
@@ -134,40 +133,6 @@ export default async function DashboardPage() {
             </div>
           </section>
         ) : null}
-
-        <section className="mt-12">
-          <div className="glass rounded-2xl p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Contact email</h2>
-                <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                  Give organizers a reliable way to reach you.
-                </p>
-              </div>
-              <form action={updateCurrentMemberEmailAction} className="flex gap-2">
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={member.email ?? ""}
-                  placeholder="you@example.com"
-                  className="h-10 rounded-xl px-4 text-sm outline-none"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="h-10 rounded-xl px-5 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                >
-                  Save
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
       </main>
     </>
   );
