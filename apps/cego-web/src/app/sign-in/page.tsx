@@ -1,114 +1,192 @@
-import AppLink from "@/components/app-link";
-import { headers } from "next/headers";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
-import { getPublicUrl } from "@/lib/public-url";
-import TelegramLoginWidget from "./telegram-login-widget";
 
-export const metadata = {
-  title: "Sign in",
-};
+type AuthState =
+  | { status: "checking" }
+  | { status: "mini_app"; message: string }
+  | { status: "browser"; error?: string }
+  | { status: "success"; displayName: string }
+  | { status: "error"; message: string };
 
-interface SignInPageProps {
-  searchParams?: Promise<{
-    error?: string;
-  }>;
-}
+export default function SignInPage() {
+  const [state, setState] = useState<AuthState>({ status: "checking" });
+  const [brand, setBrand] = useState<{ siteName: string; logoUrl: string | null }>({
+    siteName: "cego",
+    logoUrl: null,
+  });
+  const [botUsername, setBotUsername] = useState<string | null>(null);
+  const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
 
-export default async function SignInPage({ searchParams }: SignInPageProps) {
-  const params = await searchParams;
-  const hasTelegramError = params?.error === "telegram_login_failed";
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME;
-  const authUrl = await getTelegramAuthUrl();
-  const brand = await getNavbarBrand();
+  useEffect(() => {
+    fetch("/api/admin/brand")
+      .then((r) => r.json())
+      .then((d) => setBrand(d))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/auth/sign-in-config")
+      .then((r) => r.json())
+      .then((d) => {
+        setBotUsername(d.botUsername ?? null);
+        setAuthUrl(d.authUrl ?? null);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function trySignIn() {
+      const webApp = await waitForTelegramWebApp();
+
+      if (cancelled) return;
+
+      if (webApp?.initData) {
+        webApp.ready();
+        webApp.expand();
+        setState({ status: "mini_app", message: "Verifying Telegram identity..." });
+
+        try {
+          const form = new FormData();
+          form.append("initData", webApp.initData);
+
+          const res = await fetch("/api/telegram/session", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ initData: webApp.initData }),
+          });
+
+          const body = await res.json();
+
+          if (!res.ok) {
+            setState({ status: "browser", error: body.error });
+            return;
+          }
+
+          setState({ status: "success", displayName: body.member?.telegramDisplayName ?? "" });
+
+          await new Promise((r) => setTimeout(r, 800));
+          window.location.href = "/dashboard";
+        } catch {
+          setState({ status: "browser" });
+        }
+        return;
+      }
+
+      setState({ status: "browser" });
+    }
+
+    trySignIn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (state.status !== "browser" || !widgetRef.current || !botUsername || !authUrl) return;
+
+    const container = widgetRef.current;
+    container.replaceChildren();
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.dataset.telegramLogin = botUsername;
+    script.dataset.size = "large";
+    script.dataset.authUrl = authUrl;
+    script.dataset.requestAccess = "write";
+    container.append(script);
+  }, [state.status, botUsername, authUrl]);
 
   return (
     <>
+      <Script
+        src="https://telegram.org/js/telegram-web-app.js"
+        strategy="beforeInteractive"
+      />
       <Navbar brand={brand} />
-      <main className="page-shell mx-auto flex min-h-[calc(100vh-60px)] max-w-5xl flex-col justify-center px-5 py-16">
-        <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch">
-          <div className="glass-lg rounded-2xl p-8">
-            <p className="text-sm font-semibold" style={{ color: "var(--color-highlight)" }}>
-              Telegram identity
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">One account for the community.</h1>
-            <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              cego uses Telegram for sign-in, group access, and member identity. No separate password account is created.
-            </p>
-          </div>
-          <div className="glass-lg rounded-2xl p-8">
-            <h1 className="text-3xl font-semibold">Sign in</h1>
-            <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              Use your Telegram account to sign in. cego checks group membership
-              and opens the member dashboard.
-            </p>
+      <main className="mx-auto flex min-h-[calc(100vh-60px)] max-w-md flex-col justify-center px-5 py-16">
+        <div className="glass-lg rounded-2xl p-8">
+          <h1 className="text-2xl font-semibold">Sign in</h1>
+          <p className="mt-2 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
+            Use your Telegram account. No separate password needed.
+          </p>
 
-            {hasTelegramError ? (
+          {state.status === "checking" || state.status === "mini_app" ? (
+            <div className="mt-6 text-center">
               <div
-                className="mt-6 rounded-xl p-4"
-                style={{
-                  background: "var(--color-danger-bg)",
-                  border: "1px solid var(--color-danger-border)",
-                }}
-              >
-                <p className="font-semibold" style={{ color: "var(--color-danger)" }}>
-                  Sign-in did not complete.
-                </p>
-                <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                  The login link was invalid or expired. Try again below.
-                </p>
-              </div>
-            ) : null}
-
-            <div className="mt-6 glass rounded-xl p-5">
-              <p className="font-semibold">Browser sign-in</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                Use this when opening cego from a normal browser.
+                className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+                style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
+              />
+              <p className="mt-4 text-sm" style={{ color: "var(--color-muted)" }}>
+                {state.status === "checking"
+                  ? "Checking Telegram..."
+                  : state.message}
               </p>
-              <div className="mt-4">
-                {botUsername ? (
-                  <TelegramLoginWidget
-                    authUrl={authUrl}
-                    botUsername={botUsername}
-                  />
-                ) : (
-                  <div
-                    className="rounded-xl p-4 text-sm"
-                    style={{
-                      background: "var(--color-danger-bg)",
-                      border: "1px solid var(--color-danger-border)",
-                      color: "var(--color-danger)",
-                    }}
-                  >
-                    TELEGRAM_BOT_USERNAME is not configured.
-                  </div>
-                )}
-              </div>
             </div>
+          ) : null}
 
-            <div className="mt-4 glass rounded-xl p-5">
-              <p className="font-semibold">Inside Telegram</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                Open the Mini App for automatic sign-in.
+          {state.status === "success" ? (
+            <div className="mt-6 text-center">
+              <p className="font-semibold">Welcome, {state.displayName}.</p>
+              <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+                Redirecting...
               </p>
-              <AppLink
-                href="/mini-app"
-                className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
-                style={{
-                  background: "var(--color-surface-hover)",
-                  border: "1px solid var(--color-surface-border)",
-                }}
-              >
-                Open Mini App
-              </AppLink>
             </div>
-          </div>
+          ) : null}
+
+          {state.status === "browser" ? (
+            <div className="mt-6">
+              {state.error ? (
+                <div
+                  className="mb-4 rounded-xl p-4"
+                  style={{
+                    background: "var(--color-danger-bg)",
+                    border: "1px solid var(--color-danger-border)",
+                  }}
+                >
+                  <p className="text-sm" style={{ color: "var(--color-danger)" }}>
+                    {state.error}
+                  </p>
+                </div>
+              ) : null}
+              <div ref={widgetRef} className="min-h-12" />
+            </div>
+          ) : null}
+
+          {state.status === "error" ? (
+            <div className="mt-6">
+              <p className="text-sm" style={{ color: "var(--color-danger)" }}>
+                {state.message}
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-4 inline-flex h-10 items-center rounded-xl px-5 text-sm font-semibold transition"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
         </div>
       </main>
     </>
   );
 }
 
-async function getTelegramAuthUrl(): Promise<string> {
-  return getPublicUrl("/api/telegram/login", await headers()).toString();
+async function waitForTelegramWebApp() {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const webApp = window.Telegram?.WebApp;
+    if (webApp) return webApp;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return window.Telegram?.WebApp ?? null;
 }

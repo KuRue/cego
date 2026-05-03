@@ -4,6 +4,7 @@ import { getCurrentMember } from "@/lib/session";
 import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getNavbarBrand } from "@/lib/settings";
 import Navbar from "@/components/navbar";
+import SignOutButton from "./sign-out-button";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,8 @@ export default async function ProfilePage() {
             </button>
           </div>
         </form>
+
+        <SignOutButton />
       </main>
     </>
   );
