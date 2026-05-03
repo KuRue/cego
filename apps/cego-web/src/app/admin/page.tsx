@@ -22,6 +22,7 @@ import Navbar from "@/components/navbar";
 import { getSiteSettings, type BrandSettings } from "@/lib/settings";
 import { updateSiteSettingsAction } from "@/lib/settings-actions";
 import LogoUpload from "./settings/logo-upload";
+import BackgroundUpload from "./settings/background-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -289,7 +290,36 @@ function SettingsPanel({ settings }: { settings: BrandSettings }) {
               </p>
             )}
             <LogoUpload currentLogoUrl={settings.logoUrl} />
+            <input type="hidden" name="logoUrl" defaultValue={settings.logoUrl ?? ""} />
           </div>
+        </section>
+
+        <section className="glass rounded-xl p-4">
+          <h3 className="font-semibold">Background image</h3>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+            PNG, JPEG, or WebP under 5 MB. Covers the full page behind all glass panels.
+          </p>
+          <div className="mt-4">
+            {settings.backgroundUrl ? (
+              <div className="flex items-center gap-4">
+                <Image
+                  src={settings.backgroundUrl}
+                  alt="Background preview"
+                  width={160}
+                  height={90}
+                  className="h-20 w-36 rounded-lg object-cover"
+                  style={{ border: "1px solid var(--color-surface-border)" }}
+                />
+                <Badge>Active background</Badge>
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                No background uploaded. The default gradient is used.
+              </p>
+            )}
+            <BackgroundUpload currentUrl={settings.backgroundUrl} />
+          </div>
+          <input type="hidden" name="backgroundUrl" defaultValue={settings.backgroundUrl ?? ""} />
         </section>
 
         <section className="grid gap-4 sm:grid-cols-3">

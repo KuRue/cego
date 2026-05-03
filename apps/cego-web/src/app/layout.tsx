@@ -50,6 +50,16 @@ export default async function RootLayout({
         --color-on-accent: ${isLightColor(settings.accentColorDark) ? "#1a1d23" : "#0f1117"};
       }
     }
+    ${settings.backgroundUrl ? `
+    body {
+      background-image: url('${settings.backgroundUrl}');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+    body::before { display: none; }
+    ` : ''}
   `;
 
   return (

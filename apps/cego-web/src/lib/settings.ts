@@ -7,6 +7,7 @@ export interface BrandSettings {
   accentColorDark: string;
   highlightColor: string;
   logoUrl: string | null;
+  backgroundUrl: string | null;
   heroTitle: string;
   heroBody: string;
   footerText: string;
@@ -19,6 +20,7 @@ const defaults: BrandSettings = {
   accentColorDark: "#5bbcb4",
   highlightColor: "#d8b35a",
   logoUrl: null,
+  backgroundUrl: null,
   heroTitle: "Run community events without turning the group chat into a spreadsheet.",
   heroBody:
     "cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.",
@@ -64,6 +66,7 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     accentColorDark: row.accentColorDark || defaults.accentColorDark,
     highlightColor: row.highlightColor || defaults.highlightColor,
     logoUrl: row.logoUrl,
+    backgroundUrl: row.backgroundUrl,
     heroTitle: row.heroTitle || defaults.heroTitle,
     heroBody: row.heroBody || defaults.heroBody,
     footerText: row.footerText || defaults.footerText,

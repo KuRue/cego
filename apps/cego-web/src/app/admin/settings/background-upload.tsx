@@ -2,11 +2,11 @@
 
 import { useRef, useState } from "react";
 
-export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string | null }) {
+export default function BackgroundUpload({ currentUrl }: { currentUrl: string | null }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(currentLogoUrl);
+  const [url, setUrl] = useState<string | null>(currentUrl);
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
@@ -17,9 +17,9 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
 
     try {
       const form = new FormData();
-      form.append("logo", file);
+      form.append("background", file);
 
-      const res = await fetch("/api/admin/upload-logo", {
+      const res = await fetch("/api/admin/upload-background", {
         method: "POST",
         body: form,
         credentials: "include",
@@ -32,8 +32,8 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
         return;
       }
 
-      setLogoUrl(body.url);
-      const hiddenInput = document.querySelector<HTMLInputElement>('input[name="logoUrl"]');
+      setUrl(body.url);
+      const hiddenInput = document.querySelector<HTMLInputElement>('input[name="backgroundUrl"]');
       if (hiddenInput) {
         hiddenInput.setAttribute("value", body.url);
       }
@@ -49,7 +49,7 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
       <input
         ref={fileRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        accept="image/png,image/jpeg,image/webp"
         className="text-sm"
         style={{ color: "var(--color-muted)" }}
       />
@@ -66,7 +66,7 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
       >
         {uploading ? "Uploading..." : "Upload"}
       </button>
-      {logoUrl ? (
+      {url ? (
         <span className="text-sm" style={{ color: "var(--color-success)" }}>
           Saved. Submit the form to apply.
         </span>
