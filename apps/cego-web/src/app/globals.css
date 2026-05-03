@@ -3,8 +3,8 @@
 :root {
   --color-background: #eef4f6;
   --color-foreground: #151a20;
-  --color-surface: rgba(255, 255, 255, 0.62);
-  --color-surface-strong: rgba(255, 255, 255, 0.76);
+  --color-surface: rgba(255, 255, 255, 0.48);
+  --color-surface-strong: rgba(255, 255, 255, 0.60);
   --color-surface-hover: rgba(255, 255, 255, 0.82);
   --color-surface-border: rgba(128, 148, 160, 0.3);
   --color-muted: #596571;
@@ -31,8 +31,8 @@
   --color-tag-blue-text: #2563eb;
   --color-tag-gray-bg: rgba(107, 114, 128, 0.1);
   --color-tag-gray-text: #6b7280;
-  --glass-blur: 22px;
-  --glass-saturate: 1.4;
+  --glass-blur: 28px;
+  --glass-saturate: 1.6;
   --glass-border: 1px solid rgba(128, 148, 160, 0.3);
   --glass-shadow: 0 14px 36px rgba(23, 34, 45, 0.08);
   --glass-shadow-lg: 0 22px 64px rgba(23, 34, 45, 0.12);
@@ -45,8 +45,8 @@
   :root {
     --color-background: #101318;
     --color-foreground: #eff4f4;
-    --color-surface: rgba(255, 255, 255, 0.075);
-    --color-surface-strong: rgba(255, 255, 255, 0.12);
+    --color-surface: rgba(255, 255, 255, 0.06);
+    --color-surface-strong: rgba(255, 255, 255, 0.10);
     --color-surface-hover: rgba(255, 255, 255, 0.15);
     --color-surface-border: rgba(255, 255, 255, 0.12);
     --color-muted: #a7b0b8;
@@ -92,8 +92,10 @@ body {
   isolation: isolate;
   overflow-x: hidden;
   background:
-    linear-gradient(145deg, rgba(91, 188, 180, 0.16), transparent 32%),
-    linear-gradient(32deg, rgba(216, 179, 90, 0.16), transparent 38%),
+    radial-gradient(ellipse 900px 600px at 10% 15%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent),
+    radial-gradient(ellipse 700px 700px at 85% 65%, color-mix(in srgb, var(--color-highlight) 18%, transparent), transparent),
+    radial-gradient(ellipse 500px 400px at 45% 45%, color-mix(in srgb, var(--color-accent-light) 12%, transparent), transparent),
+    radial-gradient(ellipse 400px 300px at 70% 20%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent),
     linear-gradient(180deg, var(--color-background), var(--color-background));
   color: var(--color-foreground);
   font-family: var(--font-sans);
