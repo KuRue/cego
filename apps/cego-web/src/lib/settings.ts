@@ -14,7 +14,7 @@ export interface BrandSettings {
   footerText: string;
 }
 
-const defaults: BrandSettings = {
+export const defaults: BrandSettings = {
   siteName: "cego",
   tagline: "Community Event Group Orchestrator",
   accentColor: "#183f3c",

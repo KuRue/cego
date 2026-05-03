@@ -19,10 +19,14 @@ interface NavbarProps {
 
 export default function Navbar({ member, brand }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const isMiniApp = typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
   const siteName = brand?.siteName || "cego";
   const logoUrl = brand?.logoUrl;
+
+  useEffect(() => {
+    setIsMiniApp(!!window.Telegram?.WebApp?.initData);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

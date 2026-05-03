@@ -80,8 +80,8 @@ export default async function DashboardPage() {
   }
 
   const [eventStates, surveyStates] = await Promise.all([
-    getDashboardEvents(member.id),
-    getDashboardSurveys(member.id),
+    getDashboardEvents(member.id).catch(() => []),
+    getDashboardSurveys(member.id).catch(() => []),
   ]);
 
   return (

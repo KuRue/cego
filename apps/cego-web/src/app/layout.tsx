@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
-import { getSiteSettings } from "@/lib/settings";
+import { getSiteSettings, type BrandSettings, defaults } from "@/lib/settings";
 import MiniAppSessionRefresher from "@/components/mini-app-session-refresher";
 import "./globals.css";
 
@@ -16,13 +16,18 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings();
+  let tagline = "Community Event Group Orchestrator";
+
+  try {
+    const settings = await getSiteSettings();
+    tagline = settings.tagline;
+  } catch {}
 
   return {
     metadataBase: new URL(process.env.APP_BASE_URL || "https://cego.example.com"),
     title: {
-      default: settings.tagline,
-      template: `%s | ${settings.tagline}`,
+      default: tagline,
+      template: `%s | ${tagline}`,
     },
     description:
       "Telegram-first planning, RSVP, and registration tools for private community events.",
@@ -34,7 +39,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getSiteSettings();
+  let settings: BrandSettings;
+
+  try {
+    settings = await getSiteSettings();
+  } catch {
+    settings = defaults;
+  }
 
   const brandCss = `
     :root {

@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function MiniAppSessionRefresher() {
+  const refreshed = useRef(false);
+
   useEffect(() => {
+    if (refreshed.current) return;
+
     const webApp = window.Telegram?.WebApp;
     if (!webApp?.initData) return;
+
+    refreshed.current = true;
 
     let cancelled = false;
 
     const refresh = async () => {
-      if (cancelled) return;
+      const freshInitData = window.Telegram?.WebApp?.initData;
+      if (cancelled || !freshInitData) return;
 
       try {
         const controller = new AbortController();
@@ -19,7 +26,7 @@ export default function MiniAppSessionRefresher() {
         const res = await fetch("/api/telegram/session", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ initData: webApp.initData }),
+          body: JSON.stringify({ initData: freshInitData }),
           signal: controller.signal,
         });
 
@@ -27,10 +34,10 @@ export default function MiniAppSessionRefresher() {
 
         if (cancelled) return;
 
-        if (!res.ok) {
+        if (res.status === 401) {
           const body = await res.json().catch(() => ({}));
-
-          if (res.status === 401 && body.error) {
+          if (body.error) {
+            try { sessionStorage.setItem("cego_session_failed", "1"); } catch {}
             window.location.replace("/mini-app");
           }
         }
@@ -39,7 +46,7 @@ export default function MiniAppSessionRefresher() {
       }
     };
 
-    const timer = setTimeout(refresh, 2000);
+    const timer = setTimeout(refresh, 3000);
 
     return () => {
       cancelled = true;

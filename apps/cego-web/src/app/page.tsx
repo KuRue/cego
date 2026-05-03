@@ -3,14 +3,19 @@ import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
 import { StatusBadge, eventStatusLabel } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
-import { getPublicEvents } from "@/lib/events";
+import { getPublicEvents, type PublicEvent } from "@/lib/events";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const settings = await getSiteSettings();
-  const { upcoming, past } = await getPublicEvents();
+  let upcoming: PublicEvent[] = [];
+  let past: PublicEvent[] = [];
+
+  try {
+    ({ upcoming, past } = await getPublicEvents());
+  } catch {}
 
   return (
     <>
