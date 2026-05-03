@@ -38,13 +38,9 @@ export default function LogoUpload({ currentLogoUrl }: { currentLogoUrl: string 
       setSuccess("Logo uploaded. Click Save settings below to apply.");
 
       const hiddenInput = document.querySelector<HTMLInputElement>('input[name="logoUrl"]');
-      if (hiddenInput) {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        nativeInputValueSetter?.call(hiddenInput, body.url);
-        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+      if (typeof window !== "undefined" && hiddenInput) {
+        hiddenInput.value = body.url;
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");

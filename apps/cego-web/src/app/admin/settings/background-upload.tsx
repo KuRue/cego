@@ -37,14 +37,10 @@ export default function BackgroundUpload({ currentUrl }: { currentUrl: string | 
 
       setSuccess("Background uploaded. Click Save settings below to apply.");
 
-      const hiddenInput = document.querySelector<HTMLInputElement>('input[name="backgroundUrl"]');
-      if (hiddenInput) {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        nativeInputValueSetter?.call(hiddenInput, body.url);
-        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+const hiddenInput = document.querySelector<HTMLInputElement>('input[name="backgroundUrl"]');
+      if (typeof window !== "undefined" && hiddenInput) {
+        hiddenInput.value = body.url;
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
