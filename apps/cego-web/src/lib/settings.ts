@@ -67,8 +67,8 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     accentColor: row.accentColor || defaults.accentColor,
     accentColorDark: row.accentColorDark || defaults.accentColorDark,
     highlightColor: row.highlightColor || defaults.highlightColor,
-    logoUrl: row.logoUrl,
-    backgroundUrl: row.backgroundUrl,
+    logoUrl: stripQueryString(row.logoUrl),
+    backgroundUrl: stripQueryString(row.backgroundUrl),
     eventTypes: parseEventTypes(row.eventTypes),
     heroTitle: row.heroTitle || defaults.heroTitle,
     heroBody: row.heroBody || defaults.heroBody,
@@ -83,4 +83,10 @@ function parseEventTypes(value: string | null): string[] {
     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
   } catch {}
   return defaults.eventTypes;
+}
+
+function stripQueryString(url: string | null): string | null {
+  if (!url) return null;
+  const qIndex = url.indexOf("?");
+  return qIndex >= 0 ? url.slice(0, qIndex) : url;
 }
