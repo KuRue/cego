@@ -159,6 +159,9 @@ export async function rsvpForEventAction(formData: FormData) {
             checkedInAt: null,
             plusOneName: null,
             parentRsvpId: null,
+            paymentStatus: "unpaid",
+            notes: null,
+            tags: sql`'{}'`,
             updatedAt: new Date(),
           })
           .where(eq(rsvps.id, cancelledRsvp.id));
@@ -188,6 +191,10 @@ export async function rsvpForEventAction(formData: FormData) {
               status: plusOneStatus,
               plusOneName,
               parentRsvpId,
+              paymentStatus: "unpaid",
+              checkedInAt: null,
+              notes: null,
+              tags: sql`'{}'`,
               updatedAt: new Date(),
             })
             .where(eq(rsvps.id, cancelledPlusOne.id));
@@ -327,6 +334,9 @@ export async function adminRsvpForEventAction(formData: FormData) {
             checkedInAt: null,
             plusOneName: null,
             parentRsvpId: null,
+            paymentStatus: "unpaid",
+            notes: null,
+            tags: sql`'{}'`,
             updatedAt: new Date(),
           })
           .where(eq(rsvps.id, cancelledRsvp.id));
@@ -356,6 +366,10 @@ export async function adminRsvpForEventAction(formData: FormData) {
               status: plusOneStatus,
               plusOneName,
               parentRsvpId,
+              paymentStatus: "unpaid",
+              checkedInAt: null,
+              notes: null,
+              tags: sql`'{}'`,
               updatedAt: new Date(),
             })
             .where(eq(rsvps.id, cancelledPlusOne.id));
