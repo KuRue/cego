@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import { getSiteSettings, type BrandSettings, defaults } from "@/lib/settings";
 import MiniAppSessionRefresher from "@/components/mini-app-session-refresher";
@@ -12,6 +13,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-title",
   subsets: ["latin"],
 });
 
@@ -68,7 +74,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full`}
     >
       <head>
         <style dangerouslySetInnerHTML={{ __html: brandCss }} />

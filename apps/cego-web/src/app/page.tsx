@@ -140,7 +140,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }
                 </span>
               ) : null}
             </div>
-            <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
+            <h3 className="font-title mt-3 text-xl font-semibold">{event.title}</h3>
             {event.description ? (
               <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
                 {event.description.length > 200
@@ -232,7 +232,7 @@ function PastEventCard({ event, confirmedCount }: { event: import("@cego/db").Ev
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate font-semibold">{event.title}</p>
+          <p className="truncate font-title font-semibold">{event.title}</p>
           <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
             {formatDateRange(event.startsAt, event.endsAt)}
           </p>

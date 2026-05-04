@@ -207,7 +207,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-lg font-bold text-white leading-tight">{event.title}</h3>
+            <h3 className="font-title text-lg font-bold text-white leading-tight">{event.title}</h3>
             {rsvpMembers.length > 0 ? (
               <div className="mt-2">
                 <AvatarStack members={rsvpMembers} />
@@ -274,7 +274,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
-              <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
+              <h3 className="font-title mt-3 text-xl font-semibold">{event.title}</h3>
               {rsvpMembers.length > 0 ? (
                 <div className="mt-2">
                   <AvatarStack members={rsvpMembers} />

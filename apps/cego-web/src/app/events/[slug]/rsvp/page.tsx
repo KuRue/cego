@@ -84,7 +84,7 @@ export default async function RsvpPage({
           </AppLink>
         </div>
 
-        <h1 className="text-3xl font-semibold">Register for {data.event.title}</h1>
+        <h1 className="font-title text-3xl font-semibold">Register for {data.event.title}</h1>
         <div className="mt-2 flex flex-wrap gap-2">
           <StatusBadge status={data.event.status} label={eventStatusLabel(data.event.status, data.event.startsAt)} />
           {alreadyRsvpd ? (
