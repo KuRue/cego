@@ -78,7 +78,7 @@ export default async function AdminEventDetailPage({
         brand={brand}
       />
       <main className="relative mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
-        <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(16px)", background: "color-mix(in srgb, var(--color-background) 90%, transparent)" }} />
+        <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", backgroundColor: "rgba(128,128,128,0.15)" }} />
         <div className="relative z-10">
         <div className="min-w-0">
           <div className="flex items-start justify-between gap-2">
