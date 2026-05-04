@@ -1,5 +1,6 @@
 import {
   createEventAction,
+  deleteEventAction,
   updateEventAction,
   updateRsvpPaymentAction,
   updateRsvpStatusAction,
@@ -8,11 +9,12 @@ import AppLink from "@/components/app-link";
 import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
-import { Badge, StatusBadge } from "@/components/badge";
+import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
 import { Suspense } from "react";
+import ConfirmButton from "@/components/confirm-button";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +50,7 @@ export default async function AdminEventsPage() {
             </AppLink>
             <h1 className="mt-1 text-3xl font-semibold">Events</h1>
           </div>
-          <CreateEventButton />
+          <CreateEventButton defaultType={settings.eventTypes[0] ?? "meet"} />
         </div>
 
         <div className="mt-8 grid gap-5">
@@ -70,12 +72,12 @@ export default async function AdminEventsPage() {
   );
 }
 
-function CreateEventButton() {
+function CreateEventButton({ defaultType }: { defaultType: string }) {
   return (
     <form action={createEventAction} className="inline-block">
       <input type="hidden" name="title" value="New event" />
       <input type="hidden" name="slug" value={`event-${Date.now()}`} />
-      <input type="hidden" name="type" value="local_event" />
+      <input type="hidden" name="type" value={defaultType} />
       <input type="hidden" name="status" value="draft" />
       <input type="hidden" name="capacity" value="12" />
       <input type="hidden" name="startsAt" value={new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16)} />
@@ -98,7 +100,7 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap gap-2">
-            <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
+            <Badge>{titleCase(event.type)}</Badge>
             <StatusBadge status={event.status} />
           </div>
           <h2 className="mt-3 text-xl font-semibold">{event.title}</h2>
@@ -118,9 +120,20 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
             ) : null}
           </div>
         </div>
-        <span className="text-sm" style={{ color: "var(--color-muted)" }}>
-          {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
-        </span>
+    <span className="text-sm" style={{ color: "var(--color-muted)" }}>
+      {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
+    </span>
+    <form action={deleteEventAction} className="ml-2">
+      <input type="hidden" name="eventId" value={event.id} />
+      <ConfirmButton
+        type="submit"
+        message="Delete this event and all its RSVPs? This cannot be undone."
+        className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+        style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+      >
+        Delete
+      </ConfirmButton>
+    </form>
       </div>
 
       <details className="mt-5 pt-5" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
@@ -261,20 +274,19 @@ function EventForm({
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type">
-          <select name="type" defaultValue={event?.type ?? (eventTypes?.[0] ?? "local_event")} className="form-select">
-            {(eventTypes ?? ["local_event"]).map((t) => (
+        <select name="type" defaultValue={event?.type ?? (eventTypes?.[0] ?? "meet")} className="form-select">
+          {(eventTypes ?? ["meet"]).map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
         </Field>
         <Field label="Status">
-          <select name="status" defaultValue={event?.status ?? "draft"} className="form-select">
-            <option value="draft">draft</option>
-            <option value="open">open</option>
-            <option value="full">full</option>
-            <option value="closed">closed</option>
-            <option value="archived">archived</option>
-          </select>
+        <select name="status" defaultValue={event?.status ?? "draft"} className="form-select">
+          <option value="draft">Draft</option>
+          <option value="show">Show</option>
+          <option value="closed">Closed</option>
+          <option value="archived">Archived</option>
+        </select>
         </Field>
       </div>
       <Field label="Title">

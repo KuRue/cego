@@ -63,12 +63,12 @@ function readReturnPath(formData: FormData, key: string): string | null {
 
 function readEventTypes(formData: FormData, key: string): string {
   const value = readText(formData, key);
-  if (!value) return '["major_event","local_event"]';
+  if (!value) return '["retreat","meet"]';
   try {
     const parsed = JSON.parse(value);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return JSON.stringify(parsed.filter((t: unknown) => typeof t === "string" && t.trim()));
     }
   } catch {}
-  return '["major_event","local_event"]';
+  return '["retreat","meet"]';
 }

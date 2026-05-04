@@ -3,8 +3,7 @@ export type MemberGroupStatus = (typeof memberGroupStatuses)[number];
 
 export const eventStatuses = [
   "draft",
-  "open",
-  "full",
+  "show",
   "closed",
   "archived",
 ] as const;

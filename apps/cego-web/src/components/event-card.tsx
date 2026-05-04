@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { Badge, StatusBadge } from "@/components/badge";
+import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import type { Event } from "@cego/db";
 
 /**
@@ -51,7 +51,7 @@ export function EventCard({
 
   const badgeRow = (
     <div className="flex flex-wrap items-center gap-2">
-      <Badge>{event.type === "major_event" ? "Major" : "Local"}</Badge>
+      <Badge>{titleCase(event.type)}</Badge>
       <StatusBadge status={event.status} />
       {extraBadges}
       {showFull ? (

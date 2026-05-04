@@ -31,6 +31,10 @@ export function getEffectiveRsvpStatus(event: {
     return "before";
   }
 
+  if (event.status === "closed") {
+    return "closed";
+  }
+
   if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() <= now) {
     return "closed";
   }
@@ -43,7 +47,7 @@ export function getEffectiveRsvpStatus(event: {
     return "past";
   }
 
-  if (event.status === "full" || event.confirmedCount >= event.capacity) {
+  if (event.confirmedCount >= event.capacity) {
     return "full";
   }
 
@@ -90,7 +94,7 @@ export async function getDashboardEvents(
   const eventRows = await db
     .select()
     .from(events)
-    .where(inArray(events.status, ["draft", "open", "full", "closed"]))
+    .where(inArray(events.status, ["show", "closed"]))
     .orderBy(desc(events.startsAt));
 
   if (eventRows.length === 0) {
@@ -138,7 +142,7 @@ export async function getDashboardEventBySlug(
     .where(
       and(
         eq(events.slug, slug),
-        inArray(events.status, ["draft", "open", "full", "closed"]),
+        inArray(events.status, ["show", "closed"]),
       ),
     )
     .limit(1);
@@ -221,7 +225,7 @@ export async function getPublicEvents(): Promise<{
   const eventRows = await db
     .select()
     .from(events)
-    .where(inArray(events.status, ["open", "full", "closed"]))
+    .where(inArray(events.status, ["show", "closed"]))
     .orderBy(desc(events.startsAt));
 
   if (eventRows.length === 0) {
@@ -362,7 +366,7 @@ export async function getRsvpPageData(
     .where(
       and(
         eq(events.slug, slug),
-        inArray(events.status, ["draft", "open", "full"]),
+        inArray(events.status, ["show", "closed"]),
       ),
     )
     .limit(1);

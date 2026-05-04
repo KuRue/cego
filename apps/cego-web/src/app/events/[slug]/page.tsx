@@ -135,7 +135,7 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
+            <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
             {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
           </div>
           <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight">

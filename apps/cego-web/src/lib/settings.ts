@@ -22,7 +22,7 @@ export const defaults: BrandSettings = {
   highlightColor: "#d8b35a",
   logoUrl: null,
   backgroundUrl: null,
-  eventTypes: ["major_event", "local_event"],
+  eventTypes: ["retreat", "meet"],
   heroTitle: "Run community events without turning the group chat into a spreadsheet.",
   heroBody:
     "cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.",

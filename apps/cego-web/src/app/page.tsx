@@ -4,11 +4,18 @@ import Navbar from "@/components/navbar";
 import { StatusBadge, eventStatusLabel } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
 import { getPublicEvents, type PublicEvent } from "@/lib/events";
+import { getCurrentMember } from "@/lib/session";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const member = await getCurrentMember();
+  if (member) {
+    redirect("/dashboard");
+  }
+
   const settings = await getSiteSettings();
   let upcoming: PublicEvent[] = [];
   let past: PublicEvent[] = [];

@@ -3,6 +3,7 @@ import { getAdminEvents } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { getSiteSettings } from "@/lib/settings";
+import { titleCase } from "@/components/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function AdminPage() {
   const eventOverviews = await getAdminEvents();
 
   const openEvents = eventOverviews.filter(
-    (e) => e.event.status === "open" || e.event.status === "full",
+    (e) => e.event.status === "show" || e.event.status === "closed",
   );
 
   return (
@@ -71,7 +72,7 @@ export default async function AdminPage() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-highlight)" }}>
-                      {overview.event.type === "major_event" ? "Major" : "Local"}
+                      {titleCase(overview.event.type)}
                     </span>
                     <span
                       className="rounded-lg px-2.5 py-0.5 text-xs font-medium"

@@ -528,8 +528,6 @@ function getCountdownLabel(event: {
     if (diff > 0) return `RSVP opens in ${fmtDays(diff)}`;
   }
 
-  if (event.status === "draft") return "Coming soon";
-
   if (event.rsvpClosesAt) {
     const diff = event.rsvpClosesAt.getTime() - now;
     if (diff > 0) return `RSVP closes in ${fmtDays(diff)}`;

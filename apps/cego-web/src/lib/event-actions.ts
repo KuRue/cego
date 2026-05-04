@@ -283,6 +283,24 @@ export async function cancelRsvpAction(formData: FormData) {
   redirect(returnTo);
 }
 
+export async function deleteEventAction(formData: FormData) {
+  await requireAdminMember();
+  const eventId = readText(formData, "eventId");
+
+  if (!eventId) {
+    redirect("/admin/events");
+  }
+
+  const db = getDb();
+
+  await db.delete(rsvps).where(eq(rsvps.eventId, eventId));
+  await db.delete(events).where(eq(events.id, eventId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect("/admin/events");
+}
+
 export async function updateRsvpStatusAction(formData: FormData) {
   await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
@@ -344,7 +362,7 @@ function parseEventForm(formData: FormData) {
   const slug = slugify(readText(formData, "slug") || title);
 
   return {
-    type: readText(formData, "type") || "local_event",
+    type: readText(formData, "type") || "meet",
     title,
     slug,
     description: readOptionalText(formData, "description"),

@@ -13,7 +13,7 @@ import {
 } from "@/lib/member-admin";
 import { getCurrentMember } from "@/lib/session";
 import { formatSurveyAnswer, parseSurveySchema } from "@/lib/surveys";
-import { Badge, getTagTone, StatusBadge } from "@/components/badge";
+import { Badge, getTagTone, StatusBadge, titleCase } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -359,9 +359,9 @@ export default async function AdminMemberDetailPage({
                     <article key={rsvp.id} className="glass rounded-xl p-4">
                       <div className="flex flex-wrap gap-2">
                         <StatusBadge status={rsvp.status} />
-                        <Badge>
-                          {event.type === "major_event" ? "major" : "local"}
-                        </Badge>
+      <Badge>
+        {titleCase(event.type)}
+      </Badge>
                         <StatusBadge status={event.status} />
                       </div>
                       <h3 className="mt-3 font-semibold">{event.title}</h3>
@@ -492,7 +492,7 @@ function buildActivityItems(detail: AdminMemberDetail): ActivityItem[] {
     id: `rsvp:${rsvp.id}`,
     kind: "RSVP",
     title: `${rsvp.status} for ${event.title}`,
-    description: `${event.type === "major_event" ? "Major" : "Local"} event`,
+      description: `${titleCase(event.type)} event`,
     date: rsvp.updatedAt,
   }));
   const surveyItems = detail.surveyResponses.map(({ response, survey, event }) => ({

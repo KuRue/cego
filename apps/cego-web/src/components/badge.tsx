@@ -1,3 +1,7 @@
+export function titleCase(str: string): string {
+  return str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function Badge({ children }: { children: React.ReactNode }) {
   return (
     <span
@@ -11,8 +15,7 @@ export function Badge({ children }: { children: React.ReactNode }) {
 
 export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const map: Record<string, { bg: string; text: string }> = {
-    open: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
-    full: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
+    show: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
     closed: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
     draft: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
     archived: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
@@ -45,12 +48,7 @@ export function eventStatusLabel(
   const now = Date.now();
 
   switch (status) {
-    case "open":
-    case "full":
-      return "Accepting RSVPs";
-    case "closed":
-      return "RSVPs closed";
-    case "draft": {
+    case "show": {
       if (rsvpOpensAt && rsvpOpensAt.getTime() > now) {
         const date = new Intl.DateTimeFormat("en-US", {
           month: "short",
@@ -58,8 +56,12 @@ export function eventStatusLabel(
         }).format(rsvpOpensAt);
         return `RSVPs open ${date}`;
       }
-      return "Coming soon";
+      return "Accepting RSVPs";
     }
+    case "closed":
+      return "RSVPs closed";
+    case "draft":
+      return "Draft";
     case "archived":
       return "Archived";
     default:
