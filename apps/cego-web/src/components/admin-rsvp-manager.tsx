@@ -131,7 +131,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
     : undefined;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <div className="min-w-0 grid gap-4 lg:grid-cols-[1fr_1fr]">
       <div className="lg:max-h-[70vh] lg:overflow-y-auto">
         <div className="sticky top-0 z-10 p-3" style={{ background: "var(--color-background)" }}>
           <input

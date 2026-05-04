@@ -77,40 +77,42 @@ export default async function AdminEventDetailPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-7xl px-5 pb-16 pt-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <AppLink
-              href="/admin/events"
-              className="text-sm font-semibold"
-              style={{ color: "var(--color-accent)" }}
-            >
-              &larr; Events
-            </AppLink>
-            <h1 className="mt-1 font-title text-3xl font-semibold">{detail.event.title}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <StatusBadge status={detail.event.status} />
-            <form action={deleteEventAction} className="hidden sm:block">
-              <input type="hidden" name="eventId" value={detail.event.id} />
-              <ConfirmButton
-                type="submit"
-                message="Delete this event and all its RSVPs? This cannot be undone."
-                className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+      <main className="mx-auto max-w-7xl overflow-x-hidden px-4 pb-16 pt-8">
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <AppLink
+                href="/admin/events"
+                className="text-sm font-semibold"
+                style={{ color: "var(--color-accent)" }}
               >
-                Delete
-              </ConfirmButton>
-            </form>
+                &larr; Events
+              </AppLink>
+              <h1 className="mt-1 font-title text-2xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <StatusBadge status={detail.event.status} />
+              <form action={deleteEventAction} className="hidden sm:block">
+                <input type="hidden" name="eventId" value={detail.event.id} />
+                <ConfirmButton
+                  type="submit"
+                  message="Delete this event and all its RSVPs? This cannot be undone."
+                  className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                  style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+                >
+                  Delete
+                </ConfirmButton>
+              </form>
+            </div>
           </div>
+
+          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+            {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
+          </p>
         </div>
 
-        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-          {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
-        </p>
-
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
-          <div className="grid gap-6">
+          <div className="min-w-0 grid gap-6">
             <section className="glass-lg rounded-2xl p-5">
               <h2 className="text-lg font-semibold">Stats</h2>
               <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
@@ -169,7 +171,7 @@ export default async function AdminEventDetailPage({
               ) : (
                 <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
-              <form action={addEventExpenseAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_8rem_7rem_auto]">
+              <form action={addEventExpenseAction} className="mt-4 grid gap-3 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
                 <input type="hidden" name="eventId" value={detail.event.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <input
@@ -231,7 +233,7 @@ export default async function AdminEventDetailPage({
             )}
           </div>
 
-          <aside className="glass-lg h-fit rounded-2xl p-5 lg:sticky lg:top-24">
+          <aside className="glass-lg h-fit min-w-0 rounded-2xl p-5 lg:sticky lg:top-24">
             <details>
               <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
                 Edit event
