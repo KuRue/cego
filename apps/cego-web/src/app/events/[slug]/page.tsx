@@ -174,15 +174,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         <div className="grid gap-6">
           <Panel title="Event Details">
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Detail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
-              {isMultiDay(event.startsAt, event.endsAt) ? (
-                <>
-                  <Detail label="Start" value={formatDateFull(event.startsAt)} />
-                  <Detail label="End" value={formatDateFull(event.endsAt!)} />
-                </>
-              ) : (
-                <Detail label="Date" value={formatDateFull(event.startsAt)} />
-              )}
+              <Detail label="Date" value={formatDateLines(event.startsAt, event.endsAt)} />
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
               {event.addressText ? (
                 canSeeAddress ? (
@@ -469,7 +461,7 @@ function Detail({ label, value }: { label: string; value: string }) {
       <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
         {label}
       </dt>
-      <dd className="mt-1 leading-6">{value}</dd>
+      <dd className="mt-1 leading-6 whitespace-pre-line">{value}</dd>
     </div>
   );
 }
@@ -496,36 +488,18 @@ function TextBlock({ title, body }: { title: string; body: string }) {
   );
 }
 
-function isMultiDay(startsAt: Date, endsAt: Date | null): boolean {
-  if (!endsAt) return false;
-  return startsAt.toDateString() !== endsAt.toDateString();
-}
-
-function formatDateFull(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
+function formatDateLines(startsAt: Date, endsAt: Date | null): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(date);
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   });
 
-  if (!endsAt) {
-    return formatter.format(startsAt);
-  }
-
-  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
+  if (!endsAt) return formatter.format(startsAt);
+  return `${formatter.format(startsAt)}\n${formatter.format(endsAt)}`;
 }
 
 function formatDateOnly(date: Date): string {
