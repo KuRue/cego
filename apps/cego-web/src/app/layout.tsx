@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import { getSiteSettings, type BrandSettings, defaults } from "@/lib/settings";
 import MiniAppSessionRefresher from "@/components/mini-app-session-refresher";
@@ -16,9 +16,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
+const playfair = Cormorant_Garamond({
   variable: "--font-title",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
