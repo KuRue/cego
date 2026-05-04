@@ -124,7 +124,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
   return (
     <>
       <header className="glass sticky top-0 z-50">
-        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-sm justify-center gap-4 pt-12 pb-2" : "max-w-6xl py-3"}`}>
+        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-xs justify-center gap-3 pt-10 pb-1" : "max-w-6xl py-3"}`}>
           <AppLink href="/" className="flex items-center gap-2 shrink-0">
             {logoUrl ? (
               <Image
