@@ -3,6 +3,7 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Avatar from "@/components/avatar";
 
 interface NavbarProps {
@@ -20,17 +21,34 @@ interface NavbarProps {
 export default function Navbar({ member, brand }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const siteName = brand?.siteName || "cego";
   const logoUrl = brand?.logoUrl;
 
   useEffect(() => {
     setIsMiniApp(!!window.Telegram?.WebApp?.initData);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
+    if (menuOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [menuOpen]);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -56,42 +74,100 @@ export default function Navbar({ member, brand }: NavbarProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [menuOpen]);
 
-  return (
-    <header
-      className="glass sticky top-0 z-50"
-      style={isMiniApp ? { paddingTop: "max(env(safe-area-inset-top, 0px), 48px)" } : undefined}
+  const dropdown = menuOpen && mounted ? createPortal(
+    <div
+      ref={menuRef}
+      className="glass-lg fixed min-w-48 overflow-hidden rounded-xl py-1"
+      style={{ top: menuPos.top, right: menuPos.right, zIndex: 9999 }}
+      role="menu"
     >
-      <nav className={`mx-auto flex max-w-6xl items-center px-5 py-3 ${isMiniApp ? "justify-center gap-6" : "justify-between"}`}>
-        <AppLink href="/" className="flex items-center gap-2">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt={siteName}
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          ) : (
-            <span
-              className="grid h-8 w-8 place-items-center rounded-lg font-bold"
-              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-            >
-              {siteName.charAt(0).toUpperCase()}
-            </span>
-          )}
-          <span className="text-sm font-semibold tracking-wide">
-            {siteName}
-          </span>
+      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
+        <p className="text-sm font-semibold">{member?.telegramDisplayName}</p>
+      </div>
+      <div className="py-1">
+        <AppLink
+          href="/profile"
+          onClick={() => setMenuOpen(false)}
+          className="block px-4 py-2.5 text-sm transition"
+          style={{ color: "var(--color-foreground)" }}
+          role="menuitem"
+        >
+          Profile
         </AppLink>
+        {member?.isAdmin ? (
+          <>
+            <AppLink
+              href="/admin"
+              onClick={() => setMenuOpen(false)}
+              className="block px-4 py-2.5 text-sm transition"
+              style={{ color: "var(--color-foreground)" }}
+              role="menuitem"
+            >
+              Admin Dashboard
+            </AppLink>
+            <AppLink
+              href="/admin/settings"
+              onClick={() => setMenuOpen(false)}
+              className="block px-4 py-2.5 text-sm transition"
+              style={{ color: "var(--color-foreground)" }}
+              role="menuitem"
+            >
+              Settings
+            </AppLink>
+          </>
+        ) : null}
+      </div>
+    </div>,
+    document.body,
+  ) : null;
 
-        {member ? (
+  return (
+    <>
+      <header className="glass sticky top-0 z-50">
+        <nav className="mx-auto flex max-w-6xl items-center px-5 py-3">
+          <div className="flex items-center gap-2">
+            <AppLink href="/" className="flex items-center gap-2">
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={siteName}
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <span
+                  className="grid h-8 w-8 place-items-center rounded-lg font-bold"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  {siteName.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="text-sm font-semibold tracking-wide">
+                {siteName}
+              </span>
+            </AppLink>
+          </div>
+
+          <div className="flex-1 text-center">
+            {isMiniApp && (
+              <span className="text-sm font-semibold tracking-wide">
+                {siteName}
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-1 sm:flex">
-              <NavItem href="/dashboard">Dashboard</NavItem>
-              {member.isAdmin ? <NavItem href="/admin">Admin</NavItem> : null}
-            </div>
-            <div className="relative" ref={menuRef}>
+            {!isMiniApp && member ? (
+              <div className="hidden items-center gap-1 sm:flex">
+                <NavItem href="/dashboard">Dashboard</NavItem>
+                {member.isAdmin ? <NavItem href="/admin">Admin</NavItem> : null}
+              </div>
+            ) : null}
+
+            {member ? (
               <button
+                ref={buttonRef}
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 rounded-full p-0.5 transition"
@@ -105,66 +181,23 @@ export default function Navbar({ member, brand }: NavbarProps) {
                   photoUrl={member.telegramPhotoUrl}
                 />
               </button>
-
-              {menuOpen && (
-                <div
-                  className="glass-lg absolute right-0 mt-2 min-w-48 overflow-hidden rounded-xl py-1"
-                  role="menu"
-                >
-                  <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
-                    <p className="text-sm font-semibold">{member.telegramDisplayName}</p>
-                  </div>
-                  <div className="py-1">
-                  <AppLink
-                    href="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2.5 text-sm transition"
-                    style={{ color: "var(--color-foreground)" }}
-                    role="menuitem"
-                  >
-                    Profile
-                  </AppLink>
-                  {member.isAdmin ? (
-                    <>
-                      <AppLink
-                        href="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm transition"
-                        style={{ color: "var(--color-foreground)" }}
-                        role="menuitem"
-                      >
-                        Admin Dashboard
-                      </AppLink>
-                      <AppLink
-                        href="/admin/settings"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm transition"
-                        style={{ color: "var(--color-foreground)" }}
-                        role="menuitem"
-                      >
-                        Settings
-                      </AppLink>
-                    </>
-                  ) : null}
-                  </div>
-                </div>
-              )}
-            </div>
+            ) : (
+              <AppLink
+                href="/sign-in"
+                className="rounded-lg px-4 py-2 text-sm font-medium transition"
+                style={{
+                  background: "var(--color-accent)",
+                  color: "var(--color-on-accent)",
+                }}
+              >
+                Sign in
+              </AppLink>
+            )}
           </div>
-        ) : (
-          <AppLink
-            href="/sign-in"
-            className="rounded-lg px-4 py-2 text-sm font-medium transition"
-            style={{
-              background: "var(--color-accent)",
-              color: "var(--color-on-accent)",
-            }}
-          >
-            Sign in
-          </AppLink>
-        )}
-      </nav>
-    </header>
+        </nav>
+      </header>
+      {dropdown}
+    </>
   );
 }
 
@@ -178,13 +211,4 @@ function NavItem({ href, children }: { href: string; children: React.ReactNode }
       {children}
     </AppLink>
   );
-}
-
-function miniAppNavigate(href: string) {
-  return (e: React.MouseEvent) => {
-    if (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) {
-      e.preventDefault();
-      window.location.href = href;
-    }
-  };
 }
