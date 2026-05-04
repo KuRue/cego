@@ -257,23 +257,22 @@ select option {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    105deg,
-    transparent 0%,
-    transparent 35%,
-    rgba(255, 255, 255, 0.04) 42%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.04) 58%,
-    transparent 65%,
-    transparent 100%
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 60%,
+    transparent 70%
   );
-  background-size: 300% 100%;
-  animation: shimmer 6s ease-in-out infinite;
+  background-size: 400% 100%;
+  animation: shimmer 8s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0%, 10% { background-position: 150% 0; }
+  40%, 60% { background-position: -50% 0; }
+  90%, 100% { background-position: 150% 0; }
 }
 
 .button-primary {
