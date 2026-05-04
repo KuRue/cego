@@ -317,7 +317,8 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
               <div className="mt-3 grid gap-2">
                 {parsePaymentMethods(event.paymentMethods).map((m, i) => {
-                  const price = plusOne && rsvp?.status !== "cancelled" ? event.priceCents! * 2 : event.priceCents;
+                  const hasPlusOne = plusOne && plusOne.status !== "cancelled" && rsvp?.status !== "cancelled";
+                  const price = hasPlusOne ? event.priceCents! * 2 : event.priceCents;
                   const url = getPaymentMethodUrl(m, price);
                   return (
                     <div key={i} className="flex items-center justify-between gap-2">
