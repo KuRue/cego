@@ -155,11 +155,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               alt={event.title}
               width={600}
               height={400}
-              className="h-52 w-full object-cover"
+              className="h-56 w-full object-cover"
             />
           ) : (
             <div
-              className="flex h-52 items-center justify-center"
+              className="flex h-56 items-center justify-center"
               style={{ background: "var(--color-surface-hover)" }}
             >
               <span
@@ -170,16 +170,56 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               </span>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+
+          {/* Top row pills */}
+          <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+            <span
+              className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+              style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
+            >
+              {getCountdownLabel(event)}
+            </span>
+            {rsvp && rsvp.status !== "cancelled" ? (
+              <span
+                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                style={{
+                  background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : "rgba(234,179,8,0.85)",
+                  color: rsvp.status === "confirmed" ? "#fff" : "#1a1d23",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                {rsvpStatusLabel(rsvp.status)}
+              </span>
+            ) : null}
+          </div>
+
+          {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
-            <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
-            <div className="mt-1 flex items-center gap-3 text-xs text-white/80">
-              <span>{formatDateOnly(event.startsAt)}</span>
-              <span>{spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}</span>
-              {rsvp?.status === "confirmed" && event.paymentRequired ? (
-                <span style={{ color: rsvp.paymentStatus === "paid" ? "#34d399" : "#fbbf24" }}>
-                  {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+            <h3 className="text-lg font-bold text-white leading-tight">{event.title}</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span
+                className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
+                style={{ backdropFilter: "blur(8px)" }}
+              >
+                {formatDateRangeShort(event.startsAt, event.endsAt)}
+              </span>
+              <span
+                className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
+                style={{ backdropFilter: "blur(8px)" }}
+              >
+                {rsvp?.status === "waitlisted"
+                  ? "Waitlisted"
+                  : spotsLeft > 0
+                    ? `Spots left: ${spotsLeft}`
+                    : "Full"}
+              </span>
+              {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+                <span
+                  className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                  style={{ background: "rgba(234,179,8,0.8)", color: "#1a1d23" }}
+                >
+                  Payment due
                 </span>
               ) : null}
             </div>
@@ -419,6 +459,63 @@ function formatDateOnly(date: Date): string {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+function formatDateRangeShort(startsAt: Date, endsAt: Date | null): string {
+  const monthDay = { month: "short", day: "numeric" } as const;
+  const full = { month: "short", day: "numeric", year: "numeric" } as const;
+
+  if (!endsAt) {
+    return new Intl.DateTimeFormat("en-US", full).format(startsAt);
+  }
+
+  const sameYear = startsAt.getFullYear() === endsAt.getFullYear();
+  const sameMonth = startsAt.getMonth() === endsAt.getMonth();
+
+  if (sameMonth && sameYear) {
+    const m = new Intl.DateTimeFormat("en-US", { month: "short" }).format(startsAt);
+    const d1 = startsAt.getDate();
+    const d2 = endsAt.getDate();
+    const y = startsAt.getFullYear();
+    return `${m} ${d1}-${d2}, ${y}`;
+  }
+
+  if (sameYear) {
+    const fmt = new Intl.DateTimeFormat("en-US", monthDay);
+    return `${fmt.format(startsAt)} - ${fmt.format(endsAt)}, ${startsAt.getFullYear()}`;
+  }
+
+  const fmt = new Intl.DateTimeFormat("en-US", full);
+  return `${fmt.format(startsAt)} - ${fmt.format(endsAt)}`;
+}
+
+function getCountdownLabel(event: { status: string; startsAt: Date }): string {
+  const now = Date.now();
+
+  if (event.status === "draft") {
+    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
+    if (days > 30) return "Coming soon";
+    if (days > 1) return `RSVPs in ${days}d`;
+    if (days === 1) return "RSVPs in 1d";
+    return "RSVPs today";
+  }
+
+  if (event.status === "open" || event.status === "full") {
+    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
+    if (days > 30) return "Upcoming";
+    if (days > 1) return `In ${days}d`;
+    if (days === 1) return "Tomorrow";
+    return "Today";
+  }
+
+  if (event.status === "closed") {
+    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
+    if (days > 0) return `In ${days}d`;
+    if (days === 0) return "Today";
+    return "Past";
+  }
+
+  return event.status;
 }
 
 function formatDateRange(startsAt: Date, endsAt: Date | null): string {
