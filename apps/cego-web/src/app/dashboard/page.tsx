@@ -185,12 +185,19 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
           {/* Top row pills */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-            <span
-              className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
-              style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
-            >
-              {getCountdownLabel(event)}
-            </span>
+            <div>
+              <span
+                className="inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
+              >
+                {getCountdownLabel(event)}
+              </span>
+              {rsvpMembers.length > 0 ? (
+                <div className="mt-1.5">
+                  <AvatarStack members={rsvpMembers} />
+                </div>
+              ) : null}
+            </div>
             {rsvp && rsvp.status !== "cancelled" ? (
               <span
                 className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
@@ -207,12 +214,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="font-title text-lg font-bold text-white leading-tight">{event.title}</h3>
-            {rsvpMembers.length > 0 ? (
-              <div className="mt-2">
-                <AvatarStack members={rsvpMembers} />
-              </div>
-            ) : null}
+            <h3 className="font-title text-2xl font-bold text-white leading-tight">{event.title}</h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
@@ -274,7 +276,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
-              <h3 className="font-title mt-3 text-xl font-semibold">{event.title}</h3>
+              <h3 className="font-title mt-3 text-2xl font-semibold">{event.title}</h3>
               {rsvpMembers.length > 0 ? (
                 <div className="mt-2">
                   <AvatarStack members={rsvpMembers} />
