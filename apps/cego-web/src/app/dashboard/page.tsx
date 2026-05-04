@@ -513,8 +513,8 @@ function getCountdownLabel(event: {
   const now = Date.now();
   const fmtDays = (ms: number) => {
     const d = Math.ceil(ms / 86400000);
-    if (d > 1) return `${d}d`;
-    if (d === 1) return "1d";
+    if (d > 1) return `${d} days`;
+    if (d === 1) return "1 day";
     const h = Math.ceil(ms / 3600000);
     if (h > 1) return `${h}h`;
     return "soon";
