@@ -496,6 +496,7 @@ export async function updateRsvpPaymentAction(formData: FormData) {
   const rsvpId = readText(formData, "rsvpId");
   const paymentStatus = readEnum(formData, "paymentStatus", [
     "unpaid",
+    "pending",
     "paid",
     "waived",
   ] as const);
