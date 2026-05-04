@@ -301,7 +301,7 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
                     <p>If payment is not received by the due date, your RSVP may be canceled.</p>
                   )}
                   <p className="mt-1" style={{ color: "var(--color-muted)" }}>
-                    Payments are manually reviewed by organizers.
+                    Payments are manually reviewed by organizers. Feel free to message Ku for any payment questions.
                   </p>
                 </div>
               ) : null}
