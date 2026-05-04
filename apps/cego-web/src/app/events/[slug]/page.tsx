@@ -2,6 +2,7 @@ import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
+import AvatarStack from "@/components/avatar-stack";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
@@ -99,7 +100,7 @@ export default async function EventDetailPage({
 }
 
 function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
-  const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
+  const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers } = eventState;
   const returnTo = `/events/${event.slug}`;
   const effective = getEffectiveRsvpStatus({
     status: event.status,
@@ -138,6 +139,11 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
             <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
             {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
           </div>
+          {rsvpMembers.length > 0 ? (
+            <div className="mt-3">
+              <AvatarStack members={rsvpMembers} />
+            </div>
+          ) : null}
           <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight">
             {event.title}
           </h1>

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
+import AvatarStack from "@/components/avatar-stack";
 import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import StopPropagation from "@/components/stop-propagation";
@@ -138,7 +139,7 @@ export default async function DashboardPage() {
 }
 
 function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
-  const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
+  const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers } = eventState;
   const effective = getEffectiveRsvpStatus({
     status: event.status,
     startsAt: event.startsAt,
@@ -207,6 +208,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="text-lg font-bold text-white leading-tight">{event.title}</h3>
+            {rsvpMembers.length > 0 ? (
+              <div className="mt-2">
+                <AvatarStack members={rsvpMembers} />
+              </div>
+            ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
@@ -269,6 +275,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
               <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
+              {rsvpMembers.length > 0 ? (
+                <div className="mt-2">
+                  <AvatarStack members={rsvpMembers} />
+                </div>
+              ) : null}
               {event.description ? (
                 <p className="mt-3 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
                   {event.description}

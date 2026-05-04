@@ -60,6 +60,10 @@ export interface EventWithRsvpState {
   waitlistedCount: number;
   rsvp?: Rsvp;
   plusOne?: Rsvp;
+  rsvpMembers: Array<{
+    telegramDisplayName: string;
+    telegramPhotoUrl: string | null;
+  }>;
 }
 
 export interface PublicEvent {
@@ -102,12 +106,26 @@ export async function getDashboardEvents(
   }
 
   const eventIds = eventRows.map((event) => event.id);
-  const [memberRsvpRows, countRows] = await Promise.all([
+  const [memberRsvpRows, countRows, rsvpMemberRows] = await Promise.all([
     db
       .select()
       .from(rsvps)
       .where(and(eq(rsvps.memberId, memberId), inArray(rsvps.eventId, eventIds))),
     getRsvpCountRows(eventIds),
+    db
+      .select({
+        eventId: rsvps.eventId,
+        telegramDisplayName: members.telegramDisplayName,
+        telegramPhotoUrl: members.telegramPhotoUrl,
+      })
+      .from(rsvps)
+      .innerJoin(members, eq(rsvps.memberId, members.id))
+      .where(
+        and(
+          inArray(rsvps.eventId, eventIds),
+          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+        ),
+      ),
   ]);
 
   const memberRsvpsByEvent = new Map(
@@ -121,6 +139,12 @@ export async function getDashboardEvents(
       .map((rsvp) => [rsvp.eventId, rsvp]),
   );
   const countsByEvent = toCountMap(countRows);
+  const rsvpMembersByEvent = new Map<string, EventWithRsvpState["rsvpMembers"]>();
+  for (const row of rsvpMemberRows) {
+    const list = rsvpMembersByEvent.get(row.eventId) ?? [];
+    list.push({ telegramDisplayName: row.telegramDisplayName, telegramPhotoUrl: row.telegramPhotoUrl });
+    rsvpMembersByEvent.set(row.eventId, list);
+  }
 
   return eventRows.map((event) => ({
     event,
@@ -128,6 +152,7 @@ export async function getDashboardEvents(
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
     rsvp: memberRsvpsByEvent.get(event.id),
     plusOne: plusOneByEvent.get(event.id),
+    rsvpMembers: rsvpMembersByEvent.get(event.id) ?? [],
   }));
 }
 
@@ -152,12 +177,25 @@ export async function getDashboardEventBySlug(
     return null;
   }
 
-  const [memberRsvpRows, countRows] = await Promise.all([
+  const [memberRsvpRows, countRows, rsvpMemberRows] = await Promise.all([
     db
       .select()
       .from(rsvps)
       .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, event.id))),
     getRsvpCountRows([event.id]),
+    db
+      .select({
+        telegramDisplayName: members.telegramDisplayName,
+        telegramPhotoUrl: members.telegramPhotoUrl,
+      })
+      .from(rsvps)
+      .innerJoin(members, eq(rsvps.memberId, members.id))
+      .where(
+        and(
+          eq(rsvps.eventId, event.id),
+          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+        ),
+      ),
   ]);
   const countsByEvent = toCountMap(countRows);
   const parentRsvp = memberRsvpRows.find((r) => !r.parentRsvpId);
@@ -169,6 +207,10 @@ export async function getDashboardEventBySlug(
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
     rsvp: parentRsvp,
     plusOne,
+    rsvpMembers: rsvpMemberRows.map((r) => ({
+      telegramDisplayName: r.telegramDisplayName,
+      telegramPhotoUrl: r.telegramPhotoUrl,
+    })),
   };
 }
 
