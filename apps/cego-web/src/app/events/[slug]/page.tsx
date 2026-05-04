@@ -171,6 +171,14 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
           <Panel title="Event Details">
             <dl className="grid gap-4 sm:grid-cols-2">
               <Detail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
+              {isMultiDay(event.startsAt, event.endsAt) ? (
+                <>
+                  <Detail label="Start" value={formatDateFull(event.startsAt)} />
+                  <Detail label="End" value={formatDateFull(event.endsAt!)} />
+                </>
+              ) : (
+                <Detail label="Date" value={formatDateFull(event.startsAt)} />
+              )}
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
               <Detail
                 label="Capacity"
@@ -468,6 +476,22 @@ function TextBlock({ title, body }: { title: string; body: string }) {
       </p>
     </section>
   );
+}
+
+function isMultiDay(startsAt: Date, endsAt: Date | null): boolean {
+  if (!endsAt) return false;
+  return startsAt.toDateString() !== endsAt.toDateString();
+}
+
+function formatDateFull(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function formatDateRange(startsAt: Date, endsAt: Date | null): string {
