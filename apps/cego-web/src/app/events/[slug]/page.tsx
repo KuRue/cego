@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction } from "@/lib/event-actions";
+import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -193,23 +194,23 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
               </AppLink>
             ) : null}
 
-            {isCancelableRsvp ? (
-              <form action={cancelRsvpAction}>
-                <input type="hidden" name="eventId" value={event.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <button
-                  type="submit"
-                  className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                >
-                  Cancel RSVP
-                </button>
-              </form>
-            ) : null}
+          {isCancelableRsvp ? (
+            <form action={cancelRsvpAction}>
+              <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <CancelRsvpButton
+                type="submit"
+                className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
+                style={{
+                  background: "var(--color-surface-hover)",
+                  border: "1px solid var(--color-surface-border)",
+                  color: "var(--color-foreground)",
+                }}
+              >
+                Cancel RSVP
+              </CancelRsvpButton>
+            </form>
+          ) : null}
 
             {!canRsvp && !isCancelableRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>

@@ -4,6 +4,7 @@ import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/compone
 import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import StopPropagation from "@/components/stop-propagation";
+import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
@@ -336,7 +337,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 <StopPropagation>
                   <form action={cancelRsvpAction}>
                     <input type="hidden" name="eventId" value={event.id} />
-                    <button
+                    <CancelRsvpButton
                       type="submit"
                       className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
                       style={{
@@ -346,7 +347,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                       }}
                     >
                       Cancel RSVP
-                    </button>
+                    </CancelRsvpButton>
                   </form>
                 </StopPropagation>
               ) : null}
