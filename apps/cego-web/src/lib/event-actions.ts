@@ -233,6 +233,7 @@ export async function rsvpForEventAction(formData: FormData) {
       }
     });
   } catch (err) {
+    if (isNextRedirect(err)) throw err;
     console.error("RSVP action failed:", err);
     redirect(returnTo + "?rsvp_error=1");
   }
@@ -473,4 +474,14 @@ function slugify(value: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function isNextRedirect(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "digest" in err &&
+    typeof (err as { digest: string }).digest === "string" &&
+    (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+  );
 }
