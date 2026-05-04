@@ -1,6 +1,7 @@
 import {
   createSurveyAction,
   updateSurveyAction,
+  deleteSurveyAction,
 } from "@/lib/survey-actions";
 import AppLink from "@/components/app-link";
 import {
@@ -12,6 +13,7 @@ import {
 import { getAdminEvents } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
+import ConfirmButton from "@/components/confirm-button";
 import { Badge, StatusBadge } from "@/components/badge";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -121,6 +123,20 @@ function SurveyCard({
         </summary>
         <SurveyForm action={updateSurveyAction} events={events} overview={overview} submitLabel="Save survey" />
       </details>
+
+      {survey.status === "closed" ? (
+        <form action={deleteSurveyAction} className="mt-5 pt-5" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+          <input type="hidden" name="surveyId" value={survey.id} />
+          <ConfirmButton
+            type="submit"
+            message="Delete this survey and all its responses?"
+            className="h-10 rounded-xl px-5 text-sm font-semibold transition"
+            style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", border: "1px solid var(--color-danger)" }}
+          >
+            Delete survey
+          </ConfirmButton>
+        </form>
+      ) : null}
 
       {responses.length > 0 ? (
         <details className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-surface-border)" }}>

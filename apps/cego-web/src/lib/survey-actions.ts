@@ -46,6 +46,32 @@ export async function updateSurveyAction(formData: FormData) {
   redirect("/admin");
 }
 
+export async function deleteSurveyAction(formData: FormData) {
+  await requireAdminMember();
+  const surveyId = readText(formData, "surveyId");
+
+  if (!surveyId) {
+    redirect("/admin");
+  }
+
+  const db = getDb();
+  const surveyRows = await db
+    .select({ status: surveys.status })
+    .from(surveys)
+    .where(eq(surveys.id, surveyId))
+    .limit(1);
+
+  if (!surveyRows[0] || surveyRows[0].status !== "closed") {
+    redirect("/admin");
+  }
+
+  await db.delete(surveys).where(eq(surveys.id, surveyId));
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  redirect("/admin");
+}
+
 export async function submitSurveyResponseAction(formData: FormData) {
   const member = await requireCurrentMember();
   const surveyId = readText(formData, "surveyId");
