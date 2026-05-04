@@ -454,6 +454,13 @@ export async function cancelRsvpAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath(returnTo);
   revalidatePath("/admin");
+
+  sendNotification({
+    memberId: member.id,
+    eventId,
+    template: "rsvp_cancelled",
+  }).catch(() => {});
+
   redirect(returnTo);
 }
 
