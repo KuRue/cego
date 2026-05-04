@@ -157,7 +157,8 @@ function AlreadyRegistered({ data, slug }: { data: NonNullable<Awaited<ReturnTyp
           <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateOnly(data.event.paymentDueDate)}` : ""}</p>
           <div className="mt-2 grid gap-2">
             {parsePaymentMethods(data.event.paymentMethods).map((m, i) => {
-              const url = getPaymentMethodUrl(m, data.event.priceCents);
+              const price = data.plusOne && data.plusOne.status !== "cancelled" ? data.event.priceCents! * 2 : data.event.priceCents;
+              const url = getPaymentMethodUrl(m, price);
               return (
                 <div key={i} className="flex items-center justify-between gap-2">
                   <span className="text-sm">
