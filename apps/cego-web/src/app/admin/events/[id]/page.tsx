@@ -167,7 +167,7 @@ export default async function AdminEventDetailPage({
                       </div>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between p-2" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+                  <div className="flex items-center justify-between p-2">
                     <span className="text-sm font-semibold">Total expenses</span>
                     <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
                   </div>
@@ -176,7 +176,7 @@ export default async function AdminEventDetailPage({
                 <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
               <details className="mt-3">
-                <summary className="cursor-pointer h-9 rounded-lg px-3 text-sm font-semibold leading-9" style={{ background: "var(--color-surface-hover)", color: "var(--color-accent)" }}>
+                <summary className="cursor-pointer px-1 text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
                   New expense
                 </summary>
                 <form action={addEventExpenseAction} className="mt-2 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">

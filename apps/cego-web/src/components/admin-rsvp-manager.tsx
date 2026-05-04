@@ -133,7 +133,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
   return (
     <div className="min-w-0 grid gap-3 lg:grid-cols-[1fr_1fr]">
       <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">
-        <div className="sticky top-0 z-10 py-2" style={{ background: "var(--color-background)" }}>
+        <div className="sticky top-0 z-10 py-2" style={{ background: "rgba(128,128,128,0.15)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
           <input
             type="text"
             placeholder="Search name or tag..."
@@ -147,16 +147,16 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
           {filtered.length === 0 ? (
             <p className="p-4 text-center text-sm" style={{ color: "var(--color-muted)" }}>No matches</p>
           ) : (
-            filtered.map((entry) => (
+            filtered.map((entry, idx) => (
               <button
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedId(entry.id === selectedId ? null : entry.id)}
-                className={`w-full rounded-xl px-3 py-2.5 text-left transition ${
+                className={`w-full px-3 py-2 text-left transition ${
                   entry.id === selectedId ? "ring-1 ring-[var(--color-accent)]" : ""
                 }`}
                 style={{
-                  background: entry.id === selectedId ? "var(--color-surface-hover)" : "transparent",
+                  background: entry.id === selectedId ? "var(--color-surface-hover)" : idx % 2 === 1 ? "var(--color-surface)" : "transparent",
                   opacity: entry.status === "cancelled" ? 0.45 : 1,
                 }}
               >
