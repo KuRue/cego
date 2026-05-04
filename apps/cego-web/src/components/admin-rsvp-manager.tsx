@@ -184,13 +184,15 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                   {paymentRequired && (
                     <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold" style={{
                       background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
+                        : entry.paymentStatus === "pending" ? "var(--color-highlight)"
                         : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
                         : "var(--color-warning-bg)",
                       color: entry.paymentStatus === "paid" ? "var(--color-success)"
+                        : entry.paymentStatus === "pending" ? "var(--color-on-accent)"
                         : entry.paymentStatus === "waived" ? "var(--color-muted)"
                         : "var(--color-warning)",
                     }}>
-                      {entry.paymentStatus === "paid" ? "Paid" : entry.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                      {entry.paymentStatus === "paid" ? "Paid" : entry.paymentStatus === "pending" ? "Pending" : entry.paymentStatus === "waived" ? "Waived" : "Unpaid"}
                     </span>
                   )}
                   {(entry.tags ?? []).map((tag) => (
@@ -324,10 +326,12 @@ function DetailPanel({
               className="h-8 rounded-lg px-2 text-xs outline-none"
               style={{
                 background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
+                  : entry.paymentStatus === "pending" ? "var(--color-highlight)"
                   : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
                   : "var(--color-warning-bg)",
                 border: "1px solid var(--color-surface-border)",
                 color: entry.paymentStatus === "paid" ? "var(--color-success)"
+                  : entry.paymentStatus === "pending" ? "var(--color-on-accent)"
                   : entry.paymentStatus === "waived" ? "var(--color-muted)"
                   : "var(--color-warning)",
               }}
@@ -342,6 +346,7 @@ function DetailPanel({
               disabled={pending}
             >
               <option value="unpaid">Unpaid</option>
+              <option value="pending">Pending</option>
               <option value="paid">Paid</option>
               <option value="waived">Waived</option>
             </select>

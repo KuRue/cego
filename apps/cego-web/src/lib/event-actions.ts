@@ -793,3 +793,23 @@ export async function removeRsvpTagAction(formData: FormData) {
   revalidatePath(returnTo);
   redirect(returnTo);
 }
+
+export async function markRsvpPendingAction(formData: FormData) {
+  const member = await requireCurrentMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
+
+  if (!rsvpId) redirect(returnTo);
+
+  const db = getDb();
+  const [row] = await db.select({ memberId: rsvps.memberId }).from(rsvps).where(eq(rsvps.id, rsvpId)).limit(1);
+  if (!row || row.memberId !== member.id) redirect(returnTo);
+
+  await db
+    .update(rsvps)
+    .set({ paymentStatus: "pending", updatedAt: new Date() })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}

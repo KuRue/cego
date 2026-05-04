@@ -6,7 +6,7 @@ import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction } from "@/lib/event-actions";
+import { cancelRsvpAction, markRsvpPendingAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
@@ -326,19 +326,46 @@ function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; 
                 })}
               </div>
 
-              {rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
-                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-background)" }}>
-                  {event.paymentDueDate ? (
-                    <p>
-                      If payment is not received by {formatDateOnly(event.paymentDueDate)}, your RSVP will be canceled.
-                    </p>
-                  ) : (
-                    <p>If payment is not received by the due date, your RSVP may be canceled.</p>
-                  )}
-                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>
-                    Payments are manually reviewed by organizers. Feel free to message Ku for any payment questions.
+              {rsvp.paymentStatus === "unpaid" ? (
+                <form action={markRsvpPendingAction} className="mt-3">
+                  <input type="hidden" name="rsvpId" value={rsvp.id} />
+                  <input type="hidden" name="returnTo" value={`/events/${event.slug}`} />
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+                    style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  >
+                    Mark as paid
+                  </button>
+                  <p className="mt-2 text-xs text-center" style={{ color: "var(--color-muted)" }}>
+                    This lets the organizer know you've sent payment. They'll confirm once received.
                   </p>
+                </form>
+              ) : null}
+
+              {rsvp.paymentStatus === "pending" ? (
+                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-warning-bg)" }}>
+                  <p className="font-semibold" style={{ color: "var(--color-warning)" }}>Payment pending review</p>
+                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>You've marked this as paid. The organizer will confirm once they receive it.</p>
                 </div>
+              ) : null}
+
+              {rsvp.paymentStatus === "paid" ? (
+                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-success-bg)" }}>
+                  <p className="font-semibold" style={{ color: "var(--color-success)" }}>Payment confirmed</p>
+                </div>
+              ) : null}
+
+              {rsvp.paymentStatus === "waived" ? (
+                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
+                  <p className="font-semibold" style={{ color: "var(--color-muted)" }}>Payment waived</p>
+                </div>
+              ) : null}
+
+              {event.paymentDueDate && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+                <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
+                  Payment due by {formatDateOnly(event.paymentDueDate)}.
+                </p>
               ) : null}
             </div>
           ) : null}
