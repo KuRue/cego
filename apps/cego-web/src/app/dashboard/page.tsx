@@ -97,9 +97,6 @@ export default async function DashboardPage() {
       <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>
           <h1 className="text-3xl font-semibold">Events</h1>
-          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-            Upcoming events from your community. RSVP to secure your spot.
-          </p>
 
           {eventStates.length === 0 ? (
             <div className="glass-lg mt-8 rounded-2xl p-8 text-center">
@@ -145,129 +142,154 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   const canRsvp =
     (event.status === "open" || event.status === "full") &&
     (!rsvp || rsvp.status === "cancelled");
+  const spotsLeft = event.capacity - confirmedCount;
 
   return (
-    <article className="glass-lg glass-hover overflow-hidden rounded-2xl transition">
-      <div className="flex flex-col md:flex-row">
-        {event.imageUrl ? (
-          <div className="relative md:w-72 lg:w-80">
+    <AppLink href={`/events/${event.slug}`} className="block">
+      <article className="glass-lg glass-hover overflow-hidden rounded-2xl transition">
+        {/* Mobile: image card overlay */}
+        <div className="relative block md:hidden">
+          {event.imageUrl ? (
             <Image
               src={event.imageUrl}
-              alt=""
-              fill
-              className="h-48 w-full object-cover md:h-full"
+              alt={event.title}
+              width={600}
+              height={400}
+              className="h-52 w-full object-cover"
             />
-          </div>
-        ) : (
-          <div
-            className="flex items-center justify-center md:w-72 lg:w-80"
-            style={{ background: "var(--color-surface-hover)" }}
-          >
-            <span
-              className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold"
-              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+          ) : (
+            <div
+              className="flex h-52 items-center justify-center"
+              style={{ background: "var(--color-surface-hover)" }}
             >
-              {event.title.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="flex flex-1 flex-col justify-between p-5">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
-              {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
-            </div>
-            <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
-            {event.description ? (
-              <p className="mt-3 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
-                {event.description}
-              </p>
-            ) : null}
-            <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-              <EventDetail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
-              {event.locationText ? (
-                <EventDetail label="Location" value={event.locationText} />
-              ) : null}
-              <EventDetail
-                label="Capacity"
-                value={`${confirmedCount}/${event.capacity} spots filled${
-                  waitlistedCount > 0 ? `; ${waitlistedCount} waitlisted` : ""
-                }`}
-              />
-              {event.priceCents !== null || event.paymentRequired ? (
-                <EventDetail
-                  label="Price"
-                  value={
-                    event.priceCents !== null
-                      ? plusOne && rsvp?.status !== "cancelled"
-                        ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
-                        : formatPrice(event.priceCents, event.currency)
-                      : "Payment required"
-                  }
-                />
-              ) : null}
-            </dl>
-
-            {rsvp && rsvp.status !== "cancelled" && plusOne && plusOne.status !== "cancelled" ? (
-              <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-                <span style={{ color: "var(--color-muted)" }}>+1:</span>
-                <span className="font-medium">{plusOne.plusOneName}</span>
-                <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
-              </div>
-            ) : null}
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <AppLink
-              href={`/events/${event.slug}`}
-              className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-              style={{
-                background: "var(--color-surface-hover)",
-                border: "1px solid var(--color-surface-border)",
-                color: "var(--color-foreground)",
-              }}
-            >
-              View details
-            </AppLink>
-
-            {canRsvp ? (
-              <AppLink
-                href={`/events/${event.slug}/rsvp`}
-                className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+              <span
+                className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold"
                 style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
               >
-                RSVP
-              </AppLink>
-            ) : null}
-
-            {isCancelableRsvp ? (
-              <form action={cancelRsvpAction}>
-                <input type="hidden" name="eventId" value={event.id} />
-                <button
-                  type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-                  style={{
-                    background: "var(--color-surface-hover)",
-                    border: "1px solid var(--color-surface-border)",
-                    color: "var(--color-foreground)",
-                  }}
-                >
-                  Cancel RSVP
-                </button>
-              </form>
-            ) : null}
-
-            {!canRsvp && !isCancelableRsvp ? (
-              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                {event.status === "closed"
-                  ? "This event is closed."
-                  : "Your RSVP is recorded."}
-              </p>
-            ) : null}
+                {event.title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
+            <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
+            <div className="mt-1 flex items-center gap-3 text-xs text-white/80">
+              <span>{formatDateOnly(event.startsAt)}</span>
+              <span>{spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </article>
+
+        {/* Desktop: side-by-side layout */}
+        <div className="hidden md:flex md:flex-row">
+          {event.imageUrl ? (
+            <div className="relative md:w-72 lg:w-80">
+              <Image
+                src={event.imageUrl}
+                alt=""
+                fill
+                className="h-48 w-full object-cover md:h-full"
+              />
+            </div>
+          ) : (
+            <div
+              className="flex items-center justify-center md:w-72 lg:w-80"
+              style={{ background: "var(--color-surface-hover)" }}
+            >
+              <span
+                className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                {event.title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-1 flex-col justify-between p-5">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
+                {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
+              </div>
+              <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
+              {event.description ? (
+                <p className="mt-3 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
+                  {event.description}
+                </p>
+              ) : null}
+              <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+                <EventDetail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
+                {event.locationText ? (
+                  <EventDetail label="Location" value={event.locationText} />
+                ) : null}
+                <EventDetail
+                  label="Capacity"
+                  value={`${confirmedCount}/${event.capacity} spots filled${
+                    waitlistedCount > 0 ? `; ${waitlistedCount} waitlisted` : ""
+                  }`}
+                />
+                {event.priceCents !== null || event.paymentRequired ? (
+                  <EventDetail
+                    label="Price"
+                    value={
+                      event.priceCents !== null
+                        ? plusOne && rsvp?.status !== "cancelled"
+                          ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
+                          : formatPrice(event.priceCents, event.currency)
+                        : "Payment required"
+                    }
+                  />
+                ) : null}
+              </dl>
+
+              {rsvp && rsvp.status !== "cancelled" && plusOne && plusOne.status !== "cancelled" ? (
+                <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm" style={{ background: "var(--color-surface-hover)" }}>
+                  <span style={{ color: "var(--color-muted)" }}>+1:</span>
+                  <span className="font-medium">{plusOne.plusOneName}</span>
+                  <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              {canRsvp ? (
+                <span
+                  className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  RSVP
+                </span>
+              ) : null}
+
+              {isCancelableRsvp ? (
+                <form action={cancelRsvpAction} onClick={(e) => e.stopPropagation()}>
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                    style={{
+                      background: "var(--color-surface-hover)",
+                      border: "1px solid var(--color-surface-border)",
+                      color: "var(--color-foreground)",
+                    }}
+                  >
+                    Cancel RSVP
+                  </button>
+                </form>
+              ) : null}
+
+              {!canRsvp && !isCancelableRsvp ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                  {event.status === "closed"
+                    ? "This event is closed."
+                    : "Your RSVP is recorded."}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </article>
+    </AppLink>
   );
 }
 
@@ -369,6 +391,14 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
       </form>
     </article>
   );
+}
+
+function formatDateOnly(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatDateRange(startsAt: Date, endsAt: Date | null): string {
