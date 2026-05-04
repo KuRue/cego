@@ -94,12 +94,12 @@ export default async function EventDetailPage({
         }}
         brand={brand}
       />
-      <EventDetail eventState={eventState} />
+      <EventDetail eventState={eventState} isAdmin={member.isAdmin} />
     </>
   );
 }
 
-function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
+function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; isAdmin: boolean }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers } = eventState;
   const returnTo = `/events/${event.slug}`;
   const effective = getEffectiveRsvpStatus({
@@ -115,6 +115,7 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
+  const adminCanRsvp = !canRsvp && isAdmin && effective === "before" && (!rsvp || rsvp.status === "cancelled");
 
   return (
     <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
@@ -200,6 +201,16 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
               </AppLink>
             ) : null}
 
+            {adminCanRsvp ? (
+              <AppLink
+                href={`/events/${event.slug}/rsvp`}
+                className="flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.8 }}
+              >
+                RSVP (admin early access)
+              </AppLink>
+            ) : null}
+
           {isCancelableRsvp ? (
             <form action={cancelRsvpAction}>
               <input type="hidden" name="eventId" value={event.id} />
@@ -218,7 +229,7 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
             </form>
           ) : null}
 
-            {!canRsvp && !isCancelableRsvp ? (
+            {!canRsvp && !isCancelableRsvp && !adminCanRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
                 {effective === "before"
                   ? "RSVPs are not open yet."
