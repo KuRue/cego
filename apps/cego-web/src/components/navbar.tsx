@@ -144,7 +144,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
             )}
           </AppLink>
 
-          <span className="text-sm font-semibold tracking-wide absolute left-1/2 -translate-x-1/2">
+          <span className="font-title text-sm font-semibold tracking-wide absolute left-1/2 -translate-x-1/2">
             {siteName}
           </span>
 
