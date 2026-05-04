@@ -214,11 +214,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
             survey={survey}
             surveyResp={surveyResp}
           />
-        ) : (
-          <div className="flex h-full min-h-[200px] items-center justify-center p-8">
-            <p className="text-sm" style={{ color: "var(--color-muted)" }}>Select a person to view details</p>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
