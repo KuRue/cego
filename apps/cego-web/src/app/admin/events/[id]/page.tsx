@@ -56,11 +56,15 @@ export default async function AdminEventDetailPage({
   }, 0);
 
   const totalPaid = activeRsvps.reduce((sum, r) => {
-    if (detail.event.priceCents === null || r.rsvp.paymentStatus === "unpaid") return sum;
+    if (detail.event.priceCents === null) return sum;
     const price = detail.event.priceCents;
-    const plusOneCount = r.plusOne.filter((p) => p.status !== "cancelled").length;
-    const multiplier = r.rsvp.paymentStatus === "waived" ? 0 : 1;
-    return sum + price * (1 + plusOneCount) * multiplier;
+    let paid = sum;
+    if (r.rsvp.paymentStatus === "paid") paid += price;
+    for (const po of r.plusOne) {
+      if (po.status === "cancelled") continue;
+      if (po.paymentStatus === "paid") paid += price;
+    }
+    return paid;
   }, 0);
 
   const expenseTotal = detail.expenses.reduce((sum, e) => sum + e.amountCents, 0);
