@@ -6,6 +6,7 @@ export const eventStatuses = [
   "show",
   "closed",
   "archived",
+  "deleted",
 ] as const;
 export type EventStatus = (typeof eventStatuses)[number];
 

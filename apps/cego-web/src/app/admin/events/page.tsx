@@ -6,7 +6,7 @@ import {
   updateRsvpStatusAction,
 } from "@/lib/event-actions";
 import AppLink from "@/components/app-link";
-import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
+import { getAdminEvents, getAdminDeletedEvents, type AdminEventWithRsvps } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { Badge, StatusBadge, titleCase } from "@/components/badge";
@@ -28,6 +28,7 @@ export default async function AdminEventsPage() {
   const brand = await getNavbarBrand();
   const settings = await getSiteSettings();
   const eventOverviews = await getAdminEvents();
+  const deletedEvents = await getAdminDeletedEvents();
 
   return (
     <>
@@ -68,6 +69,19 @@ export default async function AdminEventsPage() {
             ))
           )}
         </div>
+
+        {deletedEvents.length > 0 ? (
+          <details className="mt-10">
+            <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-muted)" }}>
+              Show deleted ({deletedEvents.length})
+            </summary>
+            <div className="mt-5 grid gap-5">
+              {deletedEvents.map((overview) => (
+                <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} />
+              ))}
+            </div>
+          </details>
+        ) : null}
       </main>
     </>
   );

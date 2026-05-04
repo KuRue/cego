@@ -454,8 +454,10 @@ export async function deleteEventAction(formData: FormData) {
 
   const db = getDb();
 
-  await db.delete(rsvps).where(eq(rsvps.eventId, eventId));
-  await db.delete(events).where(eq(events.id, eventId));
+  await db
+    .update(events)
+    .set({ status: "deleted", updatedAt: new Date() })
+    .where(eq(events.id, eventId));
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");

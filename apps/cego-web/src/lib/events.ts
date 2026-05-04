@@ -8,6 +8,7 @@ import {
   getDb,
   inArray,
   members,
+  ne,
   rsvps,
   surveyResponses,
   surveys,
@@ -255,8 +256,18 @@ export async function getDashboardEventBySlug(
 }
 
 export async function getAdminEvents(): Promise<AdminEventWithRsvps[]> {
+  return getAdminEventsFiltered(ne(events.status, "deleted"));
+}
+
+export async function getAdminDeletedEvents(): Promise<AdminEventWithRsvps[]> {
+  return getAdminEventsFiltered(eq(events.status, "deleted"));
+}
+
+async function getAdminEventsFiltered(
+  condition: ReturnType<typeof eq> | ReturnType<typeof ne>,
+): Promise<AdminEventWithRsvps[]> {
   const db = getDb();
-  const eventRows = await db.select().from(events).orderBy(desc(events.startsAt));
+  const eventRows = await db.select().from(events).where(condition).orderBy(desc(events.startsAt));
 
   if (eventRows.length === 0) {
     return [];

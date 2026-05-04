@@ -64,6 +64,8 @@ export function eventStatusLabel(
       return "Draft";
     case "archived":
       return "Archived";
+    case "deleted":
+      return "Deleted";
     default:
       return status;
   }
