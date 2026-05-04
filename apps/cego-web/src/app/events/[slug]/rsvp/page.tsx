@@ -160,10 +160,7 @@ export default async function RsvpPage({
 
             <Section title="Plus one">
               <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                Bringing someone? Enter their name and they&apos;ll be added as your +1.
-                {data.event.priceCents !== null ? (
-                  <> This adds {formatPrice(data.event.priceCents, data.event.currency)} to your total.</>
-                ) : null}
+                Bringing a partner or someone you live with that isn&apos;t in the group? Add them here! This will double your total.
               </p>
               <input
                 name="plusOneName"

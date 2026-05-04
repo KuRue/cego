@@ -138,6 +138,7 @@ export async function rsvpForEventAction(formData: FormData) {
           memberId: member.id,
           eventId,
           status: parentStatus,
+          paymentStatus: "unpaid",
         })
         .returning({ id: rsvps.id });
       parentRsvpId = inserted.id;
@@ -165,6 +166,7 @@ export async function rsvpForEventAction(formData: FormData) {
           status: plusOneStatus,
           plusOneName,
           parentRsvpId,
+          paymentStatus: "unpaid",
         });
       }
     }
