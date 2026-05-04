@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { requireAdminMember } from "@/lib/session";
+import AppLink from "@/components/app-link";
 import { getSiteSettings, type BrandSettings } from "@/lib/settings";
 import { updateSiteSettingsAction } from "@/lib/settings-actions";
 import Navbar from "@/components/navbar";
@@ -31,10 +32,14 @@ export default async function AdminSettingsPage() {
         brand={brand}
       />
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-8">
-        <h1 className="text-3xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-          Branding, colors, and homepage content.
-        </p>
+        <AppLink
+          href="/admin"
+          className="text-sm font-semibold"
+          style={{ color: "var(--color-accent)" }}
+        >
+          &larr; Admin
+        </AppLink>
+        <h1 className="mt-1 text-3xl font-semibold">Settings</h1>
 
         <form action={updateSiteSettingsAction} className="mt-8 grid gap-6">
           <input type="hidden" name="returnTo" value="/admin/settings" />

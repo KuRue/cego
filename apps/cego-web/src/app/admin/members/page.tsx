@@ -77,21 +77,15 @@ export default async function AdminMembersPage({
         <section className="glass-lg mt-8 rounded-2xl p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p
-                className="font-mono text-xs uppercase tracking-[0.2em]"
-                style={{ color: "var(--color-highlight)" }}
+              <AppLink
+                href="/admin"
+                className="text-sm font-semibold"
+                style={{ color: "var(--color-accent)" }}
               >
-                CRM-lite
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold">Members</h2>
+                &larr; Admin
+              </AppLink>
+              <h2 className="mt-1 text-3xl font-semibold">Members</h2>
             </div>
-            <AppLink
-              href="/admin"
-              className="text-sm font-semibold"
-              style={{ color: "var(--color-accent)" }}
-            >
-              Event and survey admin
-            </AppLink>
           </div>
 
           <form className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">

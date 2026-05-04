@@ -6,6 +6,7 @@ import {
   TelegramBotApiError,
 } from "@cego/telegram";
 import { StatusBadge } from "@/components/badge";
+import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand } from "@/lib/settings";
 import { getPublicUrl } from "@/lib/public-url";
@@ -69,10 +70,14 @@ export default async function AdminDiagnosticsPage() {
         brand={brand}
       />
       <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
-        <h1 className="text-3xl font-semibold">Diagnostics</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-          Runtime checks without printing secrets. Use this when Telegram, database, or admin access looks wrong.
-        </p>
+        <AppLink
+          href="/admin"
+          className="text-sm font-semibold"
+          style={{ color: "var(--color-accent)" }}
+        >
+          &larr; Admin
+        </AppLink>
+        <h1 className="mt-1 text-3xl font-semibold">Diagnostics</h1>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <DiagnosticPanel title="Runtime" items={[database, publicHealth]} />

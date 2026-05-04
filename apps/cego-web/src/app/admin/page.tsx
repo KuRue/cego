@@ -56,9 +56,6 @@ export default async function AdminPage() {
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <h1 className="text-3xl font-semibold">Admin</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-          Manage events, surveys, members, and site settings.
-        </p>
 
         {openEvents.length > 0 ? (
           <section className="mt-10">

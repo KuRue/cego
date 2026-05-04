@@ -85,7 +85,14 @@ export default async function AdminMemberDetailPage({
         brand={brand}
       />
       <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
-        <section className="glass-lg rounded-2xl p-5">
+        <AppLink
+          href="/admin/members"
+          className="text-sm font-semibold"
+          style={{ color: "var(--color-accent)" }}
+        >
+          &larr; Members
+        </AppLink>
+        <section className="glass-lg mt-4 rounded-2xl p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap gap-2">

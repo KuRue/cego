@@ -4,6 +4,7 @@ import {
   updateRsvpPaymentAction,
   updateRsvpStatusAction,
 } from "@/lib/event-actions";
+import AppLink from "@/components/app-link";
 import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
@@ -38,10 +39,14 @@ export default async function AdminEventsPage() {
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold">Events</h1>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              {eventOverviews.length} event{eventOverviews.length === 1 ? "" : "s"} total
-            </p>
+            <AppLink
+              href="/admin"
+              className="text-sm font-semibold"
+              style={{ color: "var(--color-accent)" }}
+            >
+              &larr; Admin
+            </AppLink>
+            <h1 className="mt-1 text-3xl font-semibold">Events</h1>
           </div>
           <CreateEventButton />
         </div>

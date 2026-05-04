@@ -2,6 +2,7 @@ import {
   createSurveyAction,
   updateSurveyAction,
 } from "@/lib/survey-actions";
+import AppLink from "@/components/app-link";
 import {
   formatSurveyAnswer,
   getAdminSurveys,
@@ -42,10 +43,14 @@ export default async function AdminSurveysPage() {
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold">Surveys</h1>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              {surveyOverviews.length} survey{surveyOverviews.length === 1 ? "" : "s"}
-            </p>
+            <AppLink
+              href="/admin"
+              className="text-sm font-semibold"
+              style={{ color: "var(--color-accent)" }}
+            >
+              &larr; Admin
+            </AppLink>
+            <h1 className="mt-1 text-3xl font-semibold">Surveys</h1>
           </div>
         </div>
 
