@@ -7,6 +7,13 @@ declare global {
         initData: string;
         ready: () => void;
         expand: () => void;
+        /** True when the Mini App is in fullscreen mode (no bot-name bar at top). Bot API 8.0+. */
+        isFullscreen?: boolean;
+        requestFullscreen?: () => void;
+        exitFullscreen?: () => void;
+        /** Subscribe to a WebApp event. Available events include "fullscreenChanged", "fullscreenFailed", "viewportChanged", etc. */
+        onEvent?: (event: string, handler: () => void) => void;
+        offEvent?: (event: string, handler: () => void) => void;
       };
     };
   }

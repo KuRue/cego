@@ -21,6 +21,7 @@ interface NavbarProps {
 export default function Navbar({ member, brand }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -28,9 +29,25 @@ export default function Navbar({ member, brand }: NavbarProps) {
   const siteName = brand?.siteName || "cego";
   const logoUrl = brand?.logoUrl;
 
+  // The tall, narrow Mini App layout only makes sense when Telegram has hidden
+  // its own header bar (fullscreen mode, Bot API 8.0+). Otherwise the page sits
+  // BELOW the bot-name bar and should use the same browser-style navbar.
+  const useFullscreenMiniAppNav = isMiniApp && isFullscreen;
+
   useEffect(() => {
-    setIsMiniApp(!!window.Telegram?.WebApp?.initData);
+    const wa = window.Telegram?.WebApp;
+    setIsMiniApp(!!wa?.initData);
+    setIsFullscreen(!!wa?.isFullscreen);
     setMounted(true);
+  }, []);
+
+  // React to the user (or our own code) toggling fullscreen at runtime.
+  useEffect(() => {
+    const wa = window.Telegram?.WebApp;
+    if (!wa?.onEvent) return;
+    const sync = () => setIsFullscreen(!!wa.isFullscreen);
+    wa.onEvent("fullscreenChanged", sync);
+    return () => wa.offEvent?.("fullscreenChanged", sync);
   }, []);
 
   useEffect(() => {
@@ -38,10 +55,10 @@ export default function Navbar({ member, brand }: NavbarProps) {
       const rect = buttonRef.current.getBoundingClientRect();
       setMenuPos({
         top: rect.bottom + 16,
-        right: isMiniApp ? 16 : window.innerWidth - rect.right,
+        right: useFullscreenMiniAppNav ? 16 : window.innerWidth - rect.right,
       });
     }
-  }, [menuOpen, isMiniApp]);
+  }, [menuOpen, useFullscreenMiniAppNav]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -124,7 +141,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
   return (
     <>
       <header className="glass sticky top-0 z-50">
-        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-[200px] justify-between pt-10 pb-1" : "max-w-6xl py-3"}`}>
+        <nav className={`mx-auto flex items-center px-5 ${useFullscreenMiniAppNav ? "max-w-[200px] justify-between pt-10 pb-1" : "max-w-6xl py-3"}`}>
           <AppLink href={member ? "/dashboard" : "/"} className="flex items-center gap-2 shrink-0">
             {logoUrl ? (
               <Image
