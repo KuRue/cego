@@ -601,6 +601,7 @@ function parseEventForm(formData: FormData) {
     startsAt: readDate(formData, "startsAt"),
     endsAt: readOptionalDate(formData, "endsAt"),
     locationText: readOptionalText(formData, "locationText"),
+    addressText: readOptionalText(formData, "addressText"),
     priceCents: readOptionalPriceCents(formData, "price"),
     currency: readCurrency(formData, "currency"),
     paymentRequired: readCheckbox(formData, "paymentRequired"),

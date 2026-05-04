@@ -120,6 +120,9 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
   const adminCanRsvp = !canRsvp && isAdmin && effective === "before" && (!rsvp || rsvp.status === "cancelled");
+  const canSeeAddress =
+    rsvp?.status === "confirmed" &&
+    (!event.paymentRequired || rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived");
 
   return (
     <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
@@ -180,6 +183,20 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 <Detail label="Date" value={formatDateFull(event.startsAt)} />
               )}
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
+              {event.addressText ? (
+                canSeeAddress ? (
+                  <Detail label="Address" value={event.addressText} />
+                ) : (
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>Address</dt>
+                    <dd className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                      {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived"
+                        ? "Revealed after payment is confirmed"
+                        : "Revealed after RSVP is confirmed"}
+                    </dd>
+                  </div>
+                )
+              ) : null}
               <Detail
                 label="Capacity"
                 value={`${confirmedCount}/${event.capacity} confirmed${

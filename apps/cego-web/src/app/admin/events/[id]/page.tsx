@@ -349,8 +349,11 @@ function EventForm({
           <input name="rsvpClosesAt" type="datetime-local" defaultValue={toDateTimeLocalValue(event.rsvpClosesAt)} className="form-input" />
         </Field>
       </div>
-      <Field label="Location text">
-        <input name="locationText" defaultValue={event.locationText ?? ""} className="form-input" />
+      <Field label="Location">
+        <input name="locationText" defaultValue={event.locationText ?? ""} className="form-input" placeholder="General area (shown to everyone)" />
+      </Field>
+      <Field label="Address">
+        <input name="addressText" defaultValue={event.addressText ?? ""} className="form-input" placeholder="Exact address (shown after confirmed & paid)" />
       </Field>
       <Field label="Cover photo">
         <div className="mt-1 flex flex-col gap-3">

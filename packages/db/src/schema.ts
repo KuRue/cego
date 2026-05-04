@@ -74,6 +74,7 @@ export const events = pgTable(
     imageUrl: text("image_url"),
     promoImageUrl: text("promo_image_url"),
     locationText: text("location_text"),
+    addressText: text("address_text"),
     priceCents: integer("price_cents"),
     currency: text("currency").default("USD").notNull(),
     paymentRequired: boolean("payment_required").default(false).notNull(),
