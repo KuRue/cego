@@ -246,20 +246,82 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
           ) : null}
 
           {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods ? (
-            <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
-              <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-                Payment{event.paymentDueDate ? ` due ${formatDateOnly(event.paymentDueDate)}` : ""}
-              </p>
-              <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
-                {event.paymentMethods}
-              </p>
-              <p className="mt-2 text-sm">
-                <span className="font-medium">Status: </span>
-                <span style={{ color: rsvp.paymentStatus === "paid" ? "var(--color-success)" : rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
+            <div
+              className="mt-5 rounded-xl p-4"
+              style={{
+                border: rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived"
+                  ? "1px solid var(--color-surface-border)"
+                  : "2px solid var(--color-warning)",
+                background: rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived"
+                  ? undefined
+                  : "var(--color-warning-bg)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                  Payment
+                </p>
+                <span
+                  className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
+                  style={{
+                    background: rsvp.paymentStatus === "paid"
+                      ? "var(--color-success)"
+                      : rsvp.paymentStatus === "waived"
+                        ? "var(--color-surface-hover)"
+                        : "var(--color-warning)",
+                    color: rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "#fff",
+                  }}
+                >
                   {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
                 </span>
+              </div>
+
+              {event.priceCents !== null ? (
+                <p className="mt-3 text-lg font-semibold">
+                  {formatPrice(
+                    plusOne && plusOne.status !== "cancelled"
+                      ? event.priceCents * 2
+                      : event.priceCents,
+                    event.currency,
+                  )}
+                </p>
+              ) : null}
+
+              <p className="mt-3 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
+                {event.paymentMethods}
               </p>
+
+              {rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-background)" }}>
+                  {event.paymentDueDate ? (
+                    <p>
+                      If payment is not received by {formatDateOnly(event.paymentDueDate)}, your RSVP will be canceled.
+                    </p>
+                  ) : (
+                    <p>If payment is not received by the due date, your RSVP may be canceled.</p>
+                  )}
+                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>
+                    Payments are manually reviewed by organizers.
+                  </p>
+                </div>
+              ) : null}
             </div>
+          ) : null}
+
+          {rsvp && rsvp.status !== "cancelled" && (event.rulesText || event.termsText || event.refundPolicyText) ? (
+            <details className="mt-5">
+              <summary
+                className="cursor-pointer text-sm font-semibold"
+                style={{ color: "var(--color-accent)" }}
+              >
+                Event Policies
+              </summary>
+              <div className="mt-3 grid gap-3">
+                {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
+                {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
+                {event.refundPolicyText ? <PolicyBlock title="Cancellation & Refund Policy" body={event.refundPolicyText} /> : null}
+              </div>
+            </details>
           ) : null}
         </aside>
       </section>
@@ -289,6 +351,17 @@ function Detail({ label, value }: { label: string; value: string }) {
         {label}
       </dt>
       <dd className="mt-1 leading-6">{value}</dd>
+    </div>
+  );
+}
+
+function PolicyBlock({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-xl p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
+      <p className="font-semibold">{title}</p>
+      <p className="mt-1 whitespace-pre-wrap leading-6" style={{ color: "var(--color-muted)" }}>
+        {body}
+      </p>
     </div>
   );
 }
