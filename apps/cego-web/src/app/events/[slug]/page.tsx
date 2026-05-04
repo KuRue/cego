@@ -166,18 +166,6 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
               />
             </dl>
           </Panel>
-
-          {event.rulesText || event.termsText || event.refundPolicyText ? (
-            <Panel title="Policies">
-              <div className="grid gap-4">
-                {event.rulesText ? <TextBlock title="Rules" body={event.rulesText} /> : null}
-                {event.termsText ? <TextBlock title="Terms" body={event.termsText} /> : null}
-                {event.refundPolicyText ? (
-                  <TextBlock title="Cancellation/refund policy" body={event.refundPolicyText} />
-                ) : null}
-              </div>
-            </Panel>
-          ) : null}
         </div>
 
         <aside className="glass-lg h-fit rounded-2xl p-5 lg:sticky lg:top-24">

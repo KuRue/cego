@@ -117,8 +117,7 @@ export async function getDashboardEventBySlug(
     db
       .select()
       .from(rsvps)
-      .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, event.id)))
-      .limit(1),
+      .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, event.id))),
     getRsvpCountRows([event.id]),
   ]);
   const countsByEvent = toCountMap(countRows);

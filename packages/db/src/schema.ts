@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import {
   eventStatuses,
   memberGroupStatuses,
@@ -111,7 +112,7 @@ export const rsvps = pgTable(
     ...lifecycleColumns,
   },
   (table) => [
-    uniqueIndex("rsvps_member_event_idx").on(table.memberId, table.eventId),
+    uniqueIndex("rsvps_member_event_idx").on(table.memberId, table.eventId).where(sql`${table.parentRsvpId} IS NULL`),
     index("rsvps_event_status_idx").on(table.eventId, table.status),
     index("rsvps_parent_rsvp_id_idx").on(table.parentRsvpId),
   ],
