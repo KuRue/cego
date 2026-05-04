@@ -6,6 +6,7 @@ import { rsvpForEventAction, adminRsvpForEventAction } from "@/lib/event-actions
 import { getRsvpPageData, getEffectiveRsvpStatus } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
+import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 
 export const dynamic = "force-dynamic";
 
@@ -153,9 +154,30 @@ function AlreadyRegistered({ data, slug }: { data: NonNullable<Awaited<ReturnTyp
       {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
           <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateOnly(data.event.paymentDueDate)}` : ""}</p>
-          <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
-            {data.event.paymentMethods}
-          </p>
+          <div className="mt-2 grid gap-2">
+            {parsePaymentMethods(data.event.paymentMethods).map((m, i) => {
+              const url = getPaymentMethodUrl(m, data.event.priceCents);
+              return (
+                <div key={i} className="flex items-center justify-between gap-2">
+                  <span className="text-sm">
+                    <span className="font-semibold">{getPaymentMethodLabel(m.type)}</span>{" "}
+                    <span style={{ color: "var(--color-muted)" }}>{m.handle}</span>
+                  </span>
+                  {url ? (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                      style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                    >
+                      Pay
+                    </a>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
           <p className="mt-3 text-sm">
             <span style={{ color: "var(--color-muted)" }}>Status: </span>
             <strong style={{ color: data.rsvp!.paymentStatus === "paid" ? "var(--color-success)" : data.rsvp!.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>

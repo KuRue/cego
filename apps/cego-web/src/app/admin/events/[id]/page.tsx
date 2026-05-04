@@ -13,6 +13,7 @@ import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import Image from "next/image";
 import EventImageUpload from "../image-upload";
 import ConfirmButton from "@/components/confirm-button";
+import PaymentMethodsEditor from "@/components/payment-methods-editor";
 import AdminRsvpManager from "@/components/admin-rsvp-manager";
 import { notFound } from "next/navigation";
 
@@ -380,7 +381,7 @@ function EventForm({
         </Field>
       </div>
       <Field label="Payment methods">
-        <textarea name="paymentMethods" defaultValue={event.paymentMethods ?? ""} rows={3} placeholder="e.g. Venmo: @username&#10;Zelle: email@example.com" className="form-textarea" />
+        <PaymentMethodsEditor name="paymentMethods" defaultValue={event.paymentMethods ?? null} />
       </Field>
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Rules">

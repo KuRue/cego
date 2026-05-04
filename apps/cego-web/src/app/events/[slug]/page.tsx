@@ -11,6 +11,7 @@ import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
+import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 
 export const dynamic = "force-dynamic";
 
@@ -300,9 +301,30 @@ function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; 
                 </p>
               ) : null}
 
-              <p className="mt-3 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
-                {event.paymentMethods}
-              </p>
+              <div className="mt-3 grid gap-2">
+                {parsePaymentMethods(event.paymentMethods).map((m, i) => {
+                  const url = getPaymentMethodUrl(m, event.priceCents);
+                  return (
+                    <div key={i} className="flex items-center justify-between gap-2">
+                      <span className="text-sm">
+                        <span className="font-semibold">{getPaymentMethodLabel(m.type)}</span>{" "}
+                        <span style={{ color: "var(--color-muted)" }}>{m.handle}</span>
+                      </span>
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                          style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                        >
+                          Pay
+                        </a>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
 
               {rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
                 <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-background)" }}>
