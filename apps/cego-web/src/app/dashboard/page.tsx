@@ -3,6 +3,7 @@ import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
+import StopPropagation from "@/components/stop-propagation";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
@@ -334,20 +335,22 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               ) : null}
 
               {isCancelableRsvp ? (
-                <form action={cancelRsvpAction} onClick={(e) => e.stopPropagation()}>
-                  <input type="hidden" name="eventId" value={event.id} />
-                  <button
-                    type="submit"
-                    className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
-                    style={{
-                      background: "var(--color-surface-hover)",
-                      border: "1px solid var(--color-surface-border)",
-                      color: "var(--color-foreground)",
-                    }}
-                  >
-                    Cancel RSVP
-                  </button>
-                </form>
+                <StopPropagation>
+                  <form action={cancelRsvpAction}>
+                    <input type="hidden" name="eventId" value={event.id} />
+                    <button
+                      type="submit"
+                      className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
+                      style={{
+                        background: "var(--color-surface-hover)",
+                        border: "1px solid var(--color-surface-border)",
+                        color: "var(--color-foreground)",
+                      }}
+                    >
+                      Cancel RSVP
+                    </button>
+                  </form>
+                </StopPropagation>
               ) : null}
 
               {!canRsvp && !isCancelableRsvp ? (
