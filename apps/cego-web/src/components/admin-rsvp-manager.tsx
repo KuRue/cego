@@ -131,8 +131,8 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
     : undefined;
 
   return (
-    <div className="min-w-0 grid gap-4 lg:grid-cols-[1fr_1fr]">
-      <div className="lg:max-h-[70vh] lg:overflow-y-auto">
+    <div className="min-w-0 max-w-full grid gap-4 lg:grid-cols-[1fr_1fr]">
+      <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">
         <div className="sticky top-0 z-10 p-3" style={{ background: "var(--color-background)" }}>
           <input
             type="text"
@@ -207,7 +207,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
         </div>
       </div>
 
-      <div className="lg:max-h-[70vh] lg:overflow-y-auto">
+      <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">
         {selected ? (
           <DetailPanel
             entry={selected}
@@ -284,7 +284,7 @@ function DetailPanel({
     : null;
 
   return (
-    <div className="space-y-5 p-4">
+    <div className="max-w-full space-y-5 p-4">
       <div>
         <h3 className="text-lg font-semibold">{entry.displayName}</h3>
         {entry.kind === "primary" && entry.username && (
@@ -295,7 +295,7 @@ function DetailPanel({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex max-w-full flex-wrap gap-2">
         <form action={updateRsvpStatusAction}>
           <input type="hidden" name="rsvpId" value={entry.id} />
           <input type="hidden" name="returnTo" value={returnTo} />
@@ -366,7 +366,7 @@ function DetailPanel({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Tags</p>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex max-w-full flex-wrap items-center gap-1.5">
           {(entry.tags ?? []).map((tag) => (
             <span
               key={tag}

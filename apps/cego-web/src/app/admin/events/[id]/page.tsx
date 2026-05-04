@@ -77,10 +77,10 @@ export default async function AdminEventDetailPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-7xl overflow-x-hidden px-4 pb-16 pt-8">
-        <div className="min-w-0">
+      <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8">
+        <div className="min-w-0 max-w-full">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <AppLink
                 href="/admin/events"
                 className="text-sm font-semibold"
@@ -88,7 +88,7 @@ export default async function AdminEventDetailPage({
               >
                 &larr; Events
               </AppLink>
-              <h1 className="mt-1 font-title text-2xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+              <h1 className="mt-1 truncate font-title text-2xl font-semibold sm:text-3xl">{detail.event.title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StatusBadge status={detail.event.status} />
@@ -111,9 +111,9 @@ export default async function AdminEventDetailPage({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <div className="mt-6 max-w-full grid gap-6 lg:grid-cols-[1fr_22rem]">
           <div className="min-w-0 grid gap-6">
-            <section className="glass-lg rounded-2xl p-5">
+            <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
               <h2 className="text-lg font-semibold">Stats</h2>
               <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <StatBox label="Confirmed" value={`${detail.confirmedCount}/${detail.event.capacity}`} />
@@ -137,13 +137,13 @@ export default async function AdminEventDetailPage({
               ) : null}
             </section>
 
-            <section className="glass-lg rounded-2xl p-5">
+            <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
               <h2 className="text-lg font-semibold">Expenses</h2>
               {detail.expenses.length > 0 ? (
                 <div className="mt-4 grid gap-2">
                   {detail.expenses.map((expense) => (
-                    <div key={expense.id} className="flex items-center justify-between rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
-                      <div className="min-w-0 flex-1">
+                    <div key={expense.id} className="flex items-center justify-between gap-2 rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+                      <div className="min-w-0 flex-1 truncate">
                         <p className="text-sm font-medium">{expense.description}</p>
                         <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
                       </div>
@@ -171,7 +171,7 @@ export default async function AdminEventDetailPage({
               ) : (
                 <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
-              <form action={addEventExpenseAction} className="mt-4 grid gap-3 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
+              <form action={addEventExpenseAction} className="mt-4 max-w-full grid gap-2 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
                 <input type="hidden" name="eventId" value={detail.event.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <input
@@ -213,7 +213,7 @@ export default async function AdminEventDetailPage({
             </section>
 
             {detail.rsvps.length > 0 ? (
-              <section className="glass-lg rounded-2xl p-5">
+              <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
                 <h2 className="text-lg font-semibold">
                   RSVPs ({activeRsvps.length})
                 </h2>
@@ -227,13 +227,13 @@ export default async function AdminEventDetailPage({
                 </div>
               </section>
             ) : (
-              <div className="glass-lg rounded-2xl p-8 text-center">
+              <div className="glass-lg max-w-full overflow-hidden rounded-2xl p-8 text-center">
                 <p className="font-medium">No RSVPs yet</p>
               </div>
             )}
           </div>
 
-          <aside className="glass-lg h-fit min-w-0 rounded-2xl p-5 lg:sticky lg:top-24">
+          <aside className="glass-lg h-fit max-w-full overflow-hidden rounded-2xl p-4 sm:p-5 lg:sticky lg:top-24">
             <details>
               <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
                 Edit event
@@ -261,9 +261,9 @@ export default async function AdminEventDetailPage({
 function StatBox({ label, value, suffix, highlight }: { label: string; value: string; suffix?: string; highlight?: "good" | "bad" }) {
   const color = highlight === "good" ? "var(--color-success)" : highlight === "bad" ? "var(--color-danger)" : "var(--color-foreground)";
   return (
-    <div className="rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+    <div className="min-w-0 overflow-hidden rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
       <p className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "var(--color-muted)" }}>{label}</p>
-      <p className="mt-1 text-lg font-bold" style={{ color }}>
+      <p className="mt-1 truncate text-lg font-bold" style={{ color }}>
         {value}{suffix && <span className="text-xs font-normal">{suffix}</span>}
       </p>
     </div>
