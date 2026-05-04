@@ -82,45 +82,45 @@ export default async function AdminEventDetailPage({
         }}
         brand={brand}
       />
-      <main className="relative mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
+      <main className="relative mx-auto w-full max-w-6xl px-2 pb-16 pt-6 sm:px-4">
         <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", backgroundColor: "rgba(128,128,128,0.15)" }} />
         <div className="relative z-10">
-        <div className="min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <AppLink
-                href="/admin/events"
-                className="text-sm font-semibold"
-                style={{ color: "var(--color-accent)" }}
-              >
-                &larr; Events
-              </AppLink>
-              <h1 className="mt-1 font-title text-xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+          <div className="min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <AppLink
+                  href="/admin/events"
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  &larr; Events
+                </AppLink>
+                <h1 className="mt-1 font-title text-xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <StatusBadge status={detail.event.status} />
+                {detail.event.status === "archived" && (
+                  <form action={deleteEventAction} className="hidden sm:block">
+                    <input type="hidden" name="eventId" value={detail.event.id} />
+                    <ConfirmButton
+                      type="submit"
+                      message="Delete this event and all its RSVPs? This cannot be undone."
+                      className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                      style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+                    >
+                      Delete
+                    </ConfirmButton>
+                  </form>
+                )}
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <StatusBadge status={detail.event.status} />
-              {detail.event.status === "archived" && (
-                <form action={deleteEventAction} className="hidden sm:block">
-                  <input type="hidden" name="eventId" value={detail.event.id} />
-                  <ConfirmButton
-                    type="submit"
-                    message="Delete this event and all its RSVPs? This cannot be undone."
-                    className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                    style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
-                  >
-                    Delete
-                  </ConfirmButton>
-                </form>
-              )}
-            </div>
+
+            <p className="mt-1 text-xs sm:text-sm" style={{ color: "var(--color-muted)" }}>
+              {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
+            </p>
           </div>
 
-          <p className="mt-1 text-xs sm:text-sm" style={{ color: "var(--color-muted)" }}>
-            {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
-          </p>
-        </div>
-
-        <div className="mt-4 grid gap-0 sm:gap-6 lg:grid-cols-[1fr_22rem]">
+          <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_24rem]">
           <div className="min-w-0">
             <section>
               <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stats</h2>
