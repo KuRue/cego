@@ -139,8 +139,8 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
             placeholder="Search name or tag..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 w-full rounded-lg px-3 text-xs outline-none"
-            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+            className="h-8 w-full appearance-none rounded-lg px-3 text-xs outline-none focus:outline-none"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", WebkitAppearance: "none" } as React.CSSProperties}
           />
         </div>
         <div className="grid gap-0.5">
