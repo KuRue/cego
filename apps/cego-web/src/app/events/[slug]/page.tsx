@@ -203,9 +203,6 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
         <aside className="glass-lg h-fit rounded-2xl p-5 lg:sticky lg:top-24">
           <h2 className="text-xl font-semibold">Registration</h2>
-          <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-muted)" }}>
-            RSVPs confirm until capacity is reached. After that, members are waitlisted.
-          </p>
 
           <div className="mt-5 grid gap-3">
             {canRsvp ? (
@@ -214,7 +211,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 className="flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
                 style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
               >
-                RSVP
+                Start RSVP
               </AppLink>
             ) : null}
 
