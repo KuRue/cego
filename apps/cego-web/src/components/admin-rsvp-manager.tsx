@@ -131,7 +131,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
     : undefined;
 
   return (
-    <div className="grid gap-0 lg:grid-cols-[1fr_1fr] lg:divide-x" style={{ borderColor: "var(--color-surface-border)" }}>
+    <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
       <div className="lg:max-h-[70vh] lg:overflow-y-auto">
         <div className="sticky top-0 z-10 p-3" style={{ background: "var(--color-background)" }}>
           <input
@@ -152,7 +152,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedId(entry.id === selectedId ? null : entry.id)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                className={`w-full rounded-xl px-3 py-2.5 text-left transition ${
                   entry.id === selectedId ? "ring-1 ring-[var(--color-accent)]" : ""
                 }`}
                 style={{
@@ -160,51 +160,47 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                   opacity: entry.status === "cancelled" ? 0.45 : 1,
                 }}
               >
-                {entry.kind === "primary" ? (
-                  <Avatar displayName={entry.displayName} photoUrl={entry.photoUrl} size="sm" />
-                ) : (
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-                    style={{ background: "var(--color-surface-hover)", color: "var(--color-muted)" }}
-                  >
-                    +1
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium">{entry.displayName}</span>
-                    {entry.checkedInAt && (
-                      <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold" style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>IN</span>
-                    )}
-                    {paymentRequired && (
-                      <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold" style={{
-                        background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
-                          : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
-                          : "var(--color-warning-bg)",
-                        color: entry.paymentStatus === "paid" ? "var(--color-success)"
-                          : entry.paymentStatus === "waived" ? "var(--color-muted)"
-                          : "var(--color-warning)",
-                      }}>
-                        {entry.paymentStatus === "paid" ? "Paid" : entry.paymentStatus === "waived" ? "Waived" : "Unpaid"}
-                      </span>
-                    )}
-                  </div>
-                  {entry.kind === "plusOne" && (
-                    <p className="text-[10px]" style={{ color: "var(--color-muted)" }}>Guest of {entry.parentName}</p>
+                <div className="flex items-center gap-2">
+                  {entry.kind === "primary" ? (
+                    <Avatar displayName={entry.displayName} photoUrl={entry.photoUrl} size="sm" />
+                  ) : (
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+                      style={{ background: "var(--color-surface-hover)", color: "var(--color-muted)" }}
+                    >
+                      +1
+                    </span>
                   )}
-                  {(entry.tags ?? []).length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {(entry.tags ?? []).map((tag) => (
-                        <span key={tag} className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.85 }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                  <span className="min-w-0 truncate text-sm font-medium">{entry.displayName}</span>
+                  {entry.checkedInAt && (
+                    <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold" style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>IN</span>
                   )}
-                </div>
-                <span className="shrink-0">
+                  {paymentRequired && (
+                    <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold" style={{
+                      background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
+                        : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
+                        : "var(--color-warning-bg)",
+                      color: entry.paymentStatus === "paid" ? "var(--color-success)"
+                        : entry.paymentStatus === "waived" ? "var(--color-muted)"
+                        : "var(--color-warning)",
+                    }}>
+                      {entry.paymentStatus === "paid" ? "Paid" : entry.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                    </span>
+                  )}
                   <StatusBadge status={entry.status} />
-                </span>
+                </div>
+                {(entry.kind === "plusOne" || (entry.tags ?? []).length > 0) && (
+                  <div className="mt-1 flex flex-wrap items-center gap-1 pl-10">
+                    {entry.kind === "plusOne" && (
+                      <span className="text-[10px]" style={{ color: "var(--color-muted)" }}>Guest of {entry.parentName}</span>
+                    )}
+                    {(entry.tags ?? []).map((tag) => (
+                      <span key={tag} className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.85 }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </button>
             ))
           )}
