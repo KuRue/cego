@@ -111,7 +111,7 @@ export default async function RsvpPage({
         </p>
 
         {alreadyRsvpd ? (
-          <AlreadyRegistered data={data} slug={slug} memberName={member.telegramDisplayName} />
+          <AlreadyRegistered data={data} slug={slug} />
         ) : canRsvp || adminCanRsvp ? (
           <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} />
         ) : (
@@ -140,23 +140,16 @@ export default async function RsvpPage({
   );
 }
 
-function AlreadyRegistered({ data, slug, memberName }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; memberName: string }) {
+function AlreadyRegistered({ data, slug }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string }) {
   return (
     <div className="glass-lg mt-8 rounded-2xl p-6">
       <p className="text-lg font-semibold">You&apos;re registered!</p>
-      <div className="mt-3 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{memberName}</span>
-          <StatusBadge status={data.rsvp!.status} label={rsvpStatusLabel(data.rsvp!.status)} />
-        </div>
+      <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+        Your RSVP status: <strong>{rsvpStatusLabel(data.rsvp!.status)}</strong>
         {data.plusOne && data.plusOne.status !== "cancelled" ? (
-          <div className="mt-3 flex items-center gap-2" style={{ borderTop: "1px solid var(--color-surface-border)", paddingTop: "0.75rem" }}>
-            <span className="text-sm" style={{ color: "var(--color-muted)" }}>+1</span>
-            <span className="text-sm font-medium">{data.plusOne.plusOneName}</span>
-            <StatusBadge status={data.plusOne.status} label={rsvpStatusLabel(data.plusOne.status)} />
-          </div>
+          <> · +1: <strong>{data.plusOne.plusOneName}</strong> ({rsvpStatusLabel(data.plusOne.status)})</>
         ) : null}
-      </div>
+      </p>
 
       {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
