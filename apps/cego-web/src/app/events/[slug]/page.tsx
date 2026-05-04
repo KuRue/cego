@@ -160,6 +160,12 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         </div>
       </section>
 
+      {event.promoImageUrl ? (
+        <div className="mt-6 overflow-hidden rounded-2xl">
+          <Image src={event.promoImageUrl} alt="" width={1200} height={600} className="w-full" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px" />
+        </div>
+      ) : null}
+
       <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="grid gap-6">
           <Panel title="Event Details">

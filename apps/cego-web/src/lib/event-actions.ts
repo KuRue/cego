@@ -611,6 +611,7 @@ function parseEventForm(formData: FormData) {
     refundPolicyText: readOptionalText(formData, "refundPolicyText"),
     organizerNotes: readOptionalText(formData, "organizerNotes"),
     imageUrl: readOptionalText(formData, "imageUrl"),
+    promoImageUrl: readOptionalText(formData, "promoImageUrl"),
     capacity: readCapacity(formData),
     rsvpOpensAt: readOptionalDate(formData, "rsvpOpensAt"),
     rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),

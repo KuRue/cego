@@ -364,6 +364,18 @@ function EventForm({
           <input type="hidden" name="imageUrl" defaultValue={event.imageUrl ?? ""} />
         </div>
       </Field>
+      <Field label="Promo image">
+        <div className="mt-1 flex flex-col gap-3">
+          {event.promoImageUrl ? (
+            <div className="flex items-center gap-3">
+              <Image src={event.promoImageUrl} alt="Promo" width={80} height={45} className="h-11 w-20 rounded-lg object-cover" style={{ border: "1px solid var(--color-surface-border)" }} />
+              <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current promo</span>
+            </div>
+          ) : null}
+          <EventImageUpload currentUrl={event.promoImageUrl ?? null} fieldName="promoImageUrl" />
+          <input type="hidden" name="promoImageUrl" defaultValue={event.promoImageUrl ?? ""} />
+        </div>
+      </Field>
       <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
         <Field label="Price">
           <input name="price" type="number" min="0" step="0.01" defaultValue={event.priceCents !== null ? (event.priceCents / 100).toFixed(2) : ""} className="form-input" />
