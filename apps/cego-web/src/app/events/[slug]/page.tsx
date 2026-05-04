@@ -406,24 +406,24 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               />
             </div>
           ) : null}
-
-          {rsvp && rsvp.status !== "cancelled" && (event.rulesText || event.termsText || event.refundPolicyText) ? (
-            <details className="mt-5">
-              <summary
-                className="cursor-pointer text-sm font-semibold"
-                style={{ color: "var(--color-accent)" }}
-              >
-                Event Policies
-              </summary>
-              <div className="mt-3 grid gap-3">
-                {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
-                {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
-                {event.refundPolicyText ? <PolicyBlock title="Cancellation & Refund Policy" body={event.refundPolicyText} /> : null}
-              </div>
-            </details>
-          ) : null}
         </aside>
       </section>
+
+      {rsvp && rsvp.status !== "cancelled" && (event.rulesText || event.termsText || event.refundPolicyText) ? (
+        <details className="mt-6">
+          <summary
+            className="cursor-pointer text-sm font-semibold"
+            style={{ color: "var(--color-accent)" }}
+          >
+            Event Policies
+          </summary>
+          <div className="mt-3 grid gap-3">
+            {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
+            {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
+            {event.refundPolicyText ? <PolicyBlock title="Cancellation & Refund Policy" body={event.refundPolicyText} /> : null}
+          </div>
+        </details>
+      ) : null}
     </main>
   );
 }
