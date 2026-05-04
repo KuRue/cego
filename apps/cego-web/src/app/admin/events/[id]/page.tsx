@@ -78,7 +78,7 @@ export default async function AdminEventDetailPage({
         brand={brand}
       />
       <main className="relative mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
-        <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(20px) saturate(1.2)", background: "color-mix(in srgb, var(--color-background) 75%, transparent)" }} />
+        <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(16px)", background: "color-mix(in srgb, var(--color-background) 90%, transparent)" }} />
         <div className="relative z-10">
         <div className="min-w-0">
           <div className="flex items-start justify-between gap-2">
@@ -173,7 +173,7 @@ export default async function AdminEventDetailPage({
               ) : (
                 <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
-              <form action={addEventExpenseAction} className="mt-3 grid gap-2 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
+              <form action={addEventExpenseAction} className="mt-3 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">
                 <input type="hidden" name="eventId" value={detail.event.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <input
@@ -185,7 +185,7 @@ export default async function AdminEventDetailPage({
                 />
                 <select
                   name="category"
-                  className="hidden h-9 rounded-lg px-2 text-sm outline-none sm:block"
+                  className="h-9 rounded-lg px-2 text-sm outline-none"
                   style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
                 >
                   <option value="food">Food</option>
@@ -201,7 +201,7 @@ export default async function AdminEventDetailPage({
                   min="0"
                   step="0.01"
                   placeholder="$0"
-                  className="hidden h-9 rounded-lg px-3 text-sm outline-none sm:block"
+                  className="h-9 rounded-lg px-3 text-sm outline-none"
                   style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
                 />
                 <button
