@@ -69,143 +69,148 @@ export async function rsvpForEventAction(formData: FormData) {
 
   const db = getDb();
 
-  await db.transaction(async (tx) => {
-    const eventRows = await tx
-      .select()
-      .from(events)
-      .where(eq(events.id, eventId))
-      .limit(1);
-    const event = eventRows[0];
+  try {
+    await db.transaction(async (tx) => {
+      const eventRows = await tx
+        .select()
+        .from(events)
+        .where(eq(events.id, eventId))
+        .limit(1);
+      const event = eventRows[0];
 
-    if (!event || !["open", "full"].includes(event.status)) {
-      return;
-    }
+      if (!event || !["open", "full"].includes(event.status)) {
+        return;
+      }
 
-    const currentRsvpRows = await tx
-      .select()
-      .from(rsvps)
-      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
-    const hasActiveRsvp = currentRsvpRows.some(
-      (r) => r.status !== "cancelled" && !r.parentRsvpId,
-    );
-
-    if (hasActiveRsvp) {
-      return;
-    }
-
-    const needed = plusOneName ? 2 : 1;
-
-    const confirmedRows = await tx
-      .select({ total: count() })
-      .from(rsvps)
-      .where(
-        and(
-          eq(rsvps.eventId, eventId),
-          inArray(rsvps.status, capacityBearingStatuses),
-        ),
-      );
-    const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
-    const slotsLeft = event.capacity - confirmedCount;
-
-    const parentStatus: RsvpStatus =
-      slotsLeft >= needed ? "confirmed" : slotsLeft >= 1 ? "confirmed" : "waitlisted";
-    const plusOneStatus: RsvpStatus =
-      slotsLeft >= needed ? "confirmed" : "waitlisted";
-
-    const cancelledRsvp = currentRsvpRows.find(
-      (r) => r.status === "cancelled" && !r.parentRsvpId,
-    );
-
-    let parentRsvpId: string;
-
-    if (cancelledRsvp) {
-      await tx
-        .update(rsvps)
-        .set({
-          status: parentStatus,
-          ticketType: null,
-          checkedInAt: null,
-          plusOneName: null,
-          parentRsvpId: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(rsvps.id, cancelledRsvp.id));
-      parentRsvpId = cancelledRsvp.id;
-    } else {
-      const [inserted] = await tx
-        .insert(rsvps)
-        .values({
-          memberId: member.id,
-          eventId,
-          status: parentStatus,
-          paymentStatus: "unpaid",
-        })
-        .returning({ id: rsvps.id });
-      parentRsvpId = inserted.id;
-    }
-
-    if (plusOneName) {
-      const cancelledPlusOne = currentRsvpRows.find(
-        (r) => r.status === "cancelled" && r.parentRsvpId,
+      const currentRsvpRows = await tx
+        .select()
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
+      const hasActiveRsvp = currentRsvpRows.some(
+        (r) => r.status !== "cancelled" && !r.parentRsvpId,
       );
 
-      if (cancelledPlusOne) {
+      if (hasActiveRsvp) {
+        return;
+      }
+
+      const needed = plusOneName ? 2 : 1;
+
+      const confirmedRows = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(
+          and(
+            eq(rsvps.eventId, eventId),
+            inArray(rsvps.status, capacityBearingStatuses),
+          ),
+        );
+      const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
+      const slotsLeft = event.capacity - confirmedCount;
+
+      const parentStatus: RsvpStatus =
+        slotsLeft >= needed ? "confirmed" : slotsLeft >= 1 ? "confirmed" : "waitlisted";
+      const plusOneStatus: RsvpStatus =
+        slotsLeft >= needed ? "confirmed" : "waitlisted";
+
+      const cancelledRsvp = currentRsvpRows.find(
+        (r) => r.status === "cancelled" && !r.parentRsvpId,
+      );
+
+      let parentRsvpId: string;
+
+      if (cancelledRsvp) {
         await tx
           .update(rsvps)
           .set({
+            status: parentStatus,
+            ticketType: null,
+            checkedInAt: null,
+            plusOneName: null,
+            parentRsvpId: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(rsvps.id, cancelledRsvp.id));
+        parentRsvpId = cancelledRsvp.id;
+      } else {
+        const [inserted] = await tx
+          .insert(rsvps)
+          .values({
+            memberId: member.id,
+            eventId,
+            status: parentStatus,
+            paymentStatus: "unpaid",
+          })
+          .returning({ id: rsvps.id });
+        parentRsvpId = inserted.id;
+      }
+
+      if (plusOneName) {
+        const cancelledPlusOne = currentRsvpRows.find(
+          (r) => r.status === "cancelled" && r.parentRsvpId,
+        );
+
+        if (cancelledPlusOne) {
+          await tx
+            .update(rsvps)
+            .set({
+              status: plusOneStatus,
+              plusOneName,
+              parentRsvpId,
+              updatedAt: new Date(),
+            })
+            .where(eq(rsvps.id, cancelledPlusOne.id));
+        } else {
+          await tx.insert(rsvps).values({
+            memberId: member.id,
+            eventId,
             status: plusOneStatus,
             plusOneName,
             parentRsvpId,
-            updatedAt: new Date(),
-          })
-          .where(eq(rsvps.id, cancelledPlusOne.id));
-      } else {
-        await tx.insert(rsvps).values({
-          memberId: member.id,
-          eventId,
-          status: plusOneStatus,
-          plusOneName,
-          parentRsvpId,
-          paymentStatus: "unpaid",
-        });
-      }
-    }
-
-    if (surveyId) {
-      const surveyRows = await tx
-        .select()
-        .from(surveys)
-        .where(and(eq(surveys.id, surveyId), eq(surveys.status, "published")))
-        .limit(1);
-      const survey = surveyRows[0];
-
-      if (survey) {
-        const schema = parseSurveySchema(survey.schemaJson);
-        const answers = Object.fromEntries(
-          schema.questions.map((q) => [
-            q.id,
-            readText(formData, `answer:${q.id}`),
-          ]),
-        );
-
-        await tx
-          .insert(surveyResponses)
-          .values({
-            surveyId: survey.id,
-            memberId: member.id,
-            eventId,
-            answersJson: answers,
-          })
-          .onConflictDoUpdate({
-            target: [surveyResponses.surveyId, surveyResponses.memberId],
-            set: {
-              answersJson: answers,
-              updatedAt: new Date(),
-            },
+            paymentStatus: "unpaid",
           });
+        }
       }
-    }
-  });
+
+      if (surveyId) {
+        const surveyRows = await tx
+          .select()
+          .from(surveys)
+          .where(and(eq(surveys.id, surveyId), eq(surveys.status, "published")))
+          .limit(1);
+        const survey = surveyRows[0];
+
+        if (survey) {
+          const schema = parseSurveySchema(survey.schemaJson);
+          const answers = Object.fromEntries(
+            schema.questions.map((q) => [
+              q.id,
+              readText(formData, `answer:${q.id}`),
+            ]),
+          );
+
+          await tx
+            .insert(surveyResponses)
+            .values({
+              surveyId: survey.id,
+              memberId: member.id,
+              eventId,
+              answersJson: answers,
+            })
+            .onConflictDoUpdate({
+              target: [surveyResponses.surveyId, surveyResponses.memberId],
+              set: {
+                answersJson: answers,
+                updatedAt: new Date(),
+              },
+            });
+        }
+      }
+    });
+  } catch (err) {
+    console.error("RSVP action failed:", err);
+    redirect(returnTo + "?rsvp_error=1");
+  }
 
   revalidatePath("/dashboard");
   revalidatePath(returnTo);

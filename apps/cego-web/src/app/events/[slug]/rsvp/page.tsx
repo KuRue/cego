@@ -15,11 +15,14 @@ export const metadata = {
 
 export default async function RsvpPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ rsvp_error?: string }>;
 }) {
   const brand = await getNavbarBrand();
   const member = await getCurrentMember();
+  const { rsvp_error } = await searchParams;
 
   if (!member || member.groupStatus !== "member") {
     return (
@@ -63,6 +66,14 @@ export default async function RsvpPage({
         brand={brand}
       />
       <main className="page-shell mx-auto max-w-3xl px-5 pb-16 pt-8">
+        {rsvp_error ? (
+          <div
+            className="mb-5 rounded-xl px-4 py-3 text-sm font-semibold"
+            style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+          >
+            RSVP failed. Please try again or contact an organizer.
+          </div>
+        ) : null}
         <div className="mb-5">
           <AppLink
             href={`/events/${slug}`}
