@@ -124,8 +124,9 @@ export default function Navbar({ member, brand }: NavbarProps) {
   return (
     <>
       <header className="glass sticky top-0 z-50">
-        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-sm justify-center gap-4 py-4" : "max-w-6xl justify-between py-3"}`}>
-          <AppLink href="/" className="flex items-center gap-2">
+        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-sm justify-center gap-4 pt-14 pb-3" : "max-w-6xl py-3"}`}>
+          {!isMiniApp && <div className="flex-1" />}
+          <AppLink href="/" className="flex items-center gap-2 shrink-0">
             {logoUrl ? (
               <Image
                 src={logoUrl}
@@ -144,24 +145,18 @@ export default function Navbar({ member, brand }: NavbarProps) {
             )}
           </AppLink>
 
-          <span className="text-sm font-semibold tracking-wide">
+          <span className={`text-sm font-semibold tracking-wide ${isMiniApp ? "" : "absolute left-1/2 -translate-x-1/2"}`}>
             {siteName}
           </span>
 
           {member ? (
             <>
-              {!isMiniApp && (
-                <div className="hidden items-center gap-1 sm:flex">
-                  <NavItem href="/dashboard">Dashboard</NavItem>
-                  {member.isAdmin ? <NavItem href="/admin">Admin</NavItem> : null}
-                </div>
-              )}
-
+              {!isMiniApp && <div className="flex-1" />}
               <button
                 ref={buttonRef}
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-full p-0.5 transition"
+                className="flex items-center gap-2 rounded-full p-0.5 transition shrink-0"
                 style={{ background: menuOpen ? "var(--color-surface-hover)" : "transparent" }}
                 aria-label="Open account menu"
                 aria-expanded={menuOpen}
@@ -174,16 +169,19 @@ export default function Navbar({ member, brand }: NavbarProps) {
               </button>
             </>
           ) : (
-            <AppLink
-              href="/sign-in"
-              className="rounded-lg px-4 py-2 text-sm font-medium transition"
-              style={{
-                background: "var(--color-accent)",
-                color: "var(--color-on-accent)",
-              }}
-            >
-              Sign in
-            </AppLink>
+            <>
+              {!isMiniApp && <div className="flex-1" />}
+              <AppLink
+                href="/sign-in"
+                className="rounded-lg px-4 py-2 text-sm font-medium transition"
+                style={{
+                  background: "var(--color-accent)",
+                  color: "var(--color-on-accent)",
+                }}
+              >
+                Sign in
+              </AppLink>
+            </>
           )}
         </nav>
       </header>
