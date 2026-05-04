@@ -485,7 +485,7 @@ function formatDateLines(startsAt: Date, endsAt: Date | null): string {
   });
 
   if (!endsAt) return formatter.format(startsAt);
-  return `${formatter.format(startsAt)}\n${formatter.format(endsAt)}`;
+  return `${formatter.format(startsAt)}\nto ${formatter.format(endsAt)}`;
 }
 
 function formatDateOnly(date: Date): string {
