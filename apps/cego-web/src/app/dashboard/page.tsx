@@ -299,19 +299,21 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 ) : null}
               </dl>
 
-              {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods ? (
-                <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)" }}>
-                  <p className="text-sm font-semibold">Payment{event.paymentDueDate ? ` due ${formatDateOnly(event.paymentDueDate)}` : ""}</p>
-                  <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
-                    {event.paymentMethods}
-                  </p>
-                  <p className="mt-2 text-sm">
-                    <span className="font-medium">Status: </span>
-                    <span style={{ color: rsvp.paymentStatus === "paid" ? "var(--color-success)" : rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
-                      {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
-                    </span>
-                  </p>
-                </div>
+              {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+                <span
+                  className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                  style={{ background: "rgba(234,179,8,0.8)", color: "#1a1d23" }}
+                >
+                  Payment due
+                </span>
+              ) : null}
+              {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus === "paid" ? (
+                <span
+                  className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                  style={{ background: "rgba(34,197,94,0.8)", color: "#fff" }}
+                >
+                  Paid
+                </span>
               ) : null}
 
               {rsvp && rsvp.status !== "cancelled" && plusOne && plusOne.status !== "cancelled" ? (
@@ -467,14 +469,6 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
       </form>
     </article>
   );
-}
-
-function formatDateOnly(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
 }
 
 function formatDateRangeShort(startsAt: Date, endsAt: Date | null): string {

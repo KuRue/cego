@@ -238,6 +238,23 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
               ) : null}
             </div>
           ) : null}
+
+          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods ? (
+            <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
+              <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                Payment{event.paymentDueDate ? ` due ${formatDateOnly(event.paymentDueDate)}` : ""}
+              </p>
+              <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
+                {event.paymentMethods}
+              </p>
+              <p className="mt-2 text-sm">
+                <span className="font-medium">Status: </span>
+                <span style={{ color: rsvp.paymentStatus === "paid" ? "var(--color-success)" : rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
+                  {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                </span>
+              </p>
+            </div>
+          ) : null}
         </aside>
       </section>
     </main>
@@ -295,6 +312,14 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
   }
 
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
+}
+
+function formatDateOnly(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatPrice(priceCents: number, currency: string): string {
