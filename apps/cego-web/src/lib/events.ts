@@ -8,6 +8,7 @@ import {
   inArray,
   members,
   rsvps,
+  surveyResponses,
   surveys,
   type Event,
   type Member,
@@ -448,5 +449,107 @@ export async function getRsvpPageData(
     survey: survey
       ? { id: survey.id, title: survey.title, schema: parseSurveySchema(survey.schemaJson) }
       : undefined,
+  };
+}
+
+export interface AdminEventDetail {
+  event: Event;
+  confirmedCount: number;
+  waitlistedCount: number;
+  rsvps: Array<{
+    rsvp: Rsvp;
+    member: Pick<Member, "id" | "telegramDisplayName" | "telegramUsername" | "groupStatus">;
+    plusOne: Array<Pick<Rsvp, "id" | "status" | "plusOneName" | "paymentStatus" | "checkedInAt">>;
+  }>;
+  survey?: {
+    id: string;
+    title: string;
+    schema: SurveySchema;
+    responses: Array<{
+      memberId: string;
+      answersJson: unknown;
+    }>;
+  };
+}
+
+export async function getAdminEventDetail(eventId: string): Promise<AdminEventDetail | null> {
+  const db = getDb();
+
+  const eventRows = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  const event = eventRows[0];
+  if (!event) return null;
+
+  const [countRows, rsvpRows, surveyRows] = await Promise.all([
+    getRsvpCountRows([event.id]),
+    db
+      .select({
+        rsvp: rsvps,
+        member: {
+          id: members.id,
+          telegramDisplayName: members.telegramDisplayName,
+          telegramUsername: members.telegramUsername,
+          groupStatus: members.groupStatus,
+        },
+      })
+      .from(rsvps)
+      .innerJoin(members, eq(rsvps.memberId, members.id))
+      .where(eq(rsvps.eventId, event.id))
+      .orderBy(desc(rsvps.createdAt)),
+    db
+      .select()
+      .from(surveys)
+      .where(eq(surveys.eventId, event.id))
+      .limit(1),
+  ]);
+
+  const countsByEvent = toCountMap(countRows);
+
+  const parents = rsvpRows.filter((r) => !r.rsvp.parentRsvpId);
+  const plusOnes = rsvpRows.filter((r) => r.rsvp.parentRsvpId);
+
+  const rsvpsWithPlusOnes = parents.map((p) => ({
+    rsvp: p.rsvp,
+    member: p.member,
+    plusOne: plusOnes
+      .filter((po) => po.rsvp.parentRsvpId === p.rsvp.id)
+      .map((po) => ({
+        id: po.rsvp.id,
+        status: po.rsvp.status,
+        plusOneName: po.rsvp.plusOneName,
+        paymentStatus: po.rsvp.paymentStatus,
+        checkedInAt: po.rsvp.checkedInAt,
+      })),
+  }));
+
+  const survey = surveyRows[0];
+  let surveyDetail: AdminEventDetail["survey"];
+
+  if (survey) {
+    const responseRows = await db
+      .select({
+        memberId: surveyResponses.memberId,
+        answersJson: surveyResponses.answersJson,
+      })
+      .from(surveyResponses)
+      .where(eq(surveyResponses.surveyId, survey.id));
+
+    surveyDetail = {
+      id: survey.id,
+      title: survey.title,
+      schema: parseSurveySchema(survey.schemaJson),
+      responses: responseRows,
+    };
+  }
+
+  return {
+    event,
+    confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
+    waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
+    rsvps: rsvpsWithPlusOnes,
+    survey: surveyDetail,
   };
 }

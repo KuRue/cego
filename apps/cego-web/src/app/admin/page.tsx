@@ -67,7 +67,7 @@ export default async function AdminPage() {
               {openEvents.map((overview) => (
                 <AppLink
                   key={overview.event.id}
-                  href={`/admin/events?id=${overview.event.id}`}
+                  href={`/admin/events/${overview.event.id}`}
                   className="glass glass-hover block rounded-2xl p-5 transition"
                 >
                   <div className="flex flex-wrap items-center gap-2">

@@ -468,9 +468,10 @@ export async function updateRsvpStatusAction(formData: FormData) {
     "waitlisted",
     "cancelled",
   ] as const);
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
   if (!rsvpId) {
-    redirect("/admin");
+    redirect(returnTo);
   }
 
   const db = getDb();
@@ -485,7 +486,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
-  redirect("/admin/events");
+  redirect(returnTo);
 }
 
 export async function updateRsvpPaymentAction(formData: FormData) {
@@ -496,9 +497,10 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     "paid",
     "waived",
   ] as const);
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
   if (!rsvpId) {
-    redirect("/admin/events");
+    redirect(returnTo);
   }
 
   const db = getDb();
@@ -513,7 +515,32 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
-  redirect("/admin/events");
+  redirect(returnTo);
+}
+
+export async function checkInRsvpAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const checkedIn = readText(formData, "checkedIn");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId) {
+    redirect(returnTo);
+  }
+
+  const db = getDb();
+
+  await db
+    .update(rsvps)
+    .set({
+      checkedInAt: checkedIn === "1" ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect(returnTo);
 }
 
 function parseEventForm(formData: FormData) {
@@ -541,6 +568,7 @@ function parseEventForm(formData: FormData) {
     capacity: readCapacity(formData),
     rsvpOpensAt: readOptionalDate(formData, "rsvpOpensAt"),
     rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),
+    costCents: readOptionalPriceCents(formData, "cost"),
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };
 }
