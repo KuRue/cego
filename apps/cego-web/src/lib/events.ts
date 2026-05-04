@@ -65,6 +65,14 @@ export interface EventWithRsvpState {
     telegramDisplayName: string;
     telegramPhotoUrl: string | null;
   }>;
+  survey?: {
+    id: string;
+    title: string;
+    schema: SurveySchema;
+    response?: {
+      answersJson: unknown;
+    };
+  };
 }
 
 export interface PublicEvent {
@@ -178,7 +186,7 @@ export async function getDashboardEventBySlug(
     return null;
   }
 
-  const [memberRsvpRows, countRows, rsvpMemberRows] = await Promise.all([
+  const [memberRsvpRows, countRows, rsvpMemberRows, surveyRows, surveyResponseRows] = await Promise.all([
     db
       .select()
       .from(rsvps)
@@ -197,10 +205,39 @@ export async function getDashboardEventBySlug(
           inArray(rsvps.status, ["confirmed", "waitlisted"]),
         ),
       ),
+    db
+      .select()
+      .from(surveys)
+      .where(and(eq(surveys.eventId, event.id), eq(surveys.status, "published")))
+      .limit(1),
+    db
+      .select({
+        surveyId: surveyResponses.surveyId,
+        answersJson: surveyResponses.answersJson,
+      })
+      .from(surveyResponses)
+      .where(
+        and(
+          eq(surveyResponses.memberId, memberId),
+          eq(surveyResponses.eventId, event.id),
+        ),
+      ),
   ]);
   const countsByEvent = toCountMap(countRows);
   const parentRsvp = memberRsvpRows.find((r) => !r.parentRsvpId);
   const plusOne = memberRsvpRows.find((r) => r.parentRsvpId);
+
+  const survey = surveyRows[0];
+  const surveyResponse = surveyResponseRows.find((r) => r.surveyId === survey?.id);
+
+  const surveyData: EventWithRsvpState["survey"] = survey
+    ? {
+        id: survey.id,
+        title: survey.title,
+        schema: parseSurveySchema(survey.schemaJson),
+        response: surveyResponse ? { answersJson: surveyResponse.answersJson } : undefined,
+      }
+    : undefined;
 
   return {
     event,
@@ -212,6 +249,7 @@ export async function getDashboardEventBySlug(
       telegramDisplayName: r.telegramDisplayName,
       telegramPhotoUrl: r.telegramPhotoUrl,
     })),
+    survey: surveyData,
   };
 }
 

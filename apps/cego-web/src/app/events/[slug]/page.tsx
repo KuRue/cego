@@ -3,6 +3,8 @@ import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import AvatarStack from "@/components/avatar-stack";
+import { submitSurveyResponseAction } from "@/lib/survey-actions";
+import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
@@ -100,7 +102,7 @@ export default async function EventDetailPage({
 }
 
 function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; isAdmin: boolean }) {
-  const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers } = eventState;
+  const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers, survey } = eventState;
   const returnTo = `/events/${event.slug}`;
   const effective = getEffectiveRsvpStatus({
     status: event.status,
@@ -316,6 +318,25 @@ function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; 
                   </p>
                 </div>
               ) : null}
+            </div>
+          ) : null}
+
+          {rsvp && rsvp.status !== "cancelled" && survey && survey.schema.questions.length > 0 ? (
+            <div className="mt-5">
+              <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
+                {survey.title}
+              </p>
+              <SurveyResponseEditor
+                surveyId={survey.id}
+                eventId={event.id}
+                questions={survey.schema.questions}
+                existingAnswers={
+                  survey.response?.answersJson && typeof survey.response.answersJson === "object"
+                    ? survey.response.answersJson as Record<string, string>
+                    : {}
+                }
+                action={submitSurveyResponseAction}
+              />
             </div>
           ) : null}
 

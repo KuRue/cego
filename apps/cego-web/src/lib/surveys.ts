@@ -70,7 +70,7 @@ export async function getDashboardSurveys(
 
   const activeEventIds = new Set(activeRsvps.map(({ eventId }) => eventId));
   const visibleSurveys = surveyRows.filter(
-    (survey) => !survey.eventId || activeEventIds.has(survey.eventId),
+    (survey) => !survey.eventId,
   );
 
   if (visibleSurveys.length === 0) {
