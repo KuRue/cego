@@ -159,9 +159,9 @@ export async function rsvpForEventAction(formData: FormData) {
             checkedInAt: null,
             plusOneName: null,
             parentRsvpId: null,
-            paymentStatus: "unpaid",
             notes: null,
-            tags: sql`'{}'`,
+            tags: sql`ARRAY[]::text[]`,
+            paymentStatus: "unpaid",
             updatedAt: new Date(),
           })
           .where(eq(rsvps.id, cancelledRsvp.id));
@@ -191,10 +191,11 @@ export async function rsvpForEventAction(formData: FormData) {
               status: plusOneStatus,
               plusOneName,
               parentRsvpId,
-              paymentStatus: "unpaid",
+              ticketType: null,
               checkedInAt: null,
               notes: null,
-              tags: sql`'{}'`,
+              tags: sql`ARRAY[]::text[]`,
+              paymentStatus: "unpaid",
               updatedAt: new Date(),
             })
             .where(eq(rsvps.id, cancelledPlusOne.id));
@@ -316,74 +317,75 @@ export async function adminRsvpForEventAction(formData: FormData) {
 
       const parentStatus: RsvpStatus =
         slotsLeft >= needed ? "confirmed" : slotsLeft >= 1 ? "confirmed" : "waitlisted";
-      const plusOneStatus: RsvpStatus =
-        slotsLeft >= needed ? "confirmed" : "waitlisted";
+const plusOneStatus: RsvpStatus =
+      slotsLeft >= needed ? "confirmed" : "waitlisted";
 
-      const cancelledRsvp = currentRsvpRows.find(
-        (r) => r.status === "cancelled" && !r.parentRsvpId,
+    const cancelledRsvp = currentRsvpRows.find(
+      (r) => r.status === "cancelled" && !r.parentRsvpId,
+    );
+
+    let parentRsvpId: string;
+
+    if (cancelledRsvp) {
+      await tx
+        .update(rsvps)
+        .set({
+          status: parentStatus,
+          ticketType: null,
+          checkedInAt: null,
+          plusOneName: null,
+          parentRsvpId: null,
+          notes: null,
+          tags: sql`ARRAY[]::text[]`,
+          paymentStatus: "unpaid",
+          updatedAt: new Date(),
+        })
+        .where(eq(rsvps.id, cancelledRsvp.id));
+      parentRsvpId = cancelledRsvp.id;
+    } else {
+      const [inserted] = await tx
+        .insert(rsvps)
+        .values({
+          memberId: member.id,
+          eventId,
+          status: parentStatus,
+          paymentStatus: "unpaid",
+        })
+        .returning({ id: rsvps.id });
+      parentRsvpId = inserted.id;
+    }
+
+    if (plusOneName) {
+      const cancelledPlusOne = currentRsvpRows.find(
+        (r) => r.status === "cancelled" && r.parentRsvpId,
       );
 
-      let parentRsvpId: string;
-
-      if (cancelledRsvp) {
+      if (cancelledPlusOne) {
         await tx
           .update(rsvps)
           .set({
-            status: parentStatus,
-            ticketType: null,
-            checkedInAt: null,
-            plusOneName: null,
-            parentRsvpId: null,
-            paymentStatus: "unpaid",
-            notes: null,
-            tags: sql`'{}'`,
-            updatedAt: new Date(),
-          })
-          .where(eq(rsvps.id, cancelledRsvp.id));
-        parentRsvpId = cancelledRsvp.id;
-      } else {
-        const [inserted] = await tx
-          .insert(rsvps)
-          .values({
-            memberId: member.id,
-            eventId,
-            status: parentStatus,
-            paymentStatus: "unpaid",
-          })
-          .returning({ id: rsvps.id });
-        parentRsvpId = inserted.id;
-      }
-
-      if (plusOneName) {
-        const cancelledPlusOne = currentRsvpRows.find(
-          (r) => r.status === "cancelled" && r.parentRsvpId,
-        );
-
-        if (cancelledPlusOne) {
-          await tx
-            .update(rsvps)
-            .set({
-              status: plusOneStatus,
-              plusOneName,
-              parentRsvpId,
-              paymentStatus: "unpaid",
-              checkedInAt: null,
-              notes: null,
-              tags: sql`'{}'`,
-              updatedAt: new Date(),
-            })
-            .where(eq(rsvps.id, cancelledPlusOne.id));
-        } else {
-          await tx.insert(rsvps).values({
-            memberId: member.id,
-            eventId,
             status: plusOneStatus,
             plusOneName,
             parentRsvpId,
+            ticketType: null,
+            checkedInAt: null,
+            notes: null,
+            tags: sql`ARRAY[]::text[]`,
             paymentStatus: "unpaid",
-          });
-        }
+            updatedAt: new Date(),
+          })
+          .where(eq(rsvps.id, cancelledPlusOne.id));
+      } else {
+        await tx.insert(rsvps).values({
+          memberId: member.id,
+          eventId,
+          status: plusOneStatus,
+          plusOneName,
+          parentRsvpId,
+          paymentStatus: "unpaid",
+        });
       }
+    }
 
       if (surveyId) {
         const surveyRows = await tx

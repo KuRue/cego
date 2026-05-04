@@ -410,14 +410,14 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
       </section>
 
       {rsvp && rsvp.status !== "cancelled" && (event.rulesText || event.termsText || event.refundPolicyText) ? (
-        <details className="mt-6">
-          <summary
-            className="cursor-pointer text-sm font-semibold"
-            style={{ color: "var(--color-accent)" }}
-          >
-            Event Policies
-          </summary>
-          <div className="mt-3 grid gap-3">
+    <details className="mt-6 glass-lg rounded-2xl p-5">
+      <summary
+        className="cursor-pointer text-sm font-semibold"
+        style={{ color: "var(--color-accent)" }}
+      >
+        Event Policies
+      </summary>
+      <div className="mt-3 grid gap-3">
             {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
             {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
             {event.refundPolicyText ? <PolicyBlock title="Cancellation & Refund Policy" body={event.refundPolicyText} /> : null}
@@ -456,7 +456,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function PolicyBlock({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+    <div className="glass rounded-xl p-3">
       <p className="text-sm font-semibold">{title}</p>
       <div className="mt-1">
         <RichText>{body}</RichText>
