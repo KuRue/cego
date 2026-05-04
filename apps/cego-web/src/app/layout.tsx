@@ -38,6 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description:
       "Telegram-first planning, RSVP, and registration tools for private community events.",
+    icons: {
+      icon: "/api/favicon",
+    },
   };
 }
 
