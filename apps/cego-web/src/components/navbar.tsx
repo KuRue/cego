@@ -124,8 +124,7 @@ export default function Navbar({ member, brand }: NavbarProps) {
   return (
     <>
       <header className="glass sticky top-0 z-50">
-        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-sm justify-center gap-4 pt-14 pb-3" : "max-w-6xl py-3"}`}>
-          {!isMiniApp && <div className="flex-1" />}
+        <nav className={`mx-auto flex items-center px-5 ${isMiniApp ? "max-w-sm justify-center gap-4 pt-12 pb-2" : "max-w-6xl py-3"}`}>
           <AppLink href="/" className="flex items-center gap-2 shrink-0">
             {logoUrl ? (
               <Image
@@ -149,39 +148,35 @@ export default function Navbar({ member, brand }: NavbarProps) {
             {siteName}
           </span>
 
+          <div className="flex-1" />
+
           {member ? (
-            <>
-              {!isMiniApp && <div className="flex-1" />}
-              <button
-                ref={buttonRef}
-                type="button"
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-full p-0.5 transition shrink-0"
-                style={{ background: menuOpen ? "var(--color-surface-hover)" : "transparent" }}
-                aria-label="Open account menu"
-                aria-expanded={menuOpen}
-                aria-haspopup="true"
-              >
-                <Avatar
-                  displayName={member.telegramDisplayName}
-                  photoUrl={member.telegramPhotoUrl}
-                />
-              </button>
-            </>
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-2 rounded-full p-0.5 transition shrink-0"
+              style={{ background: menuOpen ? "var(--color-surface-hover)" : "transparent" }}
+              aria-label="Open account menu"
+              aria-expanded={menuOpen}
+              aria-haspopup="true"
+            >
+              <Avatar
+                displayName={member.telegramDisplayName}
+                photoUrl={member.telegramPhotoUrl}
+              />
+            </button>
           ) : (
-            <>
-              {!isMiniApp && <div className="flex-1" />}
-              <AppLink
-                href="/sign-in"
-                className="rounded-lg px-4 py-2 text-sm font-medium transition"
-                style={{
-                  background: "var(--color-accent)",
-                  color: "var(--color-on-accent)",
-                }}
-              >
-                Sign in
-              </AppLink>
-            </>
+            <AppLink
+              href="/sign-in"
+              className="rounded-lg px-4 py-2 text-sm font-medium transition shrink-0"
+              style={{
+                background: "var(--color-accent)",
+                color: "var(--color-on-accent)",
+              }}
+            >
+              Sign in
+            </AppLink>
           )}
         </nav>
       </header>
