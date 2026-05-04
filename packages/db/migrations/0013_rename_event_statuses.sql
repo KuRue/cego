@@ -1,7 +1,7 @@
 ALTER TABLE events ALTER COLUMN status DROP DEFAULT;
 CREATE TYPE event_status_new AS ENUM ('draft', 'show', 'closed', 'archived');
 ALTER TABLE events ALTER COLUMN status TYPE event_status_new USING
-  CASE status
+  CASE status::text
     WHEN 'open' THEN 'show'
     WHEN 'full' THEN 'show'
     ELSE status::text
