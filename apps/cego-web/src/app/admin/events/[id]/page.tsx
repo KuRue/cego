@@ -94,17 +94,19 @@ export default async function AdminEventDetailPage({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StatusBadge status={detail.event.status} />
-              <form action={deleteEventAction} className="hidden sm:block">
-                <input type="hidden" name="eventId" value={detail.event.id} />
-                <ConfirmButton
-                  type="submit"
-                  message="Delete this event and all its RSVPs? This cannot be undone."
-                  className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                  style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
-                >
-                  Delete
-                </ConfirmButton>
-              </form>
+              {detail.event.status === "archived" && (
+                <form action={deleteEventAction} className="hidden sm:block">
+                  <input type="hidden" name="eventId" value={detail.event.id} />
+                  <ConfirmButton
+                    type="submit"
+                    message="Delete this event and all its RSVPs? This cannot be undone."
+                    className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                    style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              )}
             </div>
           </div>
 
@@ -250,17 +252,19 @@ export default async function AdminEventDetailPage({
               </summary>
               <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} />
             </details>
-            <form action={deleteEventAction} className="mt-4 sm:hidden">
-              <input type="hidden" name="eventId" value={detail.event.id} />
-              <ConfirmButton
-                type="submit"
-                message="Delete this event and all its RSVPs? This cannot be undone."
-                className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
-                style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
-              >
-                Delete event
-              </ConfirmButton>
-            </form>
+            {detail.event.status === "archived" && (
+              <form action={deleteEventAction} className="mt-4 sm:hidden">
+                <input type="hidden" name="eventId" value={detail.event.id} />
+                <ConfirmButton
+                  type="submit"
+                  message="Delete this event and all its RSVPs? This cannot be undone."
+                  className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
+                  style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+                >
+                  Delete event
+                </ConfirmButton>
+              </form>
+            )}
           </aside>
         </div>
         </div>
