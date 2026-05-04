@@ -7,6 +7,7 @@ import { getRsvpPageData, getEffectiveRsvpStatus } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
+import RichText from "@/components/rich-text";
 
 export const dynamic = "force-dynamic";
 
@@ -228,9 +229,9 @@ function RsvpForm({
             <span className="ml-2 text-sm font-normal" style={{ color: "var(--color-muted)" }}>per person</span>
           </p>
           {data.event.refundPolicyText ? (
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              {data.event.refundPolicyText}
-            </p>
+            <div className="mt-2">
+              <RichText>{data.event.refundPolicyText}</RichText>
+            </div>
           ) : null}
         </Section>
       ) : null}
@@ -346,9 +347,9 @@ function TextBlock({ title, body }: { title: string; body: string }) {
   return (
     <section>
       <h3 className="font-semibold">{title}</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-        {body}
-      </p>
+      <div className="mt-2">
+        <RichText>{body}</RichText>
+      </div>
     </section>
   );
 }

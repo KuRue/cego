@@ -9,6 +9,7 @@ import Navbar from "@/components/navbar";
 import { cancelRsvpAction, markRsvpPendingAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
+import RichText from "@/components/rich-text";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -475,11 +476,11 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function PolicyBlock({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1 whitespace-pre-wrap leading-6" style={{ color: "var(--color-muted)" }}>
-        {body}
-      </p>
+    <div className="rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+      <p className="text-sm font-semibold">{title}</p>
+      <div className="mt-1">
+        <RichText>{body}</RichText>
+      </div>
     </div>
   );
 }

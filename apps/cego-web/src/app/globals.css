@@ -213,6 +213,41 @@ select option {
   position: relative;
 }
 
+.rich-text h3 {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-foreground);
+}
+
+.rich-text h4 {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.125rem;
+  color: var(--color-foreground);
+}
+
+.rich-text ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.rich-text li {
+  margin: 0.125rem 0;
+}
+
+.rich-text p {
+  margin: 0.25rem 0;
+}
+
+.rich-text strong {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
 .button-primary {
   background: var(--color-accent);
   color: var(--color-on-accent);
