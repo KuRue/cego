@@ -124,6 +124,7 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
     <span className="text-sm" style={{ color: "var(--color-muted)" }}>
       {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
     </span>
+    {event.status === "archived" ? (
     <form action={deleteEventAction} className="ml-2">
       <input type="hidden" name="eventId" value={event.id} />
       <ConfirmButton
@@ -135,6 +136,7 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
         Delete
       </ConfirmButton>
     </form>
+    ) : null}
       </div>
 
       <details className="mt-5 pt-5" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
