@@ -299,6 +299,14 @@ function EventForm({
           <input name="endsAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.endsAt) : ""} className="form-input" />
         </Field>
       </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="RSVP opens">
+          <input name="rsvpOpensAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpOpensAt) : ""} className="form-input" />
+        </Field>
+        <Field label="RSVP closes">
+          <input name="rsvpClosesAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpClosesAt) : ""} className="form-input" />
+        </Field>
+      </div>
       <Field label="Location text">
         <input name="locationText" defaultValue={event?.locationText ?? ""} className="form-input" />
       </Field>

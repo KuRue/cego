@@ -2,7 +2,7 @@ import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import { cancelRsvpAction } from "@/lib/event-actions";
-import { getDashboardEvents, type EventWithRsvpState } from "@/lib/events";
+import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
@@ -137,10 +137,18 @@ export default async function DashboardPage() {
 
 function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
+  const effective = getEffectiveRsvpStatus({
+    status: event.status,
+    startsAt: event.startsAt,
+    rsvpOpensAt: event.rsvpOpensAt,
+    rsvpClosesAt: event.rsvpClosesAt,
+    capacity: event.capacity,
+    confirmedCount,
+  });
   const isCancelableRsvp =
     rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
   const canRsvp =
-    (event.status === "open" || event.status === "full") &&
+    (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
   const spotsLeft = event.capacity - confirmedCount;
 
@@ -208,11 +216,15 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
                 style={{ backdropFilter: "blur(8px)" }}
               >
-                {rsvp?.status === "waitlisted"
-                  ? "Waitlisted"
-                  : spotsLeft > 0
-                    ? `Spots left: ${spotsLeft}`
-                    : "Full"}
+                {effective === "before"
+                  ? "RSVP not open"
+                  : effective === "closed" || effective === "past"
+                    ? "RSVP closed"
+                    : rsvp?.status === "waitlisted"
+                      ? "Waitlisted"
+                      : spotsLeft > 0
+                        ? `Spots left: ${spotsLeft}`
+                        : "Full"}
               </span>
               {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
                 <span
@@ -253,7 +265,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           <div className="flex flex-1 flex-col justify-between p-5">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
+                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
               <h3 className="mt-3 text-xl font-semibold">{event.title}</h3>
@@ -340,9 +352,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
               {!canRsvp && !isCancelableRsvp ? (
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                  {event.status === "closed"
-                    ? "This event is closed."
-                    : "Your RSVP is recorded."}
+                  {effective === "before"
+                    ? "RSVPs not open yet."
+                    : effective === "closed" || effective === "past"
+                      ? "RSVPs closed."
+                      : "Your RSVP is recorded."}
                 </p>
               ) : null}
             </div>
@@ -489,30 +503,45 @@ function formatDateRangeShort(startsAt: Date, endsAt: Date | null): string {
   return `${fmt.format(startsAt)} - ${fmt.format(endsAt)}`;
 }
 
-function getCountdownLabel(event: { status: string; startsAt: Date }): string {
+function getCountdownLabel(event: {
+  status: string;
+  startsAt: Date;
+  rsvpOpensAt: Date | null;
+  rsvpClosesAt: Date | null;
+}): string {
   const now = Date.now();
+  const fmtDays = (ms: number) => {
+    const d = Math.ceil(ms / 86400000);
+    if (d > 1) return `${d}d`;
+    if (d === 1) return "1d";
+    const h = Math.ceil(ms / 3600000);
+    if (h > 1) return `${h}h`;
+    return "soon";
+  };
 
-  if (event.status === "draft") {
-    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
-    if (days > 30) return "Coming soon";
-    if (days > 1) return `RSVPs in ${days}d`;
-    if (days === 1) return "RSVPs in 1d";
-    return "RSVPs today";
-  }
-
-  if (event.status === "open" || event.status === "full") {
-    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
-    if (days > 30) return "Upcoming";
-    if (days > 1) return `In ${days}d`;
-    if (days === 1) return "Tomorrow";
-    return "Today";
+  if (event.status === "draft" || event.status === "archived") {
+    if (event.rsvpOpensAt) {
+      const diff = event.rsvpOpensAt.getTime() - now;
+      if (diff > 0) return `RSVP opens in ${fmtDays(diff)}`;
+    }
+    if (event.status === "archived") return "Archived";
+    return "Coming soon";
   }
 
   if (event.status === "closed") {
-    const days = Math.ceil((event.startsAt.getTime() - now) / 86400000);
-    if (days > 0) return `In ${days}d`;
-    if (days === 0) return "Today";
+    const diff = event.startsAt.getTime() - now;
+    if (diff > 0) return `Event in ${fmtDays(diff)}`;
     return "Past";
+  }
+
+  if (event.status === "open" || event.status === "full") {
+    if (event.rsvpClosesAt) {
+      const diff = event.rsvpClosesAt.getTime() - now;
+      if (diff > 0) return `RSVP closes in ${fmtDays(diff)}`;
+    }
+    const diff = event.startsAt.getTime() - now;
+    if (diff > 0) return `Event in ${fmtDays(diff)}`;
+    return "Now";
   }
 
   return event.status;

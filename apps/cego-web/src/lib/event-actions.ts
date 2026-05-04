@@ -18,6 +18,7 @@ import {
 } from "@cego/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
 import { parseSurveySchema } from "@/lib/surveys";
+import { getEffectiveRsvpStatus } from "@/lib/events";
 
 const capacityBearingStatuses = ["confirmed"] as const;
 
@@ -78,7 +79,31 @@ export async function rsvpForEventAction(formData: FormData) {
         .limit(1);
       const event = eventRows[0];
 
-      if (!event || !["open", "full"].includes(event.status)) {
+      if (!event) {
+        return;
+      }
+
+      const confirmedCheck = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(
+          and(
+            eq(rsvps.eventId, eventId),
+            inArray(rsvps.status, capacityBearingStatuses),
+          ),
+        );
+      const confirmedCountNow = Number(confirmedCheck[0]?.total ?? 0);
+
+      const effective = getEffectiveRsvpStatus({
+        status: event.status,
+        startsAt: event.startsAt,
+        rsvpOpensAt: event.rsvpOpensAt,
+        rsvpClosesAt: event.rsvpClosesAt,
+        capacity: event.capacity,
+        confirmedCount: confirmedCountNow,
+      });
+
+      if (effective !== "open" && effective !== "full") {
         return;
       }
 
@@ -336,6 +361,8 @@ function parseEventForm(formData: FormData) {
     organizerNotes: readOptionalText(formData, "organizerNotes"),
     imageUrl: readOptionalText(formData, "imageUrl"),
     capacity: readCapacity(formData),
+    rsvpOpensAt: readOptionalDate(formData, "rsvpOpensAt"),
+    rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };
 }

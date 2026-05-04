@@ -15,6 +15,41 @@ import {
 } from "@cego/db";
 import { parseSurveySchema, type SurveySchema } from "@/lib/surveys";
 
+export type EffectiveRsvpStatus = "before" | "open" | "full" | "closed" | "past";
+
+export function getEffectiveRsvpStatus(event: {
+  status: string;
+  startsAt: Date;
+  rsvpOpensAt: Date | null;
+  rsvpClosesAt: Date | null;
+  capacity: number;
+  confirmedCount: number;
+}): EffectiveRsvpStatus {
+  const now = Date.now();
+
+  if (event.status === "draft" || event.status === "archived") {
+    return "before";
+  }
+
+  if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() <= now) {
+    return "closed";
+  }
+
+  if (event.rsvpOpensAt && event.rsvpOpensAt.getTime() > now) {
+    return "before";
+  }
+
+  if (event.startsAt.getTime() <= now) {
+    return "past";
+  }
+
+  if (event.status === "full" || event.confirmedCount >= event.capacity) {
+    return "full";
+  }
+
+  return "open";
+}
+
 export interface EventWithRsvpState {
   event: Event;
   confirmedCount: number;
@@ -55,7 +90,7 @@ export async function getDashboardEvents(
   const eventRows = await db
     .select()
     .from(events)
-    .where(inArray(events.status, ["open", "full", "closed"]))
+    .where(inArray(events.status, ["draft", "open", "full", "closed"]))
     .orderBy(desc(events.startsAt));
 
   if (eventRows.length === 0) {
@@ -103,7 +138,7 @@ export async function getDashboardEventBySlug(
     .where(
       and(
         eq(events.slug, slug),
-        inArray(events.status, ["open", "full", "closed"]),
+        inArray(events.status, ["draft", "open", "full", "closed"]),
       ),
     )
     .limit(1);
@@ -327,7 +362,7 @@ export async function getRsvpPageData(
     .where(
       and(
         eq(events.slug, slug),
-        inArray(events.status, ["open", "full"]),
+        inArray(events.status, ["draft", "open", "full"]),
       ),
     )
     .limit(1);

@@ -37,20 +37,33 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   );
 }
 
-export function eventStatusLabel(status: string, startsAt?: Date | null): string {
+export function eventStatusLabel(
+  status: string,
+  startsAt?: Date | null,
+  rsvpOpensAt?: Date | null,
+): string {
+  const now = Date.now();
+
   switch (status) {
-    case "open": return "Accepting RSVPs";
-    case "full": return "RSVPs full — join waitlist";
-    case "closed": return "RSVPs closed";
+    case "open":
+    case "full":
+      return "Accepting RSVPs";
+    case "closed":
+      return "RSVPs closed";
     case "draft": {
-      if (startsAt) {
-        const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(startsAt);
-        return `Opening for RSVPs ${date}`;
+      if (rsvpOpensAt && rsvpOpensAt.getTime() > now) {
+        const date = new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+        }).format(rsvpOpensAt);
+        return `RSVPs open ${date}`;
       }
       return "Coming soon";
     }
-    case "archived": return "Archived";
-    default: return status;
+    case "archived":
+      return "Archived";
+    default:
+      return status;
   }
 }
 

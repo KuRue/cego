@@ -83,6 +83,8 @@ export const events = pgTable(
     refundPolicyText: text("refund_policy_text"),
     organizerNotes: text("organizer_notes"),
     capacity: integer("capacity").notNull(),
+    rsvpOpensAt: timestamp("rsvp_opens_at", { withTimezone: true }),
+    rsvpClosesAt: timestamp("rsvp_closes_at", { withTimezone: true }),
     status: eventStatusEnum("status").default("draft").notNull(),
     ...lifecycleColumns,
   },

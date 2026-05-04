@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction } from "@/lib/event-actions";
-import { getDashboardEventBySlug, type EventWithRsvpState } from "@/lib/events";
+import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 
@@ -100,10 +100,18 @@ export default async function EventDetailPage({
 function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne } = eventState;
   const returnTo = `/events/${event.slug}`;
+  const effective = getEffectiveRsvpStatus({
+    status: event.status,
+    startsAt: event.startsAt,
+    rsvpOpensAt: event.rsvpOpensAt,
+    rsvpClosesAt: event.rsvpClosesAt,
+    capacity: event.capacity,
+    confirmedCount,
+  });
   const isCancelableRsvp =
     rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
   const canRsvp =
-    (event.status === "open" || event.status === "full") &&
+    (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
 
   return (
@@ -205,9 +213,11 @@ function EventDetail({ eventState }: { eventState: EventWithRsvpState }) {
 
             {!canRsvp && !isCancelableRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-                {event.status === "closed"
-                  ? "This event is closed."
-                  : "Your RSVP is recorded."}
+                {effective === "before"
+                  ? "RSVPs are not open yet."
+                  : effective === "closed" || effective === "past"
+                    ? "RSVPs are closed."
+                    : "Your RSVP is recorded."}
               </p>
             ) : null}
           </div>
