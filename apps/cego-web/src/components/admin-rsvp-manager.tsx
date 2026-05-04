@@ -173,6 +173,9 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                   )}
                   <span className="min-w-0 truncate text-sm font-medium">{entry.displayName}</span>
                 </div>
+                {entry.kind === "plusOne" && (
+                  <p className="pl-10 text-[10px]" style={{ color: "var(--color-muted)" }}>Guest of {entry.parentName}</p>
+                )}
                 <div className="mt-0.5 flex flex-wrap items-center gap-1 pl-10">
                   <StatusBadge status={entry.status} />
                   {entry.checkedInAt && (
@@ -189,9 +192,6 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                     }}>
                       {entry.paymentStatus === "paid" ? "Paid" : entry.paymentStatus === "waived" ? "Waived" : "Unpaid"}
                     </span>
-                  )}
-                  {entry.kind === "plusOne" && (
-                    <span className="text-[10px]" style={{ color: "var(--color-muted)" }}>Guest of {entry.parentName}</span>
                   )}
                   {(entry.tags ?? []).map((tag) => (
                     <span key={tag} className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.85 }}>
