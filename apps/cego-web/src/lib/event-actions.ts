@@ -6,6 +6,7 @@ import {
   and,
   count,
   eq,
+  eventExpenses,
   eventStatuses,
   events,
   getDb,
@@ -540,6 +541,47 @@ export async function checkInRsvpAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
+  redirect(returnTo);
+}
+
+export async function addEventExpenseAction(formData: FormData) {
+  await requireAdminMember();
+  const eventId = readText(formData, "eventId");
+  const description = readText(formData, "description");
+  const category = readText(formData, "category") || "other";
+  const amountCents = readOptionalPriceCents(formData, "amount");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!eventId || !description || amountCents === null) {
+    redirect(returnTo);
+  }
+
+  const db = getDb();
+  await db.insert(eventExpenses).values({
+    id: crypto.randomUUID(),
+    eventId,
+    description,
+    amountCents,
+    category,
+  });
+
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}
+
+export async function deleteEventExpenseAction(formData: FormData) {
+  await requireAdminMember();
+  const expenseId = readText(formData, "expenseId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!expenseId) {
+    redirect(returnTo);
+  }
+
+  const db = getDb();
+  await db.delete(eventExpenses).where(eq(eventExpenses.id, expenseId));
+
+  revalidatePath(returnTo);
   redirect(returnTo);
 }
 

@@ -4,6 +4,8 @@ import {
   updateRsvpStatusAction,
   updateRsvpPaymentAction,
   checkInRsvpAction,
+  addEventExpenseAction,
+  deleteEventExpenseAction,
 } from "@/lib/event-actions";
 import AppLink from "@/components/app-link";
 import { getAdminEventDetail } from "@/lib/events";
@@ -64,8 +66,10 @@ export default async function AdminEventDetailPage({
     return sum + price * (1 + plusOneCount) * multiplier;
   }, 0);
 
-  const costs = detail.event.costCents ?? 0;
-  const netBalance = totalPaid - costs;
+  const expenseTotal = detail.expenses.reduce((sum, e) => sum + e.amountCents, 0);
+  const manualCosts = detail.event.costCents ?? 0;
+  const totalCosts = expenseTotal + manualCosts;
+  const netBalance = totalPaid - totalCosts;
 
   return (
     <>
@@ -91,7 +95,7 @@ export default async function AdminEventDetailPage({
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={detail.event.status} />
-            <form action={deleteEventAction}>
+            <form action={deleteEventAction} className="hidden sm:block">
               <input type="hidden" name="eventId" value={detail.event.id} />
               <ConfirmButton
                 type="submit"
@@ -120,9 +124,9 @@ export default async function AdminEventDetailPage({
                 <StatBox label="Paid" value={`${paidCount}/${activeRsvps.length}`} />
               </div>
 
-              {detail.event.priceCents !== null || costs > 0 ? (
+              {detail.event.priceCents !== null || totalCosts > 0 ? (
                 <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
-                  <StatBox label="Total Costs" value={formatPrice(costs)} />
+                  <StatBox label="Total Costs" value={formatPrice(totalCosts)} />
                   <StatBox label="Total Owed" value={formatPrice(totalOwed)} />
                   <StatBox label="Total Paid" value={formatPrice(totalPaid)} />
                   <StatBox
@@ -135,132 +139,204 @@ export default async function AdminEventDetailPage({
               ) : null}
             </section>
 
+            <section className="glass-lg rounded-2xl p-5">
+              <h2 className="text-lg font-semibold">Expenses</h2>
+              {detail.expenses.length > 0 ? (
+                <div className="mt-4 grid gap-2">
+                  {detail.expenses.map((expense) => (
+                    <div key={expense.id} className="flex items-center justify-between rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{expense.description}</p>
+                        <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">{formatPrice(expense.amountCents)}</span>
+                        <form action={deleteEventExpenseAction}>
+                          <input type="hidden" name="expenseId" value={expense.id} />
+                          <input type="hidden" name="returnTo" value={returnTo} />
+                          <button
+                            type="submit"
+                            className="text-xs transition"
+                            style={{ color: "var(--color-danger)" }}
+                          >
+                            Remove
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between rounded-xl p-3" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+                    <span className="text-sm font-semibold">Total expenses</span>
+                    <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
+              )}
+              <form action={addEventExpenseAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_8rem_7rem_auto]">
+                <input type="hidden" name="eventId" value={detail.event.id} />
+                <input type="hidden" name="returnTo" value={returnTo} />
+                <input
+                  name="description"
+                  required
+                  placeholder="Description (e.g. Groceries)"
+                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                />
+                <select
+                  name="category"
+                  className="h-10 rounded-xl px-3 text-sm outline-none"
+                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                >
+                  <option value="food">Food</option>
+                  <option value="supplies">Supplies</option>
+                  <option value="venue">Venue</option>
+                  <option value="transport">Transport</option>
+                  <option value="other">Other</option>
+                </select>
+                <input
+                  name="amount"
+                  required
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="$0.00"
+                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                />
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                >
+                  Add
+                </button>
+              </form>
+            </section>
+
             {detail.rsvps.length > 0 ? (
               <section className="glass-lg rounded-2xl p-5">
                 <h2 className="text-lg font-semibold">
                   RSVPs ({activeRsvps.length})
                 </h2>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
-                        <th className="pb-3 text-left font-medium" style={{ color: "var(--color-muted)" }}>Member</th>
-                        <th className="pb-3 text-left font-medium" style={{ color: "var(--color-muted)" }}>Status</th>
-                        {detail.event.paymentRequired ? (
-                          <th className="pb-3 text-left font-medium" style={{ color: "var(--color-muted)" }}>Payment</th>
-                        ) : null}
-                        <th className="pb-3 text-left font-medium" style={{ color: "var(--color-muted)" }}>Check-in</th>
-                        <th className="pb-3 text-left font-medium" style={{ color: "var(--color-muted)" }}>Survey</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detail.rsvps.map(({ rsvp, member: m, plusOne }) => {
-                        const surveyResp = detail.survey?.responses.find(
-                          (r) => r.memberId === m.id,
-                        );
-                        return (
-                          <tr key={rsvp.id} style={{ borderBottom: "1px solid var(--color-surface-border)" }}>
-                            <td className="py-3 pr-3">
-                              <div>
-                                <p className="font-medium">{m.telegramDisplayName}</p>
-                                {m.telegramUsername ? (
-                                  <p className="text-xs" style={{ color: "var(--color-muted)" }}>@{m.telegramUsername}</p>
-                                ) : null}
-                                {plusOne.length > 0 ? (
-                                  <div className="mt-1">
-                                    {plusOne.map((po) => (
-                                      <p key={po.id} className="text-xs" style={{ color: "var(--color-muted)" }}>
-                                        +1: {po.plusOneName}
-                                      </p>
-                                    ))}
-                                  </div>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="py-3 pr-3">
-                              <form action={updateRsvpStatusAction} className="flex gap-1">
-                                <input type="hidden" name="rsvpId" value={rsvp.id} />
-                                <input type="hidden" name="returnTo" value={returnTo} />
-                                <AutoSubmitSelect
-                                  name="status"
-                                  defaultValue={rsvp.status}
-                                  className="h-8 rounded-lg px-2 text-xs outline-none"
-                                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                                >
-                                  <option value="confirmed">confirmed</option>
-                                  <option value="waitlisted">waitlisted</option>
-                                  <option value="cancelled">cancelled</option>
-                                </AutoSubmitSelect>
-                              </form>
-                            </td>
-                            {detail.event.paymentRequired ? (
-                              <td className="py-3 pr-3">
-                                <form action={updateRsvpPaymentAction} className="flex gap-1">
-                                  <input type="hidden" name="rsvpId" value={rsvp.id} />
-                                  <input type="hidden" name="returnTo" value={returnTo} />
-                                  <AutoSubmitSelect
-                                    name="paymentStatus"
-                                    defaultValue={rsvp.paymentStatus ?? "unpaid"}
-                                    className="h-8 rounded-lg px-2 text-xs outline-none"
-                                    style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                                  >
-                                    <option value="unpaid">unpaid</option>
-                                    <option value="paid">paid</option>
-                                    <option value="waived">waived</option>
-                                  </AutoSubmitSelect>
-                                </form>
-                              </td>
+                <div className="mt-4 grid gap-3">
+                  {detail.rsvps.map(({ rsvp, member: m, plusOne }) => {
+                    const surveyResp = detail.survey?.responses.find(
+                      (r) => r.memberId === m.id,
+                    );
+                    return (
+                      <div key={rsvp.id} className="glass rounded-xl p-4" style={rsvp.status === "cancelled" ? { opacity: 0.5 } : undefined}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-medium">{m.telegramDisplayName}</p>
+                            {m.telegramUsername ? (
+                              <p className="text-xs" style={{ color: "var(--color-muted)" }}>@{m.telegramUsername}</p>
                             ) : null}
-                            <td className="py-3 pr-3">
-                              <form action={checkInRsvpAction}>
-                                <input type="hidden" name="rsvpId" value={rsvp.id} />
-                                <input type="hidden" name="returnTo" value={returnTo} />
-                                <input type="hidden" name="checkedIn" value={rsvp.checkedInAt ? "0" : "1"} />
-                                <button
-                                  type="submit"
-                                  className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                                  style={{
-                                    background: rsvp.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
-                                    color: rsvp.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
-                                    border: "1px solid var(--color-surface-border)",
-                                  }}
-                                >
-                                  {rsvp.checkedInAt ? "Checked in" : "Check in"}
-                                </button>
-                              </form>
-                            </td>
-                            <td className="py-3">
-                              {surveyResp ? (
-                                <details>
-                                  <summary className="cursor-pointer text-xs font-medium" style={{ color: "var(--color-accent)" }}>
-                                    View
-                                  </summary>
-                                  <dl className="mt-2 grid gap-2">
-                                    {detail.survey!.schema.questions.map((q) => (
-                                      <div key={q.id}>
-                                        <dt className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
-                                          {q.label}
-                                        </dt>
-                                        <dd className="text-xs">
-                                          {formatSurveyAnswer(
-                                            typeof surveyResp.answersJson === "object" && surveyResp.answersJson !== null
-                                              ? (surveyResp.answersJson as Record<string, unknown>)[q.id]
-                                              : undefined,
-                                          )}
-                                        </dd>
-                                      </div>
-                                    ))}
-                                  </dl>
-                                </details>
-                              ) : (
-                                <span className="text-xs" style={{ color: "var(--color-muted)" }}>—</span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            {plusOne.length > 0 ? (
+                              <div className="mt-1">
+                                {plusOne.map((po) => (
+                                  <p key={po.id} className="text-xs" style={{ color: "var(--color-muted)" }}>
+                                    +1: {po.plusOneName}
+                                  </p>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <StatusBadge status={rsvp.status} />
+                            {rsvp.checkedInAt ? (
+                              <span className="rounded-lg px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>
+                                IN
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <form action={updateRsvpStatusAction}>
+                            <input type="hidden" name="rsvpId" value={rsvp.id} />
+                            <input type="hidden" name="returnTo" value={returnTo} />
+                            <AutoSubmitSelect
+                              name="status"
+                              defaultValue={rsvp.status}
+                              className="h-8 rounded-lg px-2 text-xs outline-none"
+                              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                            >
+                              <option value="confirmed">confirmed</option>
+                              <option value="waitlisted">waitlisted</option>
+                              <option value="cancelled">cancelled</option>
+                            </AutoSubmitSelect>
+                          </form>
+
+                          {detail.event.paymentRequired ? (
+                            <form action={updateRsvpPaymentAction}>
+                              <input type="hidden" name="rsvpId" value={rsvp.id} />
+                              <input type="hidden" name="returnTo" value={returnTo} />
+                              <AutoSubmitSelect
+                                name="paymentStatus"
+                                defaultValue={rsvp.paymentStatus ?? "unpaid"}
+                                className="h-8 rounded-lg px-2 text-xs outline-none"
+                                style={{
+                                  background: rsvp.paymentStatus === "paid" ? "var(--color-success-bg)"
+                                    : rsvp.paymentStatus === "waived" ? "var(--color-surface-hover)"
+                                    : "var(--color-warning-bg)",
+                                  border: "1px solid var(--color-surface-border)",
+                                  color: rsvp.paymentStatus === "paid" ? "var(--color-success)"
+                                    : rsvp.paymentStatus === "waived" ? "var(--color-muted)"
+                                    : "var(--color-warning)",
+                                }}
+                              >
+                                <option value="unpaid">unpaid</option>
+                                <option value="paid">paid</option>
+                                <option value="waived">waived</option>
+                              </AutoSubmitSelect>
+                            </form>
+                          ) : null}
+
+                          <form action={checkInRsvpAction}>
+                            <input type="hidden" name="rsvpId" value={rsvp.id} />
+                            <input type="hidden" name="returnTo" value={returnTo} />
+                            <input type="hidden" name="checkedIn" value={rsvp.checkedInAt ? "0" : "1"} />
+                            <button
+                              type="submit"
+                              className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                              style={{
+                                background: rsvp.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
+                                color: rsvp.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
+                                border: "1px solid var(--color-surface-border)",
+                              }}
+                            >
+                              {rsvp.checkedInAt ? "Checked in" : "Check in"}
+                            </button>
+                          </form>
+                        </div>
+
+                        {surveyResp ? (
+                          <details className="mt-3">
+                            <summary className="cursor-pointer text-xs font-semibold" style={{ color: "var(--color-accent)" }}>
+                              Survey responses
+                            </summary>
+                            <dl className="mt-2 grid gap-2">
+                              {detail.survey!.schema.questions.map((q) => (
+                                <div key={q.id} className="rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+                                  <dt className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+                                    {q.label}
+                                  </dt>
+                                  <dd className="text-xs mt-0.5">
+                                    {formatSurveyAnswer(
+                                      typeof surveyResp.answersJson === "object" && surveyResp.answersJson !== null
+                                        ? (surveyResp.answersJson as Record<string, unknown>)[q.id]
+                                        : undefined,
+                                    )}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             ) : (
@@ -277,6 +353,17 @@ export default async function AdminEventDetailPage({
               </summary>
               <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} />
             </details>
+            <form action={deleteEventAction} className="mt-4 sm:hidden">
+              <input type="hidden" name="eventId" value={detail.event.id} />
+              <ConfirmButton
+                type="submit"
+                message="Delete this event and all its RSVPs? This cannot be undone."
+                className="h-9 w-full rounded-xl px-3 text-sm font-semibold transition"
+                style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+              >
+                Delete event
+              </ConfirmButton>
+            </form>
           </aside>
         </div>
       </main>
@@ -383,7 +470,7 @@ function EventForm({
         </label>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Event costs (total)">
+        <Field label="Other costs">
           <input name="cost" type="number" min="0" step="0.01" defaultValue={event.costCents !== null ? (event.costCents / 100).toFixed(2) : ""} className="form-input" />
         </Field>
         <Field label="Payment due date">

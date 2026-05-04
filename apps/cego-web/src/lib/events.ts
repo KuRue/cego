@@ -3,6 +3,7 @@ import {
   count,
   desc,
   eq,
+  eventExpenses,
   events,
   getDb,
   inArray,
@@ -499,6 +500,12 @@ export interface AdminEventDetail {
     member: Pick<Member, "id" | "telegramDisplayName" | "telegramUsername" | "groupStatus">;
     plusOne: Array<Pick<Rsvp, "id" | "status" | "plusOneName" | "paymentStatus" | "checkedInAt">>;
   }>;
+  expenses: Array<{
+    id: string;
+    description: string;
+    amountCents: number;
+    category: string;
+  }>;
   survey?: {
     id: string;
     title: string;
@@ -521,7 +528,7 @@ export async function getAdminEventDetail(eventId: string): Promise<AdminEventDe
   const event = eventRows[0];
   if (!event) return null;
 
-  const [countRows, rsvpRows, surveyRows] = await Promise.all([
+  const [countRows, rsvpRows, surveyRows, expenseRows] = await Promise.all([
     getRsvpCountRows([event.id]),
     db
       .select({
@@ -542,6 +549,11 @@ export async function getAdminEventDetail(eventId: string): Promise<AdminEventDe
       .from(surveys)
       .where(eq(surveys.eventId, event.id))
       .limit(1),
+    db
+      .select()
+      .from(eventExpenses)
+      .where(eq(eventExpenses.eventId, event.id))
+      .orderBy(desc(eventExpenses.createdAt)),
   ]);
 
   const countsByEvent = toCountMap(countRows);
@@ -588,6 +600,12 @@ export async function getAdminEventDetail(eventId: string): Promise<AdminEventDe
     confirmedCount: countsByEvent.get(event.id)?.confirmed ?? 0,
     waitlistedCount: countsByEvent.get(event.id)?.waitlisted ?? 0,
     rsvps: rsvpsWithPlusOnes,
+    expenses: expenseRows.map((e) => ({
+      id: e.id,
+      description: e.description,
+      amountCents: e.amountCents,
+      category: e.category,
+    })),
     survey: surveyDetail,
   };
 }
