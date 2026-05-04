@@ -213,20 +213,18 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               >
                 {formatDateRangeShort(event.startsAt, event.endsAt)}
               </span>
-              <span
-                className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
-                style={{ backdropFilter: "blur(8px)" }}
-              >
-                {effective === "before"
-                  ? "RSVP not open"
-                  : effective === "closed" || effective === "past"
-                    ? "RSVP closed"
-                    : rsvp?.status === "waitlisted"
-                      ? "Waitlisted"
-                      : spotsLeft > 0
-                        ? `Spots left: ${spotsLeft}`
-                        : "Full"}
-              </span>
+              {effective === "open" || effective === "full" ? (
+                <span
+                  className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
+                  style={{ backdropFilter: "blur(8px)" }}
+                >
+                  {rsvp?.status === "waitlisted"
+                    ? "Waitlisted"
+                    : spotsLeft > 0
+                      ? `Spots left: ${spotsLeft}`
+                      : "Full"}
+                </span>
+              ) : null}
               {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
                 <span
                   className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
@@ -522,32 +520,24 @@ function getCountdownLabel(event: {
     return "soon";
   };
 
-  if (event.status === "draft" || event.status === "archived") {
-    if (event.rsvpOpensAt) {
-      const diff = event.rsvpOpensAt.getTime() - now;
-      if (diff > 0) return `RSVP opens in ${fmtDays(diff)}`;
-    }
-    if (event.status === "archived") return "Archived";
-    return "Coming soon";
+  if (event.status === "archived") return "Archived";
+
+  if (event.rsvpOpensAt) {
+    const diff = event.rsvpOpensAt.getTime() - now;
+    if (diff > 0) return `RSVP opens in ${fmtDays(diff)}`;
   }
 
-  if (event.status === "closed") {
-    const diff = event.startsAt.getTime() - now;
-    if (diff > 0) return `Event in ${fmtDays(diff)}`;
-    return "Past";
+  if (event.status === "draft") return "Coming soon";
+
+  if (event.rsvpClosesAt) {
+    const diff = event.rsvpClosesAt.getTime() - now;
+    if (diff > 0) return `RSVP closes in ${fmtDays(diff)}`;
   }
 
-  if (event.status === "open" || event.status === "full") {
-    if (event.rsvpClosesAt) {
-      const diff = event.rsvpClosesAt.getTime() - now;
-      if (diff > 0) return `RSVP closes in ${fmtDays(diff)}`;
-    }
-    const diff = event.startsAt.getTime() - now;
-    if (diff > 0) return `Event in ${fmtDays(diff)}`;
-    return "Now";
-  }
+  const diff = event.startsAt.getTime() - now;
+  if (diff > 0) return `Event in ${fmtDays(diff)}`;
 
-  return event.status;
+  return "Past";
 }
 
 function formatDateRange(startsAt: Date, endsAt: Date | null): string {
