@@ -258,13 +258,15 @@ select option {
   inset: 0;
   background: linear-gradient(
     105deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.04) 45%,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.04) 42%,
     rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.04) 55%,
-    transparent 60%
+    rgba(255, 255, 255, 0.04) 58%,
+    transparent 65%,
+    transparent 100%
   );
-  background-size: 250% 100%;
+  background-size: 300% 100%;
   animation: shimmer 6s ease-in-out infinite;
   pointer-events: none;
 }
