@@ -158,11 +158,6 @@ export default function MiniAppSession() {
   return (
     <main className="page-shell flex min-h-screen items-center justify-center px-5 py-6">
       <div className="glass-lg mx-auto w-full max-w-md rounded-2xl p-6">
-        <div
-          className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-          style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
-        />
-
     {state.status === "checking" ? (
       <div className="mt-6 text-center">
         <div
