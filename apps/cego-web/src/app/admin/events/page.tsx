@@ -287,7 +287,7 @@ function EventForm({
   eventTypes?: string[];
 }) {
   return (
-    <form action={action} className="mt-4 grid gap-4">
+    <form action={action} className="mt-4 grid gap-4 overflow-hidden">
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type">

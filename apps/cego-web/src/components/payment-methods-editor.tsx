@@ -27,20 +27,20 @@ export default function PaymentMethodsEditor({ name, defaultValue }: { name: str
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <input type="hidden" name={name} value={methods.length > 0 ? serializePaymentMethods(methods) : ""} />
       {methods.length > 0 && (
         <div className="grid gap-2">
           {methods.map((m, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
-              <span className="text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{getPaymentMethodLabel(m.type)}</span>
+            <div key={i} className="flex min-w-0 items-center gap-2 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+              <span className="shrink-0 text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{getPaymentMethodLabel(m.type)}</span>
               <span className="min-w-0 flex-1 truncate text-sm">{m.handle}</span>
-              <button type="button" onClick={() => remove(i)} className="text-xs" style={{ color: "var(--color-danger)" }}>&times;</button>
+              <button type="button" onClick={() => remove(i)} className="shrink-0 text-xs" style={{ color: "var(--color-danger)" }}>&times;</button>
             </div>
           ))}
         </div>
       )}
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2 flex min-w-0 items-center gap-2">
         <select
           value={newType}
           onChange={(e) => setNewType(e.target.value as PaymentMethodType)}
