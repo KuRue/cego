@@ -186,6 +186,16 @@ a {
   appearance: auto;
 }
 
+.form-select option {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+select option {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
 .form-textarea {
   min-height: 5rem;
   line-height: 1.5;
