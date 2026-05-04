@@ -8,6 +8,7 @@ import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
 import { cancelRsvpAction, markRsvpPendingAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
+import ConfirmButton from "@/components/confirm-button";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -330,13 +331,14 @@ function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; 
                 <form action={markRsvpPendingAction} className="mt-3">
                   <input type="hidden" name="rsvpId" value={rsvp.id} />
                   <input type="hidden" name="returnTo" value={`/events/${event.slug}`} />
-                  <button
+                  <ConfirmButton
                     type="submit"
+                    message="Mark this as paid? The organizer will review and confirm."
                     className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition"
                     style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
                   >
                     Mark as paid
-                  </button>
+                  </ConfirmButton>
                   <p className="mt-2 text-xs text-center" style={{ color: "var(--color-muted)" }}>
                     This lets the organizer know you've sent payment. They'll confirm once received.
                   </p>
