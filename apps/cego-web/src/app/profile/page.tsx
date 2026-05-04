@@ -4,6 +4,7 @@ import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 import Navbar from "@/components/navbar";
 import SignOutButton from "./sign-out-button";
+import NotifyPrefsForm from "./notify-prefs-form";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,19 @@ export default async function ProfilePage() {
                 })}
               </span>
             </div>
+          </div>
+        </div>
+
+        <div className="glass-lg mt-6 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold">Notifications</h2>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+            Choose which updates you receive via Telegram.
+          </p>
+          <div className="mt-4">
+            <NotifyPrefsForm
+              rsvpUpdates={member.notifyPrefs?.rsvpUpdates ?? true}
+              newEvents={member.notifyPrefs?.newEvents ?? true}
+            />
           </div>
         </div>
 

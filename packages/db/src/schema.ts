@@ -56,6 +56,10 @@ export const members = pgTable(
       .default("unknown")
       .notNull(),
     isAdmin: boolean("is_admin").default(false).notNull(),
+    notifyPrefs: jsonb("notify_prefs").$type<{
+      rsvpUpdates?: boolean;
+      newEvents?: boolean;
+    }>().default({ rsvpUpdates: true, newEvents: true }),
     ...lifecycleColumns,
   },
   (table) => [uniqueIndex("members_telegram_id_idx").on(table.telegramId)],

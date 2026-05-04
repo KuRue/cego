@@ -16,7 +16,8 @@ type NotificationTemplate =
   | "rsvp_cancelled"
   | "payment_confirmed"
   | "payment_waived"
-  | "payment_reminder";
+  | "payment_reminder"
+  | "new_event";
 
 function buildMessage(
   template: NotificationTemplate,
@@ -45,6 +46,8 @@ function buildMessage(
       const due = event.paymentDueDate ? formatDate(event.paymentDueDate) : "soon";
       return `⏰ Reminder: Payment for *${event.title}* is due by ${due}.`;
     }
+    case "new_event":
+      return `🎉 New event: *${event.title}*. Check it out and RSVP!`;
   }
 }
 
@@ -70,13 +73,27 @@ export async function sendNotification({
   const db = getDb();
 
   const memberRows = await db
-    .select({ telegramId: members.telegramId })
+    .select({ telegramId: members.telegramId, notifyPrefs: members.notifyPrefs })
     .from(members)
     .where(eq(members.id, memberId))
     .limit(1);
 
   const member = memberRows[0];
   if (!member) return;
+
+  const prefs = member.notifyPrefs ?? { rsvpUpdates: true, newEvents: true };
+  const isRsvpNotification = [
+    "rsvp_confirmed",
+    "rsvp_waitlisted",
+    "rsvp_promoted",
+    "rsvp_cancelled",
+    "payment_confirmed",
+    "payment_waived",
+    "payment_reminder",
+  ].includes(template);
+
+  if (isRsvpNotification && !prefs.rsvpUpdates) return;
+  if (template === "new_event" && !prefs.newEvents) return;
 
   const eventRows = await db
     .select({
