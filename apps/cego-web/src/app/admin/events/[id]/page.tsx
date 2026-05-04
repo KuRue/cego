@@ -113,8 +113,8 @@ export default async function AdminEventDetailPage({
           </p>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:gap-6 lg:grid-cols-[1fr_22rem]">
-          <div className="min-w-0 grid gap-4 sm:gap-6">
+        <div className="mt-4 grid gap-0 sm:gap-6 lg:grid-cols-[1fr_22rem]">
+          <div className="min-w-0">
             <section>
               <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stats</h2>
               <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
@@ -138,6 +138,8 @@ export default async function AdminEventDetailPage({
                 </div>
               ) : null}
             </section>
+
+            <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
 
             <section>
               <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Expenses</h2>
@@ -173,46 +175,53 @@ export default async function AdminEventDetailPage({
               ) : (
                 <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
-              <form action={addEventExpenseAction} className="mt-3 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">
-                <input type="hidden" name="eventId" value={detail.event.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <input
-                  name="description"
-                  required
-                  placeholder="Description"
-                  className="h-9 rounded-lg px-3 text-sm outline-none"
-                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                />
-                <select
-                  name="category"
-                  className="h-9 rounded-lg px-2 text-sm outline-none"
-                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                >
-                  <option value="food">Food</option>
-                  <option value="supplies">Supplies</option>
-                  <option value="venue">Venue</option>
-                  <option value="transport">Transport</option>
-                  <option value="other">Other</option>
-                </select>
-                <input
-                  name="amount"
-                  required
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="$0"
-                  className="h-9 rounded-lg px-3 text-sm outline-none"
-                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                />
-                <button
-                  type="submit"
-                  className="h-9 rounded-lg px-3 text-sm font-semibold transition"
-                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                >
-                  Add
-                </button>
-              </form>
+              <details className="mt-3">
+                <summary className="cursor-pointer h-9 rounded-lg px-3 text-sm font-semibold leading-9" style={{ background: "var(--color-surface-hover)", color: "var(--color-accent)" }}>
+                  New expense
+                </summary>
+                <form action={addEventExpenseAction} className="mt-2 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">
+                  <input type="hidden" name="eventId" value={detail.event.id} />
+                  <input type="hidden" name="returnTo" value={returnTo} />
+                  <input
+                    name="description"
+                    required
+                    placeholder="Description"
+                    className="h-9 rounded-lg px-3 text-sm outline-none"
+                    style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                  />
+                  <select
+                    name="category"
+                    className="h-9 rounded-lg px-2 text-sm outline-none"
+                    style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                  >
+                    <option value="food">Food</option>
+                    <option value="supplies">Supplies</option>
+                    <option value="venue">Venue</option>
+                    <option value="transport">Transport</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input
+                    name="amount"
+                    required
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="$0"
+                    className="h-9 rounded-lg px-3 text-sm outline-none"
+                    style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+                  />
+                  <button
+                    type="submit"
+                    className="h-9 rounded-lg px-3 text-sm font-semibold transition"
+                    style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  >
+                    Add
+                  </button>
+                </form>
+              </details>
             </section>
+
+            <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
 
             {detail.rsvps.length > 0 ? (
               <section>
