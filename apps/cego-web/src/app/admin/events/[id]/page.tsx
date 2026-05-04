@@ -77,9 +77,9 @@ export default async function AdminEventDetailPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8">
-        <div className="min-w-0 max-w-full">
-          <div className="flex items-start justify-between gap-3">
+      <main className="mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <AppLink
                 href="/admin/events"
@@ -88,7 +88,7 @@ export default async function AdminEventDetailPage({
               >
                 &larr; Events
               </AppLink>
-              <h1 className="mt-1 truncate font-title text-2xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+              <h1 className="mt-1 font-title text-xl font-semibold sm:text-3xl">{detail.event.title}</h1>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StatusBadge status={detail.event.status} />
@@ -106,16 +106,16 @@ export default async function AdminEventDetailPage({
             </div>
           </div>
 
-          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          <p className="mt-1 text-xs sm:text-sm" style={{ color: "var(--color-muted)" }}>
             {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
           </p>
         </div>
 
-        <div className="mt-6 max-w-full grid gap-6 lg:grid-cols-[1fr_22rem]">
-          <div className="min-w-0 grid gap-6">
-            <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
-              <h2 className="text-lg font-semibold">Stats</h2>
-              <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
+        <div className="mt-4 grid gap-4 sm:gap-6 lg:grid-cols-[1fr_22rem]">
+          <div className="min-w-0 grid gap-4 sm:gap-6">
+            <section>
+              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stats</h2>
+              <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
                 <StatBox label="Confirmed" value={`${detail.confirmedCount}/${detail.event.capacity}`} />
                 <StatBox label="Waitlisted" value={String(detail.waitlistedCount)} />
                 <StatBox label="Checked In" value={String(checkedInCount)} />
@@ -123,7 +123,7 @@ export default async function AdminEventDetailPage({
               </div>
 
               {detail.event.priceCents !== null || totalCosts > 0 ? (
-                <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
+                <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
                   <StatBox label="Total Costs" value={formatPrice(totalCosts)} />
                   <StatBox label="Total Owed" value={formatPrice(totalOwed)} />
                   <StatBox label="Total Paid" value={formatPrice(totalPaid)} />
@@ -137,17 +137,17 @@ export default async function AdminEventDetailPage({
               ) : null}
             </section>
 
-            <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
-              <h2 className="text-lg font-semibold">Expenses</h2>
+            <section>
+              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Expenses</h2>
               {detail.expenses.length > 0 ? (
-                <div className="mt-4 grid gap-2">
+                <div className="mt-2 grid gap-2">
                   {detail.expenses.map((expense) => (
-                    <div key={expense.id} className="flex items-center justify-between gap-2 rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
-                      <div className="min-w-0 flex-1 truncate">
-                        <p className="text-sm font-medium">{expense.description}</p>
+                    <div key={expense.id} className="flex items-center justify-between gap-2 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{expense.description}</p>
                         <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <span className="text-sm font-semibold">{formatPrice(expense.amountCents)}</span>
                         <form action={deleteEventExpenseAction}>
                           <input type="hidden" name="expenseId" value={expense.id} />
@@ -163,27 +163,27 @@ export default async function AdminEventDetailPage({
                       </div>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between rounded-xl p-3" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
+                  <div className="flex items-center justify-between p-2" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
                     <span className="text-sm font-semibold">Total expenses</span>
                     <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
                   </div>
                 </div>
               ) : (
-                <p className="mt-3 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
+                <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
               )}
-              <form action={addEventExpenseAction} className="mt-4 max-w-full grid gap-2 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
+              <form action={addEventExpenseAction} className="mt-3 grid gap-2 grid-cols-[1fr_auto] sm:grid-cols-[1fr_8rem_7rem_auto]">
                 <input type="hidden" name="eventId" value={detail.event.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
                 <input
                   name="description"
                   required
-                  placeholder="Description (e.g. Groceries)"
-                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  placeholder="Description"
+                  className="h-9 rounded-lg px-3 text-sm outline-none"
                   style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
                 />
                 <select
                   name="category"
-                  className="h-10 rounded-xl px-3 text-sm outline-none"
+                  className="hidden h-9 rounded-lg px-2 text-sm outline-none sm:block"
                   style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
                 >
                   <option value="food">Food</option>
@@ -198,13 +198,13 @@ export default async function AdminEventDetailPage({
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="$0.00"
-                  className="h-10 rounded-xl px-4 text-sm outline-none"
+                  placeholder="$0"
+                  className="hidden h-9 rounded-lg px-3 text-sm outline-none sm:block"
                   style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
                 />
                 <button
                   type="submit"
-                  className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                  className="h-9 rounded-lg px-3 text-sm font-semibold transition"
                   style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
                 >
                   Add
@@ -213,11 +213,11 @@ export default async function AdminEventDetailPage({
             </section>
 
             {detail.rsvps.length > 0 ? (
-              <section className="glass-lg max-w-full overflow-hidden rounded-2xl p-4 sm:p-5">
-                <h2 className="text-lg font-semibold">
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
                   RSVPs ({activeRsvps.length})
                 </h2>
-                <div className="mt-4">
+                <div className="mt-2">
                   <AdminRsvpManager
                     rsvps={detail.rsvps}
                     eventId={detail.event.id}
@@ -227,13 +227,11 @@ export default async function AdminEventDetailPage({
                 </div>
               </section>
             ) : (
-              <div className="glass-lg max-w-full overflow-hidden rounded-2xl p-8 text-center">
-                <p className="font-medium">No RSVPs yet</p>
-              </div>
+              <p className="text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
             )}
           </div>
 
-          <aside className="glass-lg h-fit max-w-full overflow-hidden rounded-2xl p-4 sm:p-5 lg:sticky lg:top-24">
+          <aside className="h-fit lg:sticky lg:top-24">
             <details>
               <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
                 Edit event
@@ -245,7 +243,7 @@ export default async function AdminEventDetailPage({
               <ConfirmButton
                 type="submit"
                 message="Delete this event and all its RSVPs? This cannot be undone."
-                className="h-9 w-full rounded-xl px-3 text-sm font-semibold transition"
+                className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
                 style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
               >
                 Delete event
@@ -261,9 +259,9 @@ export default async function AdminEventDetailPage({
 function StatBox({ label, value, suffix, highlight }: { label: string; value: string; suffix?: string; highlight?: "good" | "bad" }) {
   const color = highlight === "good" ? "var(--color-success)" : highlight === "bad" ? "var(--color-danger)" : "var(--color-foreground)";
   return (
-    <div className="min-w-0 overflow-hidden rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
-      <p className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "var(--color-muted)" }}>{label}</p>
-      <p className="mt-1 truncate text-lg font-bold" style={{ color }}>
+    <div className="min-w-0 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+      <p className="truncate text-[10px] uppercase tracking-wider font-medium" style={{ color: "var(--color-muted)" }}>{label}</p>
+      <p className="mt-0.5 truncate text-base font-bold sm:text-lg" style={{ color }}>
         {value}{suffix && <span className="text-xs font-normal">{suffix}</span>}
       </p>
     </div>

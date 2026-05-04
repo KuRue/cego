@@ -131,19 +131,19 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
     : undefined;
 
   return (
-    <div className="min-w-0 max-w-full grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <div className="min-w-0 grid gap-3 lg:grid-cols-[1fr_1fr]">
       <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">
-        <div className="sticky top-0 z-10 p-3" style={{ background: "var(--color-background)" }}>
+        <div className="sticky top-0 z-10 py-2" style={{ background: "var(--color-background)" }}>
           <input
             type="text"
             placeholder="Search name or tag..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-xl px-3 text-sm outline-none"
+            className="h-8 w-full rounded-lg px-3 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
           />
         </div>
-        <div className="grid gap-1 p-2">
+        <div className="grid gap-0.5">
           {filtered.length === 0 ? (
             <p className="p-4 text-center text-sm" style={{ color: "var(--color-muted)" }}>No matches</p>
           ) : (
@@ -284,7 +284,7 @@ function DetailPanel({
     : null;
 
   return (
-    <div className="max-w-full space-y-5 p-4">
+    <div className="min-w-0 space-y-4 py-2">
       <div>
         <h3 className="text-lg font-semibold">{entry.displayName}</h3>
         {entry.kind === "primary" && entry.username && (
@@ -302,7 +302,7 @@ function DetailPanel({
           <select
             name="status"
             defaultValue={entry.status}
-            className="h-9 rounded-xl px-3 text-sm outline-none"
+            className="h-8 rounded-lg px-2 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
             onChange={(e) => {
               const fd = new FormData(e.currentTarget.form!);
@@ -323,7 +323,7 @@ function DetailPanel({
             <select
               name="paymentStatus"
               defaultValue={entry.paymentStatus}
-              className="h-9 rounded-xl px-3 text-sm outline-none"
+              className="h-8 rounded-lg px-2 text-xs outline-none"
               style={{
                 background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
                   : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
@@ -352,7 +352,7 @@ function DetailPanel({
           <input type="hidden" name="checkedIn" value={entry.checkedInAt ? "0" : "1"} />
           <button
             type="submit"
-            className="h-9 rounded-xl px-4 text-sm font-semibold transition"
+            className="h-8 rounded-lg px-3 text-xs font-semibold transition"
             style={{
               background: entry.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
               color: entry.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
@@ -416,13 +416,13 @@ function DetailPanel({
             onChange={(e) => { setNotesVal(e.target.value); setNotesDirty(true); }}
             rows={3}
             placeholder="Add a note..."
-            className="w-full rounded-xl p-3 text-sm outline-none"
+            className="w-full rounded-lg p-2 text-sm outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
           />
           {notesDirty && (
             <button
               type="submit"
-              className="mt-2 h-8 rounded-xl px-4 text-xs font-semibold transition"
+              className="mt-2 h-8 rounded-lg px-4 text-xs font-semibold transition"
               style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
               disabled={pending}
             >
