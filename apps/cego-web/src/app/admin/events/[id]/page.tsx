@@ -77,7 +77,9 @@ export default async function AdminEventDetailPage({
         }}
         brand={brand}
       />
-      <main className="mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
+      <main className="relative mx-auto w-full max-w-7xl px-2 pb-16 pt-6 sm:px-4">
+        <div className="-mx-2 -mt-6 fixed inset-0 z-0 sm:-mx-4" style={{ backdropFilter: "blur(20px) saturate(1.2)", background: "color-mix(in srgb, var(--color-background) 75%, transparent)" }} />
+        <div className="relative z-10">
         <div className="min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
@@ -250,6 +252,7 @@ export default async function AdminEventDetailPage({
               </ConfirmButton>
             </form>
           </aside>
+        </div>
         </div>
       </main>
     </>
