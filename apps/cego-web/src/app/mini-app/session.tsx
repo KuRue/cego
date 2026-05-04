@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type SessionState =
@@ -64,7 +63,7 @@ export default function MiniAppSession() {
         status: "error",
         message: isAbort
           ? "Session request timed out. Reopen the Mini App and try again."
-          : "cego could not reach the session endpoint. Reopen the Mini App and try again.",
+          : "Could not reach the session endpoint. Reopen the Mini App and try again.",
       });
       return;
     }
@@ -83,7 +82,7 @@ export default function MiniAppSession() {
 
       setState({
         status: "error",
-        message: `cego returned a non-JSON session response with status ${response.status}.`,
+        message: `Server returned a non-JSON session response with status ${response.status}.`,
       });
       return;
     }
@@ -110,7 +109,7 @@ export default function MiniAppSession() {
     if (!body.member) {
       setState({
         status: "error",
-        message: "Telegram session succeeded but cego did not return a member profile.",
+        message: "Telegram session succeeded but no member profile was returned.",
       });
       return;
     }
@@ -159,9 +158,10 @@ export default function MiniAppSession() {
   return (
     <main className="page-shell flex min-h-screen items-center justify-center px-5 py-6">
       <div className="glass-lg mx-auto w-full max-w-md rounded-2xl p-6">
-        <Link href="/" className="text-sm font-semibold">
-          cego
-        </Link>
+        <div
+          className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+          style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
+        />
 
     {state.status === "checking" ? (
       <div className="mt-6 text-center">
