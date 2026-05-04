@@ -589,6 +589,24 @@ export async function updateRsvpPaymentAction(formData: FormData) {
   redirect(returnTo);
 }
 
+export async function deleteRsvpAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId) {
+    redirect(returnTo);
+  }
+
+  const db = getDb();
+
+  await db.delete(rsvps).where(eq(rsvps.id, rsvpId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect(returnTo);
+}
+
 export async function checkInRsvpAction(formData: FormData) {
   await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");

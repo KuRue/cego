@@ -8,6 +8,7 @@ import {
   updateRsvpNotesAction,
   addRsvpTagAction,
   removeRsvpTagAction,
+  deleteRsvpAction,
 } from "@/lib/event-actions";
 import { StatusBadge } from "@/components/badge";
 import Avatar from "@/components/avatar";
@@ -463,6 +464,32 @@ function DetailPanel({
             ))}
           </dl>
         </div>
+      )}
+
+      {entry.status === "cancelled" && (
+        <form
+          action={(fd) => {
+            startTransition(async () => {
+              await deleteRsvpAction(fd);
+            });
+          }}
+          className="pt-4"
+          style={{ borderTop: "1px solid var(--color-surface-border)" }}
+        >
+          <input type="hidden" name="rsvpId" value={entry.id} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <button
+            type="submit"
+            disabled={pending}
+            className="h-9 rounded-lg px-4 text-sm font-semibold transition"
+            style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", opacity: pending ? 0.5 : 1 }}
+            onClick={(e) => {
+              if (!confirm("Delete this cancelled RSVP?")) e.preventDefault();
+            }}
+          >
+            Remove RSVP
+          </button>
+        </form>
       )}
     </div>
   );
