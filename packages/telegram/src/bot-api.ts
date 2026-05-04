@@ -188,3 +188,46 @@ function isActiveChatMember(member: TelegramChatMember): boolean {
 
   return ["creator", "administrator", "member"].includes(member.status);
 }
+
+interface TelegramMessage {
+  message_id: number;
+}
+
+export async function sendTelegramMessage({
+  botToken,
+  chatId,
+  text,
+  parseMode,
+}: {
+  botToken: string;
+  chatId: string;
+  text: string;
+  parseMode?: "Markdown" | "HTML";
+}): Promise<string> {
+  if (!botToken) {
+    throw new TelegramBotApiError("Telegram bot token is required.");
+  }
+
+  const endpoint = `https://api.telegram.org/bot${botToken}/sendMessage`;
+  const response = await fetchWithRetry(endpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      ...(parseMode ? { parse_mode: parseMode } : {}),
+    }),
+  });
+
+  const payload = (await response.json()) as TelegramApiResponse<TelegramMessage>;
+
+  if (!response.ok || !payload.ok || !payload.result) {
+    throw new TelegramBotApiError(
+      payload.description ?? "Telegram sendMessage failed.",
+    );
+  }
+
+  return String(payload.result.message_id);
+}

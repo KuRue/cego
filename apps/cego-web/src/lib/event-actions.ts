@@ -21,6 +21,7 @@ import {
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
 import { parseSurveySchema } from "@/lib/surveys";
 import { getEffectiveRsvpStatus } from "@/lib/events";
+import { sendNotification } from "@/lib/notifications";
 
 const capacityBearingStatuses = ["confirmed"] as const;
 
@@ -71,6 +72,7 @@ export async function rsvpForEventAction(formData: FormData) {
   }
 
   const db = getDb();
+  let rsvpStatus: "confirmed" | "waitlisted" | null = null;
 
   try {
     await db.transaction(async (tx) => {
@@ -139,6 +141,8 @@ export async function rsvpForEventAction(formData: FormData) {
         slotsLeft >= needed ? "confirmed" : slotsLeft >= 1 ? "confirmed" : "waitlisted";
       const plusOneStatus: RsvpStatus =
         slotsLeft >= needed ? "confirmed" : "waitlisted";
+
+      rsvpStatus = parentStatus;
 
       const cancelledRsvp = currentRsvpRows.find(
         (r) => r.status === "cancelled" && !r.parentRsvpId,
@@ -243,6 +247,15 @@ export async function rsvpForEventAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath(returnTo);
   revalidatePath("/admin");
+
+  if (rsvpStatus) {
+    sendNotification({
+      memberId: member.id,
+      eventId,
+      template: rsvpStatus === "confirmed" ? "rsvp_confirmed" : "rsvp_waitlisted",
+    }).catch(() => {});
+  }
+
   redirect(returnTo);
 }
 
@@ -480,6 +493,12 @@ export async function updateRsvpStatusAction(formData: FormData) {
 
   const db = getDb();
 
+  const rsvpRows = await db
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, prevStatus: rsvps.status })
+    .from(rsvps)
+    .where(eq(rsvps.id, rsvpId))
+    .limit(1);
+
   await db
     .update(rsvps)
     .set({
@@ -490,6 +509,25 @@ export async function updateRsvpStatusAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
+
+  if (rsvpRows[0]) {
+    const r = rsvpRows[0];
+    const template =
+      status === "confirmed" && r.prevStatus === "waitlisted"
+        ? "rsvp_promoted"
+        : status === "confirmed"
+          ? "rsvp_confirmed"
+          : status === "waitlisted"
+            ? "rsvp_waitlisted"
+            : status === "cancelled"
+              ? "rsvp_cancelled"
+              : null;
+
+    if (template) {
+      sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
+    }
+  }
+
   redirect(returnTo);
 }
 
@@ -510,6 +548,12 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 
   const db = getDb();
 
+  const rsvpRows = await db
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId })
+    .from(rsvps)
+    .where(eq(rsvps.id, rsvpId))
+    .limit(1);
+
   await db
     .update(rsvps)
     .set({
@@ -520,6 +564,21 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
+
+  if (rsvpRows[0]) {
+    const r = rsvpRows[0];
+    const template =
+      paymentStatus === "paid"
+        ? "payment_confirmed"
+        : paymentStatus === "waived"
+          ? "payment_waived"
+          : null;
+
+    if (template) {
+      sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
+    }
+  }
+
   redirect(returnTo);
 }
 
