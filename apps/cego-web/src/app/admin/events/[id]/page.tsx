@@ -250,7 +250,7 @@ export default async function AdminEventDetailPage({
             )}
           </div>
 
-          <aside className="h-fit lg:sticky lg:top-24">
+          <aside className="min-w-0 h-fit lg:sticky lg:top-24">
             <details>
               <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
                 Edit event
@@ -300,7 +300,7 @@ function EventForm({
   eventTypes?: string[];
 }) {
   return (
-    <form action={action} className="mt-4 grid gap-4">
+    <form action={action} className="mt-4 grid gap-4 overflow-hidden">
       <input type="hidden" name="eventId" value={event.id} />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Type">
