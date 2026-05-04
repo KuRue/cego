@@ -112,6 +112,8 @@ export const rsvps = pgTable(
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     plusOneName: text("plus_one_name"),
     parentRsvpId: uuid("parent_rsvp_id"),
+    notes: text("notes"),
+    tags: text("tags").array(),
     ...lifecycleColumns,
   },
   (table) => [
@@ -268,8 +270,8 @@ export const siteSettings = pgTable("site_settings", {
 });
 
 export const eventExpenses = pgTable("event_expenses", {
-  id: text("id").primaryKey(),
-  eventId: text("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
   description: text("description").notNull(),
   amountCents: integer("amount_cents").notNull(),
   category: text("category").default("other").notNull(),

@@ -1,9 +1,6 @@
 import {
   updateEventAction,
   deleteEventAction,
-  updateRsvpStatusAction,
-  updateRsvpPaymentAction,
-  checkInRsvpAction,
   addEventExpenseAction,
   deleteEventExpenseAction,
 } from "@/lib/event-actions";
@@ -13,11 +10,10 @@ import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
-import { formatSurveyAnswer } from "@/lib/surveys";
 import Image from "next/image";
 import EventImageUpload from "../image-upload";
 import ConfirmButton from "@/components/confirm-button";
-import AutoSubmitSelect from "@/components/auto-submit-select";
+import AdminRsvpManager from "@/components/admin-rsvp-manager";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -219,124 +215,13 @@ export default async function AdminEventDetailPage({
                 <h2 className="text-lg font-semibold">
                   RSVPs ({activeRsvps.length})
                 </h2>
-                <div className="mt-4 grid gap-3">
-                  {detail.rsvps.map(({ rsvp, member: m, plusOne }) => {
-                    const surveyResp = detail.survey?.responses.find(
-                      (r) => r.memberId === m.id,
-                    );
-                    return (
-                      <div key={rsvp.id} className="glass rounded-xl p-4" style={rsvp.status === "cancelled" ? { opacity: 0.5 } : undefined}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-medium">{m.telegramDisplayName}</p>
-                            {m.telegramUsername ? (
-                              <p className="text-xs" style={{ color: "var(--color-muted)" }}>@{m.telegramUsername}</p>
-                            ) : null}
-                            {plusOne.length > 0 ? (
-                              <div className="mt-1">
-                                {plusOne.map((po) => (
-                                  <p key={po.id} className="text-xs" style={{ color: "var(--color-muted)" }}>
-                                    +1: {po.plusOneName}
-                                  </p>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <StatusBadge status={rsvp.status} />
-                            {rsvp.checkedInAt ? (
-                              <span className="rounded-lg px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}>
-                                IN
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <form action={updateRsvpStatusAction}>
-                            <input type="hidden" name="rsvpId" value={rsvp.id} />
-                            <input type="hidden" name="returnTo" value={returnTo} />
-                            <AutoSubmitSelect
-                              name="status"
-                              defaultValue={rsvp.status}
-                              className="h-8 rounded-lg px-2 text-xs outline-none"
-                              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-                            >
-                              <option value="confirmed">confirmed</option>
-                              <option value="waitlisted">waitlisted</option>
-                              <option value="cancelled">cancelled</option>
-                            </AutoSubmitSelect>
-                          </form>
-
-                          {detail.event.paymentRequired ? (
-                            <form action={updateRsvpPaymentAction}>
-                              <input type="hidden" name="rsvpId" value={rsvp.id} />
-                              <input type="hidden" name="returnTo" value={returnTo} />
-                              <AutoSubmitSelect
-                                name="paymentStatus"
-                                defaultValue={rsvp.paymentStatus ?? "unpaid"}
-                                className="h-8 rounded-lg px-2 text-xs outline-none"
-                                style={{
-                                  background: rsvp.paymentStatus === "paid" ? "var(--color-success-bg)"
-                                    : rsvp.paymentStatus === "waived" ? "var(--color-surface-hover)"
-                                    : "var(--color-warning-bg)",
-                                  border: "1px solid var(--color-surface-border)",
-                                  color: rsvp.paymentStatus === "paid" ? "var(--color-success)"
-                                    : rsvp.paymentStatus === "waived" ? "var(--color-muted)"
-                                    : "var(--color-warning)",
-                                }}
-                              >
-                                <option value="unpaid">unpaid</option>
-                                <option value="paid">paid</option>
-                                <option value="waived">waived</option>
-                              </AutoSubmitSelect>
-                            </form>
-                          ) : null}
-
-                          <form action={checkInRsvpAction}>
-                            <input type="hidden" name="rsvpId" value={rsvp.id} />
-                            <input type="hidden" name="returnTo" value={returnTo} />
-                            <input type="hidden" name="checkedIn" value={rsvp.checkedInAt ? "0" : "1"} />
-                            <button
-                              type="submit"
-                              className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                              style={{
-                                background: rsvp.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
-                                color: rsvp.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
-                                border: "1px solid var(--color-surface-border)",
-                              }}
-                            >
-                              {rsvp.checkedInAt ? "Checked in" : "Check in"}
-                            </button>
-                          </form>
-                        </div>
-
-                        {surveyResp ? (
-                          <details className="mt-3">
-                            <summary className="cursor-pointer text-xs font-semibold" style={{ color: "var(--color-accent)" }}>
-                              Survey responses
-                            </summary>
-                            <dl className="mt-2 grid gap-2">
-                              {detail.survey!.schema.questions.map((q) => (
-                                <div key={q.id} className="rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
-                                  <dt className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
-                                    {q.label}
-                                  </dt>
-                                  <dd className="text-xs mt-0.5">
-                                    {formatSurveyAnswer(
-                                      typeof surveyResp.answersJson === "object" && surveyResp.answersJson !== null
-                                        ? (surveyResp.answersJson as Record<string, unknown>)[q.id]
-                                        : undefined,
-                                    )}
-                                  </dd>
-                                </div>
-                              ))}
-                            </dl>
-                          </details>
-                        ) : null}
-                      </div>
-                    );
-                  })}
+                <div className="mt-4">
+                  <AdminRsvpManager
+                    rsvps={detail.rsvps}
+                    eventId={detail.event.id}
+                    paymentRequired={detail.event.paymentRequired ?? false}
+                    survey={detail.survey ?? null}
+                  />
                 </div>
               </section>
             ) : (

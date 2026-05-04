@@ -1,6 +1,6 @@
 CREATE TABLE event_expenses (
-  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  event_id text NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id uuid NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   description text NOT NULL,
   amount_cents integer NOT NULL,
   category text NOT NULL DEFAULT 'other',

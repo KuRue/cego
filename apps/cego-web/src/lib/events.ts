@@ -497,8 +497,8 @@ export interface AdminEventDetail {
   waitlistedCount: number;
   rsvps: Array<{
     rsvp: Rsvp;
-    member: Pick<Member, "id" | "telegramDisplayName" | "telegramUsername" | "groupStatus">;
-    plusOne: Array<Pick<Rsvp, "id" | "status" | "plusOneName" | "paymentStatus" | "checkedInAt">>;
+    member: Pick<Member, "id" | "telegramDisplayName" | "telegramUsername" | "telegramPhotoUrl" | "groupStatus">;
+    plusOne: Array<Pick<Rsvp, "id" | "status" | "plusOneName" | "paymentStatus" | "checkedInAt" | "notes" | "tags">>;
   }>;
   expenses: Array<{
     id: string;
@@ -537,6 +537,7 @@ export async function getAdminEventDetail(eventId: string): Promise<AdminEventDe
           id: members.id,
           telegramDisplayName: members.telegramDisplayName,
           telegramUsername: members.telegramUsername,
+          telegramPhotoUrl: members.telegramPhotoUrl,
           groupStatus: members.groupStatus,
         },
       })
@@ -572,6 +573,8 @@ export async function getAdminEventDetail(eventId: string): Promise<AdminEventDe
         plusOneName: po.rsvp.plusOneName,
         paymentStatus: po.rsvp.paymentStatus,
         checkedInAt: po.rsvp.checkedInAt,
+        notes: po.rsvp.notes,
+        tags: po.rsvp.tags,
       })),
   }));
 

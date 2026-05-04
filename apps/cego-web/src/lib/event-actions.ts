@@ -12,6 +12,7 @@ import {
   getDb,
   inArray,
   rsvps,
+  sql,
   surveyResponses,
   surveys,
   type EventStatus,
@@ -731,4 +732,64 @@ function isNextRedirect(err: unknown): boolean {
     typeof (err as { digest: string }).digest === "string" &&
     (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
   );
+}
+
+export async function updateRsvpNotesAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const notes = readOptionalText(formData, "notes") ?? null;
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId) redirect(returnTo);
+
+  const db = getDb();
+  await db
+    .update(rsvps)
+    .set({ notes, updatedAt: new Date() })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}
+
+export async function addRsvpTagAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const tag = readText(formData, "tag")?.trim();
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId || !tag) redirect(returnTo);
+
+  const db = getDb();
+  await db
+    .update(rsvps)
+    .set({
+      tags: sql`array_append(COALESCE(${rsvps.tags}, '{}'), ${tag})`,
+      updatedAt: new Date(),
+    })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}
+
+export async function removeRsvpTagAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const tag = readText(formData, "tag");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId || !tag) redirect(returnTo);
+
+  const db = getDb();
+  await db
+    .update(rsvps)
+    .set({
+      tags: sql`array_remove(COALESCE(${rsvps.tags}, '{}'), ${tag})`,
+      updatedAt: new Date(),
+    })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath(returnTo);
+  redirect(returnTo);
 }
