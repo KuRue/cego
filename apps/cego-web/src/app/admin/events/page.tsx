@@ -1,6 +1,7 @@
 import {
   createEventAction,
   updateEventAction,
+  updateRsvpPaymentAction,
   updateRsvpStatusAction,
 } from "@/lib/event-actions";
 import { getAdminEvents, type AdminEventWithRsvps } from "@/lib/events";
@@ -169,6 +170,31 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
                             Update
                           </button>
                         </form>
+                        {event.paymentRequired ? (
+                          <form action={updateRsvpPaymentAction} className="flex gap-2">
+                            <input type="hidden" name="rsvpId" value={rsvp.id} />
+                            <select
+                              name="paymentStatus"
+                              defaultValue={rsvp.paymentStatus ?? "unpaid"}
+                              className="h-10 rounded-xl px-3 text-sm outline-none"
+                              style={{
+                                background: "var(--color-surface-hover)",
+                                border: "1px solid var(--color-surface-border)",
+                              }}
+                            >
+                              <option value="unpaid">unpaid</option>
+                              <option value="paid">paid</option>
+                              <option value="waived">waived</option>
+                            </select>
+                            <button
+                              type="submit"
+                              className="h-10 rounded-xl px-4 text-sm font-semibold transition"
+                              style={{ background: "var(--color-highlight)", color: "#1a1d23" }}
+                            >
+                              Payment
+                            </button>
+                          </form>
+                        ) : null}
                       </div>
                       {plusOneRows.length > 0 ? (
                         <div className="mt-3 rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
@@ -308,6 +334,25 @@ function EventForm({
           <input name="paymentRequired" type="checkbox" defaultChecked={event?.paymentRequired ?? false} className="h-4 w-4" />
           <span className="font-medium">Payment required</span>
         </label>
+      </div>
+      <Field label="Payment methods">
+        <textarea
+          name="paymentMethods"
+          defaultValue={event?.paymentMethods ?? ""}
+          rows={3}
+          placeholder="e.g. Venmo: @username&#10;Zelle: email@example.com"
+          className="form-textarea"
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Payment due date">
+          <input
+            name="paymentDueDate"
+            type="datetime-local"
+            defaultValue={event?.paymentDueDate ? toDateTimeLocalValue(event.paymentDueDate) : ""}
+            className="form-input"
+          />
+        </Field>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Rules">

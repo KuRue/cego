@@ -15,6 +15,7 @@ import {
   eventStatuses,
   memberGroupStatuses,
   notificationStatuses,
+  rsvpPaymentStatuses,
   rsvpStatuses,
   surveyStatuses,
 } from "./types";
@@ -34,6 +35,7 @@ export const memberGroupStatusEnum = pgEnum(
 );
 export const eventStatusEnum = pgEnum("event_status", eventStatuses);
 export const rsvpStatusEnum = pgEnum("rsvp_status", rsvpStatuses);
+export const rsvpPaymentStatusEnum = pgEnum("rsvp_payment_status", rsvpPaymentStatuses);
 export const surveyStatusEnum = pgEnum("survey_status", surveyStatuses);
 export const notificationStatusEnum = pgEnum(
   "notification_status",
@@ -73,6 +75,8 @@ export const events = pgTable(
     priceCents: integer("price_cents"),
     currency: text("currency").default("USD").notNull(),
     paymentRequired: boolean("payment_required").default(false).notNull(),
+    paymentMethods: text("payment_methods"),
+    paymentDueDate: timestamp("payment_due_date", { withTimezone: true }),
     rulesText: text("rules_text"),
     termsText: text("terms_text"),
     refundPolicyText: text("refund_policy_text"),
@@ -99,6 +103,7 @@ export const rsvps = pgTable(
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
     status: rsvpStatusEnum("status").notNull(),
+    paymentStatus: rsvpPaymentStatusEnum("payment_status").default("unpaid").notNull(),
     ticketType: text("ticket_type"),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     plusOneName: text("plus_one_name"),

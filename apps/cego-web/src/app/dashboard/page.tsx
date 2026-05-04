@@ -177,6 +177,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
             <div className="mt-1 flex items-center gap-3 text-xs text-white/80">
               <span>{formatDateOnly(event.startsAt)}</span>
               <span>{spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}</span>
+              {rsvp?.status === "confirmed" && event.paymentRequired ? (
+                <span style={{ color: rsvp.paymentStatus === "paid" ? "#34d399" : "#fbbf24" }}>
+                  {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
@@ -241,6 +246,21 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                   />
                 ) : null}
               </dl>
+
+              {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods ? (
+                <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)" }}>
+                  <p className="text-sm font-semibold">Payment{event.paymentDueDate ? ` due ${formatDateOnly(event.paymentDueDate)}` : ""}</p>
+                  <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
+                    {event.paymentMethods}
+                  </p>
+                  <p className="mt-2 text-sm">
+                    <span className="font-medium">Status: </span>
+                    <span style={{ color: rsvp.paymentStatus === "paid" ? "var(--color-success)" : rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
+                      {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                    </span>
+                  </p>
+                </div>
+              ) : null}
 
               {rsvp && rsvp.status !== "cancelled" && plusOne && plusOne.status !== "cancelled" ? (
                 <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm" style={{ background: "var(--color-surface-hover)" }}>

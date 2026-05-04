@@ -278,6 +278,34 @@ export async function updateRsvpStatusAction(formData: FormData) {
   redirect("/admin/events");
 }
 
+export async function updateRsvpPaymentAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const paymentStatus = readEnum(formData, "paymentStatus", [
+    "unpaid",
+    "paid",
+    "waived",
+  ] as const);
+
+  if (!rsvpId) {
+    redirect("/admin/events");
+  }
+
+  const db = getDb();
+
+  await db
+    .update(rsvps)
+    .set({
+      paymentStatus,
+      updatedAt: new Date(),
+    })
+    .where(eq(rsvps.id, rsvpId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect("/admin/events");
+}
+
 function parseEventForm(formData: FormData) {
   const title = readText(formData, "title");
   const slug = slugify(readText(formData, "slug") || title);
@@ -293,6 +321,8 @@ function parseEventForm(formData: FormData) {
     priceCents: readOptionalPriceCents(formData, "price"),
     currency: readCurrency(formData, "currency"),
     paymentRequired: readCheckbox(formData, "paymentRequired"),
+    paymentMethods: readOptionalText(formData, "paymentMethods"),
+    paymentDueDate: readOptionalDate(formData, "paymentDueDate"),
     rulesText: readOptionalText(formData, "rulesText"),
     termsText: readOptionalText(formData, "termsText"),
     refundPolicyText: readOptionalText(formData, "refundPolicyText"),

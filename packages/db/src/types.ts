@@ -13,6 +13,9 @@ export type EventStatus = (typeof eventStatuses)[number];
 export const rsvpStatuses = ["confirmed", "waitlisted", "cancelled"] as const;
 export type RsvpStatus = (typeof rsvpStatuses)[number];
 
+export const rsvpPaymentStatuses = ["unpaid", "paid", "waived"] as const;
+export type RsvpPaymentStatus = (typeof rsvpPaymentStatuses)[number];
+
 export const surveyStatuses = ["draft", "published", "closed"] as const;
 export type SurveyStatus = (typeof surveyStatuses)[number];
 

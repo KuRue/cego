@@ -95,6 +95,22 @@ export default async function RsvpPage({
                 <> · +1: <strong>{data.plusOne.plusOneName}</strong> ({rsvpStatusLabel(data.plusOne.status)})</>
               ) : null}
             </p>
+
+            {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
+              <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
+                <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateOnly(data.event.paymentDueDate)}` : ""}</p>
+                <p className="mt-2 whitespace-pre-line text-sm" style={{ color: "var(--color-muted)" }}>
+                  {data.event.paymentMethods}
+                </p>
+                <p className="mt-3 text-sm">
+                  <span style={{ color: "var(--color-muted)" }}>Status: </span>
+                  <strong style={{ color: data.rsvp!.paymentStatus === "paid" ? "var(--color-success)" : data.rsvp!.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
+                    {data.rsvp!.paymentStatus === "paid" ? "Paid" : data.rsvp!.paymentStatus === "waived" ? "Waived" : "Unpaid — organizer will confirm when received"}
+                  </strong>
+                </p>
+              </div>
+            ) : null}
+
             <AppLink
               href={`/events/${slug}`}
               className="mt-4 inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
@@ -246,6 +262,14 @@ function TextBlock({ title, body }: { title: string; body: string }) {
       </p>
     </section>
   );
+}
+
+function formatDateOnly(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatPrice(priceCents: number, currency: string): string {
