@@ -37,11 +37,11 @@ export default function Navbar({ member, brand }: NavbarProps) {
     if (menuOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setMenuPos({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
+        top: rect.bottom + 16,
+        right: isMiniApp ? 16 : window.innerWidth - rect.right,
       });
     }
-  }, [menuOpen]);
+  }, [menuOpen, isMiniApp]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
