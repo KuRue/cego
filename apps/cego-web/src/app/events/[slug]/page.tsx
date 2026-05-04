@@ -385,6 +385,7 @@ function EventDetail({ eventState, isAdmin }: { eventState: EventWithRsvpState; 
                     : {}
                 }
                 action={submitSurveyResponseAction}
+                returnTo={`/events/${event.slug}`}
               />
             </div>
           ) : null}

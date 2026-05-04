@@ -16,12 +16,14 @@ export default function SurveyResponseEditor({
   questions,
   existingAnswers,
   action,
+  returnTo,
 }: {
   surveyId: string;
   eventId: string;
   questions: SurveyQuestion[];
   existingAnswers: Record<string, string>;
   action: (formData: FormData) => Promise<void>;
+  returnTo?: string;
 }) {
   const [editing, setEditing] = useState(false);
 
@@ -57,6 +59,7 @@ export default function SurveyResponseEditor({
   return (
     <form action={action} className="mt-3 grid gap-3">
       <input type="hidden" name="surveyId" value={surveyId} />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       {questions.map((q) => (
         <label key={q.id} className="grid gap-1.5 text-sm">
           <span className="font-medium">

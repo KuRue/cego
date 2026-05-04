@@ -111,7 +111,10 @@ export async function submitSurveyResponseAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/admin");
-  redirect("/dashboard");
+
+  const returnTo = (formData.get("returnTo") as string) || "/dashboard";
+  if (returnTo.startsWith("/")) revalidatePath(returnTo);
+  redirect(returnTo);
 }
 
 function parseSurveyForm(formData: FormData) {
