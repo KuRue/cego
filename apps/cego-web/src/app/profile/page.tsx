@@ -1,7 +1,6 @@
 import AppLink from "@/components/app-link";
 import Avatar from "@/components/avatar";
 import { getCurrentMember } from "@/lib/session";
-import { updateCurrentMemberEmailAction } from "@/lib/member-actions";
 import { getNavbarBrand } from "@/lib/settings";
 import Navbar from "@/components/navbar";
 import SignOutButton from "./sign-out-button";
@@ -107,30 +106,6 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
-
-        <form action={updateCurrentMemberEmailAction} className="glass mt-6 rounded-2xl p-6">
-          <input type="hidden" name="returnTo" value="/profile" />
-          <h2 className="text-lg font-semibold">Contact email</h2>
-          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-            Optional. Organizers can use this if Telegram is not enough for an event detail.
-          </p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <input
-              name="email"
-              type="email"
-              defaultValue={member.email ?? ""}
-              placeholder="you@example.com"
-              className="form-input h-11 flex-1"
-            />
-            <button
-              type="submit"
-              className="h-11 rounded-xl px-5 text-sm font-semibold transition"
-              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-            >
-              Save email
-            </button>
-          </div>
-        </form>
 
         <SignOutButton />
       </main>
