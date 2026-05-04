@@ -132,7 +132,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
     : undefined;
 
   return (
-    <div className="min-w-0 grid gap-3 lg:grid-cols-[1fr_1fr]">
+    <div className="min-w-0 grid gap-3 2xl:grid-cols-[1fr_1fr]">
       <div className="min-w-0 lg:max-h-[70vh] lg:overflow-y-auto">
         <div className="sticky top-0 z-10 py-2" style={{ background: "rgba(128,128,128,0.15)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
           <input

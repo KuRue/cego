@@ -120,158 +120,158 @@ export default async function AdminEventDetailPage({
             </p>
           </div>
 
-<div className="mt-4 grid gap-6 lg:grid-cols-[1fr_24rem]">
-    <div className="min-w-0">
-      <details>
-        <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
-          Edit event
-        </summary>
-        <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} />
-      </details>
-      {detail.event.status === "archived" && (
-        <form action={deleteEventAction} className="mt-4 sm:hidden">
-          <input type="hidden" name="eventId" value={detail.event.id} />
-          <ConfirmButton
-            type="submit"
-            message="Delete this event and all its RSVPs? This cannot be undone."
-            className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
-            style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
-          >
-            Delete event
-          </ConfirmButton>
-        </form>
-      )}
-    </div>
-
-    <aside className="min-w-0 h-fit lg:sticky lg:top-24">
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stats</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Stats</h2>
+      <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
+        <StatBox label="Confirmed" value={`${detail.confirmedCount}/${detail.event.capacity}`} />
+        <StatBox label="Waitlisted" value={String(detail.waitlistedCount)} />
+        <StatBox label="Checked In" value={String(checkedInCount)} />
+        <StatBox label="Paid" value={`${paidCount}/${activeRsvps.length}`} />
+      </div>
+
+      {detail.event.priceCents !== null || totalCosts > 0 ? (
         <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
-          <StatBox label="Confirmed" value={`${detail.confirmedCount}/${detail.event.capacity}`} />
-          <StatBox label="Waitlisted" value={String(detail.waitlistedCount)} />
-          <StatBox label="Checked In" value={String(checkedInCount)} />
-          <StatBox label="Paid" value={`${paidCount}/${activeRsvps.length}`} />
+          <StatBox label="Total Costs" value={formatPrice(totalCosts)} />
+          <StatBox label="Total Owed" value={formatPrice(totalOwed)} />
+          <StatBox label="Total Paid" value={formatPrice(totalPaid)} />
+          <StatBox
+            label="Net Balance"
+            value={formatPrice(Math.abs(netBalance))}
+            suffix={netBalance >= 0 ? " surplus" : " short"}
+            highlight={netBalance < 0 ? "bad" : netBalance > 0 ? "good" : undefined}
+          />
         </div>
+      ) : null}
+    </section>
 
-        {detail.event.priceCents !== null || totalCosts > 0 ? (
-          <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
-            <StatBox label="Total Costs" value={formatPrice(totalCosts)} />
-            <StatBox label="Total Owed" value={formatPrice(totalOwed)} />
-            <StatBox label="Total Paid" value={formatPrice(totalPaid)} />
-            <StatBox
-              label="Net Balance"
-              value={formatPrice(Math.abs(netBalance))}
-              suffix={netBalance >= 0 ? " surplus" : " short"}
-              highlight={netBalance < 0 ? "bad" : netBalance > 0 ? "good" : undefined}
-            />
-          </div>
-        ) : null}
-      </section>
+    <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
 
-      <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
-
-      <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Expenses</h2>
-        {detail.expenses.length > 0 ? (
-          <div className="mt-2 grid gap-2">
-            {detail.expenses.map((expense) => (
-              <div key={expense.id} className="flex items-center justify-between gap-2 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{expense.description}</p>
-                  <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-sm font-semibold">{formatPrice(expense.amountCents)}</span>
-                  <form action={deleteEventExpenseAction}>
-                    <input type="hidden" name="expenseId" value={expense.id} />
-                    <input type="hidden" name="returnTo" value={returnTo} />
-                    <ConfirmButton
-                      type="submit"
-                      message="Remove this expense?"
-                      className="text-xs transition"
-                      style={{ color: "var(--color-danger)" }}
-                    >
-                      Remove
-                    </ConfirmButton>
-                  </form>
-                </div>
+    <section>
+      <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>Expenses</h2>
+      {detail.expenses.length > 0 ? (
+        <div className="mt-2 grid gap-2">
+          {detail.expenses.map((expense) => (
+            <div key={expense.id} className="flex items-center justify-between gap-2 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{expense.description}</p>
+                <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
               </div>
-            ))}
-            <div className="flex items-center justify-between p-2">
-              <span className="text-sm font-semibold">Total expenses</span>
-              <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-sm font-semibold">{formatPrice(expense.amountCents)}</span>
+                <form action={deleteEventExpenseAction}>
+                  <input type="hidden" name="expenseId" value={expense.id} />
+                  <input type="hidden" name="returnTo" value={returnTo} />
+                  <ConfirmButton
+                    type="submit"
+                    message="Remove this expense?"
+                    className="text-xs transition"
+                    style={{ color: "var(--color-danger)" }}
+                  >
+                    Remove
+                  </ConfirmButton>
+                </form>
+              </div>
             </div>
+          ))}
+          <div className="flex items-center justify-between p-2">
+            <span className="text-sm font-semibold">Total expenses</span>
+            <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
           </div>
-        ) : (
-          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
-        )}
-        <details className="mt-3">
-          <summary className="cursor-pointer px-1 text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
-            New expense
-          </summary>
-          <form action={addEventExpenseAction} className="mt-2 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">
-            <input type="hidden" name="eventId" value={detail.event.id} />
-            <input type="hidden" name="returnTo" value={returnTo} />
-            <input
-              name="description"
-              required
-              placeholder="Description"
-              className="h-9 rounded-lg px-3 text-sm outline-none"
-              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-            />
-            <select
-              name="category"
-              className="h-9 rounded-lg px-2 text-sm outline-none"
-              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-            >
-              <option value="food">Food</option>
-              <option value="supplies">Supplies</option>
-              <option value="venue">Venue</option>
-              <option value="transport">Transport</option>
-              <option value="other">Other</option>
-            </select>
-            <input
-              name="amount"
-              required
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="$0"
-              className="h-9 rounded-lg px-3 text-sm outline-none"
-              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-            />
-            <button
-              type="submit"
-              className="h-9 rounded-lg px-3 text-sm font-semibold transition"
-              style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-            >
-              Add
-            </button>
-          </form>
-        </details>
-      </section>
-
-      <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
-
-      {detail.rsvps.length > 0 ? (
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
-            RSVPs ({activeRsvps.length})
-          </h2>
-          <div className="mt-2">
-            <AdminRsvpManager
-              rsvps={detail.rsvps}
-              eventId={detail.event.id}
-              paymentRequired={detail.event.paymentRequired ?? false}
-              survey={detail.survey ?? null}
-            />
-          </div>
-        </section>
+        </div>
       ) : (
-        <p className="text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>No expenses logged yet.</p>
       )}
-    </aside>
-  </div>
+      <details className="mt-3">
+        <summary className="cursor-pointer px-1 text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
+          New expense
+        </summary>
+        <form action={addEventExpenseAction} className="mt-2 grid gap-2 sm:grid-cols-[1fr_8rem_7rem_auto]">
+          <input type="hidden" name="eventId" value={detail.event.id} />
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <input
+            name="description"
+            required
+            placeholder="Description"
+            className="h-9 rounded-lg px-3 text-sm outline-none"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+          />
+          <select
+            name="category"
+            className="h-9 rounded-lg px-2 text-sm outline-none"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+          >
+            <option value="food">Food</option>
+            <option value="supplies">Supplies</option>
+            <option value="venue">Venue</option>
+            <option value="transport">Transport</option>
+            <option value="other">Other</option>
+          </select>
+          <input
+            name="amount"
+            required
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="$0"
+            className="h-9 rounded-lg px-3 text-sm outline-none"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
+          />
+          <button
+            type="submit"
+            className="h-9 rounded-lg px-3 text-sm font-semibold transition"
+            style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+          >
+            Add
+          </button>
+        </form>
+      </details>
+    </section>
+
+    <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
+
+    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+      <div className="min-w-0">
+        <details>
+          <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
+            Edit event
+          </summary>
+          <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} />
+        </details>
+        {detail.event.status === "archived" && (
+          <form action={deleteEventAction} className="mt-4 sm:hidden">
+            <input type="hidden" name="eventId" value={detail.event.id} />
+            <ConfirmButton
+              type="submit"
+              message="Delete this event and all its RSVPs? This cannot be undone."
+              className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
+              style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+            >
+              Delete event
+            </ConfirmButton>
+          </form>
+        )}
+      </div>
+
+      <aside className="min-w-0 h-fit lg:sticky lg:top-24">
+        {detail.rsvps.length > 0 ? (
+          <section>
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+              RSVPs ({activeRsvps.length})
+            </h2>
+            <div className="mt-2">
+              <AdminRsvpManager
+                rsvps={detail.rsvps}
+                eventId={detail.event.id}
+                paymentRequired={detail.event.paymentRequired ?? false}
+                survey={detail.survey ?? null}
+              />
+            </div>
+          </section>
+        ) : (
+          <p className="text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
+        )}
+      </aside>
+    </div>
         </div>
       </main>
     </>
