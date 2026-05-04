@@ -152,7 +152,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedId(entry.id === selectedId ? null : entry.id)}
-                className={`w-full px-3 py-2 text-left transition ${
+                className={`w-full rounded-lg px-3 py-2 text-left transition ${
                   entry.id === selectedId ? "ring-1 ring-[var(--color-accent)]" : ""
                 }`}
                 style={{
@@ -299,6 +299,10 @@ function DetailPanel({
             className="h-8 rounded-lg px-2 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
             onChange={(e) => {
+              if (!confirm(`Change status to ${e.currentTarget.value}?`)) {
+                e.currentTarget.value = entry.status;
+                return;
+              }
               const fd = new FormData(e.currentTarget.form!);
               startTransition(async () => { await updateRsvpStatusAction(fd); });
             }}
@@ -328,6 +332,10 @@ function DetailPanel({
                   : "var(--color-warning)",
               }}
               onChange={(e) => {
+                if (!confirm(`Change payment to ${e.currentTarget.value}?`)) {
+                  e.currentTarget.value = entry.paymentStatus;
+                  return;
+                }
                 const fd = new FormData(e.currentTarget.form!);
                 startTransition(async () => { await updateRsvpPaymentAction(fd); });
               }}
@@ -347,6 +355,11 @@ function DetailPanel({
           <button
             type="submit"
             className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+            onClick={(e) => {
+              if (!confirm(entry.checkedInAt ? "Undo check-in?" : "Check in this person?")) {
+                e.preventDefault();
+              }
+            }}
             style={{
               background: entry.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
               color: entry.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
@@ -370,7 +383,10 @@ function DetailPanel({
               {tag}
               <button
                 type="button"
-                onClick={() => handleRemoveTag(tag)}
+                onClick={() => {
+                  if (!confirm(`Remove tag "${tag}"?`)) return;
+                  handleRemoveTag(tag);
+                }}
                 className="ml-0.5 opacity-60 hover:opacity-100"
                 disabled={pending}
               >

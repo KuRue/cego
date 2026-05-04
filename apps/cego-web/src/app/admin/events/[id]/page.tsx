@@ -156,13 +156,14 @@ export default async function AdminEventDetailPage({
                         <form action={deleteEventExpenseAction}>
                           <input type="hidden" name="expenseId" value={expense.id} />
                           <input type="hidden" name="returnTo" value={returnTo} />
-                          <button
+                          <ConfirmButton
                             type="submit"
+                            message="Remove this expense?"
                             className="text-xs transition"
                             style={{ color: "var(--color-danger)" }}
                           >
                             Remove
-                          </button>
+                          </ConfirmButton>
                         </form>
                       </div>
                     </div>
