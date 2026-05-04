@@ -176,19 +176,8 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             <dl className="grid gap-4 sm:grid-cols-2">
               <Detail label="Date" value={formatDateLines(event.startsAt, event.endsAt)} />
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
-              {event.addressText ? (
-                canSeeAddress ? (
-                  <Detail label="Address" value={event.addressText} />
-                ) : (
-                  <div>
-                    <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>Address</dt>
-                    <dd className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                      {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived"
-                        ? "Revealed after payment is confirmed"
-                        : "Revealed after RSVP is confirmed"}
-                    </dd>
-                  </div>
-                )
+              {event.addressText && canSeeAddress ? (
+                <Detail label="Address" value={event.addressText} />
               ) : null}
               <Detail
                 label="Capacity"
