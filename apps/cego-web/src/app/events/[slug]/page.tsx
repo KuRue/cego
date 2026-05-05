@@ -192,7 +192,22 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               <Detail label="Date" value={formatDateLines(event.startsAt, event.endsAt)} />
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
               {event.addressText && canSeeAddress ? (
-                <Detail label="Address" value={event.addressText} />
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                    Address
+                  </dt>
+                  <dd className="mt-1">
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(event.addressText)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline decoration-dotted underline-offset-4 transition"
+                      style={{ color: "var(--color-accent)" }}
+                    >
+                      {event.addressText}
+                    </a>
+                  </dd>
+                </div>
               ) : null}
               <Detail
                 label="Capacity"
