@@ -143,7 +143,7 @@ export async function rsvpForEventAction(formData: FormData) {
       const slotsLeft = event.capacity - confirmedCount;
 
       const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const activeStatus: RsvpStatus = slotsLeft >= 1 ? "confirmed" : "waitlisted";
       const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       rsvpStatus = activeStatus;
@@ -376,7 +376,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
       const slotsLeft = event.capacity - confirmedCount;
 
       const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const activeStatus: RsvpStatus = slotsLeft >= 1 ? "confirmed" : "waitlisted";
       const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       const now = new Date();
