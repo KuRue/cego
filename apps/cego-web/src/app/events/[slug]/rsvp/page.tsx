@@ -7,6 +7,7 @@ import { getRsvpPageData, getEffectiveRsvpStatus } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
+import PaymentLink from "@/components/payment-link";
 import RichText from "@/components/rich-text";
 
 export const dynamic = "force-dynamic";
@@ -112,7 +113,7 @@ export default async function RsvpPage({
         </p>
 
         {alreadyRsvpd ? (
-          <AlreadyRegistered data={data} slug={slug} />
+          <AlreadyRegistered data={data} slug={slug} displayName={member.telegramDisplayName} />
         ) : canRsvp || adminCanRsvp ? (
           <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} />
         ) : (
@@ -141,7 +142,7 @@ export default async function RsvpPage({
   );
 }
 
-function AlreadyRegistered({ data, slug }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string }) {
+function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; displayName: string }) {
   return (
     <div className="glass-lg mt-8 rounded-2xl p-6">
       <p className="text-lg font-semibold">You&apos;re registered!</p>
@@ -166,15 +167,7 @@ function AlreadyRegistered({ data, slug }: { data: NonNullable<Awaited<ReturnTyp
                     <span style={{ color: "var(--color-muted)" }}>{m.handle}</span>
                   </span>
                   {url ? (
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-                      style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                    >
-                      Pay
-                    </a>
+                    <PaymentLink href={url} label="Pay" displayName={displayName} />
                   ) : null}
                 </div>
               );

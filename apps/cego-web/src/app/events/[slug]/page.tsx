@@ -11,6 +11,7 @@ import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
 import QrCodeDisplay from "@/components/qr-code-display";
+import PaymentLink from "@/components/payment-link";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -351,15 +352,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                         <span style={{ color: "var(--color-muted)" }}>{m.handle}</span>
                       </span>
                       {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-                          style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                        >
-                          Pay
-                        </a>
+                        <PaymentLink href={url} label="Pay" displayName={memberName} />
                       ) : null}
                     </div>
                   );
