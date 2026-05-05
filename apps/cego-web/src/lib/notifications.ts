@@ -46,7 +46,7 @@ function buildMessage(
     case "rsvp_waitlisted":
       return `⏳ You've been waitlisted for *${event.title}*. You'll be notified if a spot opens up.`;
     case "rsvp_promoted":
-      return `🎉 A spot opened up — you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDate(event.paymentDueDate)}.` : ""}`;
+      return `🎉 A spot opened up - you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDate(event.paymentDueDate)}.` : ""}`;
     case "rsvp_cancelled":
       return `❌ Your RSVP for *${event.title}* has been cancelled.`;
     case "rsvp_expired":
