@@ -134,7 +134,7 @@ export async function getDashboardEvents(
       .where(
         and(
           inArray(rsvps.eventId, eventIds),
-          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+          inArray(rsvps.status, ["confirmed"]),
         ),
       ),
   ]);
@@ -204,7 +204,7 @@ export async function getDashboardEventBySlug(
       .where(
         and(
           eq(rsvps.eventId, event.id),
-          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+          inArray(rsvps.status, ["confirmed"]),
         ),
       ),
     db
@@ -339,7 +339,7 @@ export async function getPublicEvents(): Promise<{
       .where(
         and(
           inArray(rsvps.eventId, eventIds),
-          inArray(rsvps.status, ["confirmed", "waitlisted"]),
+          inArray(rsvps.status, ["confirmed"]),
         ),
       ),
   ]);
