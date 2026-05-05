@@ -316,7 +316,7 @@ function RsvpForm({
       <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-surface-border)" }}>
         {adminBypass ? (
           <p className="text-sm" style={{ color: "var(--color-warning)" }}>
-            Admin early RSVP — registration hasn&apos;t opened yet.
+            Early RSVP
           </p>
         ) : null}
         <p className="text-sm" style={{ color: "var(--color-muted)" }}>
