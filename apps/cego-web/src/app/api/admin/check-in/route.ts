@@ -45,6 +45,8 @@ export async function POST(request: Request) {
       checkedInAt: rsvps.checkedInAt,
       plusOneName: rsvps.plusOneName,
       parentRsvpId: rsvps.parentRsvpId,
+      tags: rsvps.tags,
+      notes: rsvps.notes,
     })
     .from(rsvps)
     .where(eq(rsvps.id, rsvpId))
@@ -72,7 +74,12 @@ export async function POST(request: Request) {
 
   if (rsvpRow.checkedInAt) {
     const [memberRow] = await db
-      .select({ telegramDisplayName: members.telegramDisplayName, telegramPhotoUrl: members.telegramPhotoUrl })
+      .select({
+        telegramDisplayName: members.telegramDisplayName,
+        telegramUsername: members.telegramUsername,
+        telegramPhotoUrl: members.telegramPhotoUrl,
+        email: members.email,
+      })
       .from(members)
       .where(eq(members.id, rsvpRow.memberId))
       .limit(1);
@@ -81,8 +88,12 @@ export async function POST(request: Request) {
       ok: false,
       error: "Already checked in",
       displayName: memberRow?.telegramDisplayName,
+      username: memberRow?.telegramUsername,
       photoUrl: memberRow?.telegramPhotoUrl,
+      email: memberRow?.email,
       plusOneName: rsvpRow.plusOneName,
+      rsvpTags: rsvpRow.tags,
+      rsvpNotes: rsvpRow.notes,
     });
   }
 
@@ -108,7 +119,12 @@ export async function POST(request: Request) {
   }
 
   const [memberRow] = await db
-    .select({ telegramDisplayName: members.telegramDisplayName, telegramPhotoUrl: members.telegramPhotoUrl })
+    .select({
+      telegramDisplayName: members.telegramDisplayName,
+      telegramUsername: members.telegramUsername,
+      telegramPhotoUrl: members.telegramPhotoUrl,
+      email: members.email,
+    })
     .from(members)
     .where(eq(members.id, rsvpRow.memberId))
     .limit(1);
@@ -122,7 +138,11 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     displayName: memberRow?.telegramDisplayName,
+    username: memberRow?.telegramUsername,
     photoUrl: memberRow?.telegramPhotoUrl,
+    email: memberRow?.email,
     plusOneName: rsvpRow.plusOneName,
+    rsvpTags: rsvpRow.tags,
+    rsvpNotes: rsvpRow.notes,
   });
 }

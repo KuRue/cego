@@ -14,8 +14,12 @@ type ScanResult = {
   ok: boolean;
   error?: string;
   displayName?: string;
+  username?: string | null;
   photoUrl?: string | null;
+  email?: string | null;
   plusOneName?: string | null;
+  rsvpTags?: string[] | null;
+  rsvpNotes?: string | null;
 };
 
 export default function CheckInScanner({ events }: { events: EventOption[] }) {
@@ -24,7 +28,6 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [flash, setFlash] = useState<"green" | "red" | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const lastScanRef = useRef<string>("");
   const lastScanTimeRef = useRef<number>(0);
 
@@ -59,7 +62,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
   );
 
   const startScanning = useCallback(async () => {
-    if (!selectedEventId || !containerRef.current) return;
+    if (!selectedEventId) return;
 
     setResult(null);
     setFlash(null);
@@ -67,28 +70,17 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
     const scanner = new Html5Qrcode("qr-reader");
     scannerRef.current = scanner;
 
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    const onSuccess = (decodedText: string) => { processScan(decodedText); };
+
     try {
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-          processScan(decodedText);
-        },
-        () => {},
-      );
+      await scanner.start({ facingMode: "environment" }, config, onSuccess, () => {});
       setScanning(true);
     } catch {
       try {
-        await scanner.start(
-          { facingMode: "user" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decodedText) => {
-            processScan(decodedText);
-          },
-          () => {},
-        );
+        await scanner.start({ facingMode: "user" }, config, onSuccess, () => {});
         setScanning(true);
-      } catch (err) {
+      } catch {
         setResult({ ok: false, error: "Camera access denied or unavailable" });
       }
     }
@@ -122,58 +114,70 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
     lastScanRef.current = "";
   }, [selectedEventId]);
 
+  if (!scanning) {
+    return (
+      <div className="mt-6 flex flex-col gap-4">
+        <label className="grid gap-1 text-sm">
+          <span className="font-medium">Event</span>
+          <select
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
+            className="form-select"
+          >
+            {events.map((e) => (
+              <option key={e.id} value={e.id}>{e.title}</option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={startScanning}
+          disabled={!selectedEventId}
+          className="h-11 rounded-xl px-6 text-sm font-semibold transition"
+          style={{
+            background: "var(--color-accent)",
+            color: "var(--color-on-accent)",
+            opacity: selectedEventId ? 1 : 0.5,
+          }}
+        >
+          Start Scanner
+        </button>
+
+        {result && !result.ok && (
+          <p className="text-sm" style={{ color: "var(--color-danger)" }}>{result.error}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-4">
-      <label className="grid gap-1 text-sm">
-        <span className="font-medium">Event</span>
+    <div>
+      <div className="flex items-center justify-between px-1 pb-2">
         <select
           value={selectedEventId}
           onChange={(e) => setSelectedEventId(e.target.value)}
-          className="form-select"
+          className="h-8 rounded-lg px-2 text-xs outline-none"
+          style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
         >
           {events.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.title}
-            </option>
+            <option key={e.id} value={e.id}>{e.title}</option>
           ))}
         </select>
-      </label>
-
-      <div className="mt-4">
-        {!scanning ? (
-          <button
-            type="button"
-            onClick={startScanning}
-            disabled={!selectedEventId}
-            className="h-11 rounded-xl px-6 text-sm font-semibold transition"
-            style={{
-              background: "var(--color-accent)",
-              color: "var(--color-on-accent)",
-              opacity: selectedEventId ? 1 : 0.5,
-            }}
-          >
-            Start Scanner
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={stopScanning}
-            className="h-11 rounded-xl px-6 text-sm font-semibold transition"
-            style={{
-              background: "var(--color-surface-hover)",
-              border: "1px solid var(--color-surface-border)",
-              color: "var(--color-foreground)",
-            }}
-          >
-            Stop Scanner
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={stopScanning}
+          className="text-xs font-semibold"
+          style={{ color: "var(--color-danger)" }}
+        >
+          Stop
+        </button>
       </div>
 
       <div
-        ref={containerRef}
-        className="relative mt-4 overflow-hidden rounded-2xl"
+        className="relative mx-auto overflow-hidden rounded-2xl"
         style={{
+          maxWidth: 320,
           border: flash
             ? `3px solid ${flash === "green" ? "var(--color-success)" : "var(--color-danger)"}`
             : "1px solid var(--color-surface-border)",
@@ -181,15 +185,11 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
         }}
       >
         <div id="qr-reader" />
-
         {flash && (
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background:
-                flash === "green"
-                  ? "rgba(34,197,94,0.15)"
-                  : "rgba(239,68,68,0.15)",
+              background: flash === "green" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
               transition: "background 0.2s",
             }}
           />
@@ -200,9 +200,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
         <div
           className="mt-4 rounded-xl p-4"
           style={{
-            border: `1px solid ${
-              result.ok ? "var(--color-success)" : "var(--color-danger)"
-            }`,
+            border: `1px solid ${result.ok ? "var(--color-success)" : "var(--color-danger)"}`,
             background: result.ok ? "var(--color-success-bg)" : "var(--color-danger-bg)",
           }}
         >
@@ -211,27 +209,58 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
               <Avatar
                 displayName={result.displayName ?? "?"}
                 photoUrl={result.photoUrl ?? null}
+                size="lg"
               />
             )}
-            <div className="min-w-0">
-              <p className="font-semibold">
+            <div className="min-w-0 flex-1">
+              <p className="text-lg font-bold">
                 {result.ok ? "Checked in" : "Problem"}
               </p>
               {result.displayName && (
-                <p className="text-sm">{result.displayName}</p>
+                <p className="text-sm font-semibold">{result.displayName}</p>
               )}
-              {result.plusOneName && (
-                <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                  +1: {result.plusOneName}
-                </p>
-              )}
-              {result.error && (
-                <p className="text-sm" style={{ color: "var(--color-danger)" }}>
-                  {result.error}
-                </p>
+              {result.username && (
+                <p className="text-xs" style={{ color: "var(--color-muted)" }}>@{result.username}</p>
               )}
             </div>
           </div>
+
+          {result.plusOneName && (
+            <div className="mt-3 rounded-lg p-2" style={{ background: "var(--color-surface-hover)" }}>
+              <p className="text-xs font-semibold" style={{ color: "var(--color-muted)" }}>+1</p>
+              <p className="text-sm font-medium">{result.plusOneName}</p>
+            </div>
+          )}
+
+          {result.email && (
+            <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>{result.email}</p>
+          )}
+
+          {(result.rsvpTags ?? []).length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {result.rsvpTags!.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-md px-2 py-0.5 text-xs font-semibold"
+                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.85 }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {result.rsvpNotes && (
+            <p className="mt-2 text-xs whitespace-pre-line" style={{ color: "var(--color-muted)" }}>
+              {result.rsvpNotes}
+            </p>
+          )}
+
+          {result.error && (
+            <p className="mt-2 text-sm font-medium" style={{ color: "var(--color-danger)" }}>
+              {result.error}
+            </p>
+          )}
         </div>
       )}
     </div>
