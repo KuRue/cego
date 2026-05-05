@@ -125,7 +125,9 @@ function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWi
             <Badge>{titleCase(event.type)}</Badge>
             <StatusBadge status={event.status} />
           </div>
-          <h2 className="mt-3 text-xl font-semibold">{event.title}</h2>
+          <h2 className="mt-3 text-xl font-semibold">
+            <AppLink href={`/admin/events/${event.id}`} style={{ color: "var(--color-foreground)" }}>{event.title}</AppLink>
+          </h2>
           <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
             {formatDateRange(event.startsAt, event.endsAt)}
           </p>

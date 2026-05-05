@@ -1,5 +1,4 @@
 import {
-  updateEventAction,
   deleteEventAction,
   addEventExpenseAction,
   deleteEventExpenseAction,
@@ -7,15 +6,10 @@ import {
 import AppLink from "@/components/app-link";
 import { getAdminEventDetail } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
-import { getDb, members } from "@cego/db";
-import { asc } from "@cego/db";
 import Navbar from "@/components/navbar";
 import { StatusBadge, titleCase } from "@/components/badge";
-import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
-import Image from "next/image";
-import EventImageUpload from "../image-upload";
+import { getNavbarBrand } from "@/lib/settings";
 import ConfirmButton from "@/components/confirm-button";
-import PaymentMethodsEditor from "@/components/payment-methods-editor";
 import AdminRsvpManager from "@/components/admin-rsvp-manager";
 import { notFound } from "next/navigation";
 
@@ -32,17 +26,10 @@ export default async function AdminEventDetailPage({
 }) {
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
-  const settings = await getSiteSettings();
   const { id } = await params;
   const detail = await getAdminEventDetail(id);
 
   if (!detail) notFound();
-
-  const db = getDb();
-  const allMembers = await db
-    .select({ id: members.id, telegramDisplayName: members.telegramDisplayName })
-    .from(members)
-    .orderBy(asc(members.telegramDisplayName));
 
   const returnTo = `/admin/events/${detail.event.id}`;
 
@@ -239,25 +226,13 @@ export default async function AdminEventDetailPage({
 
     <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
       <div className="min-w-0">
-        <details>
-          <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
-            Edit event
-          </summary>
-          <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} allMembers={allMembers} />
-        </details>
-        {detail.event.status === "archived" && (
-          <form action={deleteEventAction} className="mt-4 sm:hidden">
-            <input type="hidden" name="eventId" value={detail.event.id} />
-            <ConfirmButton
-              type="submit"
-              message="Delete this event and all its RSVPs? This cannot be undone."
-              className="h-9 w-full rounded-lg px-3 text-sm font-semibold transition"
-              style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
-            >
-              Delete event
-            </ConfirmButton>
-          </form>
-        )}
+        <AppLink
+          href="/admin/events"
+          className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-semibold transition"
+          style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+        >
+          &larr; Edit event
+        </AppLink>
       </div>
 
       <aside className="min-w-0 h-fit lg:sticky lg:top-24">
@@ -295,162 +270,6 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
         {value}{suffix && <span className="text-xs font-normal">{suffix}</span>}
       </p>
     </div>
-  );
-}
-
-function EventForm({
-  action,
-  event,
-  eventTypes,
-  allMembers,
-}: {
-  action: (formData: FormData) => Promise<void>;
-  event: import("@cego/db").Event;
-  eventTypes?: string[];
-  allMembers?: { id: string; telegramDisplayName: string }[];
-}) {
-  return (
-    <form action={action} className="mt-4 grid gap-4 overflow-hidden">
-      <input type="hidden" name="eventId" value={event.id} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Type">
-          <select name="type" defaultValue={event.type} className="form-select">
-            {(eventTypes ?? ["meet"]).map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Status">
-          <select name="status" defaultValue={event.status} className="form-select">
-            <option value="draft">Draft</option>
-            <option value="show">Show</option>
-            <option value="closed">Closed</option>
-            <option value="archived">Archived</option>
-          </select>
-        </Field>
-      </div>
-      <Field label="Title">
-        <input name="title" required defaultValue={event.title} className="form-input" />
-      </Field>
-      <Field label="Description">
-        <textarea name="description" defaultValue={event.description ?? ""} rows={3} className="form-textarea" />
-      </Field>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Slug">
-          <input name="slug" required defaultValue={event.slug} className="form-input" />
-        </Field>
-        <Field label="Capacity">
-          <input name="capacity" required type="number" min="1" defaultValue={event.capacity} className="form-input" />
-        </Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Starts">
-          <input name="startsAt" required type="datetime-local" defaultValue={toDateTimeLocalValue(event.startsAt)} className="form-input" />
-        </Field>
-        <Field label="Ends">
-          <input name="endsAt" type="datetime-local" defaultValue={toDateTimeLocalValue(event.endsAt)} className="form-input" />
-        </Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="RSVP opens">
-          <input name="rsvpOpensAt" type="datetime-local" defaultValue={toDateTimeLocalValue(event.rsvpOpensAt)} className="form-input" />
-        </Field>
-        <Field label="RSVP closes">
-          <input name="rsvpClosesAt" type="datetime-local" defaultValue={toDateTimeLocalValue(event.rsvpClosesAt)} className="form-input" />
-        </Field>
-      </div>
-      <Field label="Location">
-        <input name="locationText" defaultValue={event.locationText ?? ""} className="form-input" placeholder="General area (shown to everyone)" />
-      </Field>
-      <Field label="Address">
-        <input name="addressText" defaultValue={event.addressText ?? ""} className="form-input" placeholder="Exact address (shown after confirmed & paid)" />
-      </Field>
-      <Field label="Cover photo">
-        <div className="mt-1 flex flex-col gap-3">
-          {event.imageUrl ? (
-            <div className="flex items-center gap-3">
-              <Image src={event.imageUrl} alt="Cover" width={80} height={45} className="h-11 w-20 rounded-lg object-cover" style={{ border: "1px solid var(--color-surface-border)" }} />
-              <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current cover</span>
-            </div>
-          ) : null}
-          <EventImageUpload currentUrl={event.imageUrl ?? null} />
-          <input type="hidden" name="imageUrl" defaultValue={event.imageUrl ?? ""} />
-        </div>
-      </Field>
-      <Field label="Promo image">
-        <div className="mt-1 flex flex-col gap-3">
-          {event.promoImageUrl ? (
-            <div className="flex items-center gap-3">
-              <Image src={event.promoImageUrl} alt="Promo" width={80} height={45} className="h-11 w-20 rounded-lg object-cover" style={{ border: "1px solid var(--color-surface-border)" }} />
-              <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current promo</span>
-            </div>
-          ) : null}
-          <EventImageUpload currentUrl={event.promoImageUrl ?? null} fieldName="promoImageUrl" />
-          <input type="hidden" name="promoImageUrl" defaultValue={event.promoImageUrl ?? ""} />
-        </div>
-      </Field>
-      <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
-        <Field label="Price">
-          <input name="price" type="number" min="0" step="0.01" defaultValue={event.priceCents !== null ? (event.priceCents / 100).toFixed(2) : ""} className="form-input" />
-        </Field>
-        <Field label="Currency">
-          <input name="currency" maxLength={3} defaultValue={event.currency ?? "USD"} className="form-input uppercase" />
-        </Field>
-        <label className="flex items-end gap-2 pb-2 text-sm">
-          <input name="paymentRequired" type="checkbox" defaultChecked={event.paymentRequired ?? false} className="h-4 w-4" />
-          <span className="font-medium">Payment required</span>
-        </label>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Other costs">
-          <input name="cost" type="number" min="0" step="0.01" defaultValue={event.costCents !== null ? (event.costCents / 100).toFixed(2) : ""} className="form-input" />
-        </Field>
-        <Field label="Payment due date">
-          <input name="paymentDueDate" type="datetime-local" defaultValue={event.paymentDueDate ? toDateTimeLocalValue(event.paymentDueDate) : ""} className="form-input" />
-        </Field>
-      </div>
-      <Field label="Payment methods">
-        <PaymentMethodsEditor name="paymentMethods" defaultValue={event.paymentMethods ?? null} />
-      </Field>
-      <Field label="Payment notification recipient">
-        <select name="paymentNotifyMemberId" defaultValue={event.paymentNotifyMemberId ?? ""} className="form-select">
-          <option value="">None</option>
-          {allMembers?.map((m) => (
-            <option key={m.id} value={m.id}>{m.telegramDisplayName}</option>
-          ))}
-        </select>
-      </Field>
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Field label="Rules">
-          <textarea name="rulesText" defaultValue={event.rulesText ?? ""} rows={3} className="form-textarea" />
-        </Field>
-        <Field label="Terms">
-          <textarea name="termsText" defaultValue={event.termsText ?? ""} rows={3} className="form-textarea" />
-        </Field>
-      </div>
-      <Field label="Cancellation/refund policy">
-        <textarea name="refundPolicyText" defaultValue={event.refundPolicyText ?? ""} rows={2} className="form-textarea" />
-      </Field>
-      <Field label="Organizer notes">
-        <textarea name="organizerNotes" defaultValue={event.organizerNotes ?? ""} rows={2} className="form-textarea" />
-      </Field>
-      <button
-        type="submit"
-        className="h-11 rounded-xl px-5 text-sm font-semibold transition sm:w-fit"
-        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-      >
-        Save event
-      </button>
-    </form>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      {children}
-    </label>
   );
 }
 
