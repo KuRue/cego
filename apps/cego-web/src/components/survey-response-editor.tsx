@@ -33,9 +33,11 @@ export default function SurveyResponseEditor({
         <div className="mt-3 grid gap-3">
           {questions.map((q) => (
             <div key={q.id} className="rounded-xl p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-              <p className="font-medium">{q.label}</p>
-              <p className="mt-1" style={{ color: "var(--color-muted)" }}>
-                {existingAnswers[q.id] || "No answer"}
+              <p className="text-xs uppercase tracking-[0.12em] font-semibold" style={{ color: "var(--color-muted)" }}>
+                {q.label}
+              </p>
+              <p className="mt-1.5 font-medium">
+                {existingAnswers[q.id] || <span style={{ color: "var(--color-muted)" }}>No answer</span>}
               </p>
             </div>
           ))}
