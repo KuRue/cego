@@ -30,6 +30,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanRef = useRef<string>("");
   const lastScanTimeRef = useRef<number>(0);
+  const startRef = useRef<() => void>(() => {});
 
   const showResult = useCallback((res: ScanResult) => {
     setResult(res);
@@ -67,6 +68,9 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
     setResult(null);
     setFlash(null);
 
+    const el = document.getElementById("qr-reader");
+    if (!el) return;
+
     const scanner = new Html5Qrcode("qr-reader");
     scannerRef.current = scanner;
 
@@ -85,6 +89,14 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
       }
     }
   }, [selectedEventId, processScan]);
+
+  useEffect(() => {
+    startRef.current = startScanning;
+  }, [startScanning]);
+
+  const handleStart = useCallback(() => {
+    startRef.current();
+  }, []);
 
   const stopScanning = useCallback(async () => {
     if (scannerRef.current) {
@@ -114,65 +126,65 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
     lastScanRef.current = "";
   }, [selectedEventId]);
 
-  if (!scanning) {
-    return (
-      <div className="mt-6 flex flex-col gap-4">
-        <label className="grid gap-1 text-sm">
-          <span className="font-medium">Event</span>
+  return (
+    <div>
+      {!scanning && (
+        <div className="mt-6 flex flex-col gap-4">
+          <label className="grid gap-1 text-sm">
+            <span className="font-medium">Event</span>
+            <select
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+              className="form-select"
+            >
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>{e.title}</option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={!selectedEventId}
+            className="h-11 rounded-xl px-6 text-sm font-semibold transition"
+            style={{
+              background: "var(--color-accent)",
+              color: "var(--color-on-accent)",
+              opacity: selectedEventId ? 1 : 0.5,
+            }}
+          >
+            Start Scanner
+          </button>
+
+          {result && !result.ok && (
+            <p className="text-sm" style={{ color: "var(--color-danger)" }}>{result.error}</p>
+          )}
+        </div>
+      )}
+
+      {scanning && (
+        <div className="flex items-center justify-between px-1 pb-2">
           <select
             value={selectedEventId}
             onChange={(e) => setSelectedEventId(e.target.value)}
-            className="form-select"
+            className="h-8 rounded-lg px-2 text-xs outline-none"
+            style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
           >
             {events.map((e) => (
               <option key={e.id} value={e.id}>{e.title}</option>
             ))}
           </select>
-        </label>
-
-        <button
-          type="button"
-          onClick={startScanning}
-          disabled={!selectedEventId}
-          className="h-11 rounded-xl px-6 text-sm font-semibold transition"
-          style={{
-            background: "var(--color-accent)",
-            color: "var(--color-on-accent)",
-            opacity: selectedEventId ? 1 : 0.5,
-          }}
-        >
-          Start Scanner
-        </button>
-
-        {result && !result.ok && (
-          <p className="text-sm" style={{ color: "var(--color-danger)" }}>{result.error}</p>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex items-center justify-between px-1 pb-2">
-        <select
-          value={selectedEventId}
-          onChange={(e) => setSelectedEventId(e.target.value)}
-          className="h-8 rounded-lg px-2 text-xs outline-none"
-          style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-        >
-          {events.map((e) => (
-            <option key={e.id} value={e.id}>{e.title}</option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={stopScanning}
-          className="text-xs font-semibold"
-          style={{ color: "var(--color-danger)" }}
-        >
-          Stop
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={stopScanning}
+            className="text-xs font-semibold"
+            style={{ color: "var(--color-danger)" }}
+          >
+            Stop
+          </button>
+        </div>
+      )}
 
       <div
         className="relative mx-auto overflow-hidden rounded-2xl"
@@ -182,6 +194,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
             ? `3px solid ${flash === "green" ? "var(--color-success)" : "var(--color-danger)"}`
             : "1px solid var(--color-surface-border)",
           transition: "border-color 0.2s",
+          display: scanning ? "block" : "none",
         }}
       >
         <div id="qr-reader" />
@@ -196,7 +209,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
         )}
       </div>
 
-      {result && (
+      {scanning && result && (
         <div
           className="mt-4 rounded-xl p-4"
           style={{
