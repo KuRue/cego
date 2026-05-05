@@ -518,7 +518,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
   const db = getDb();
 
   const rsvpRows = await db
-    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, prevStatus: rsvps.status })
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, prevStatus: rsvps.status, parentRsvpId: rsvps.parentRsvpId })
     .from(rsvps)
     .where(eq(rsvps.id, rsvpId))
     .limit(1);
@@ -534,7 +534,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
 
-  if (rsvpRows[0]) {
+  if (rsvpRows[0] && !rsvpRows[0].parentRsvpId) {
     const r = rsvpRows[0];
     const template =
       status === "confirmed" && r.prevStatus === "waitlisted"
