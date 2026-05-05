@@ -13,6 +13,7 @@ import {
   getDb,
   inArray,
   members,
+  ne,
   rsvps,
   sql,
   surveyResponses,
@@ -1028,6 +1029,41 @@ export async function markRsvpPendingAction(formData: FormData) {
     }
   }
 
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}
+
+export async function dropPlusOneAction(formData: FormData) {
+  const member = await requireCurrentMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
+
+  if (!rsvpId) redirect(returnTo);
+
+  const db = getDb();
+  const [row] = await db
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId })
+    .from(rsvps)
+    .where(eq(rsvps.id, rsvpId))
+    .limit(1);
+  if (!row || row.memberId !== member.id) redirect(returnTo);
+
+  const [plusOneRow] = await db
+    .select({ id: rsvps.id })
+    .from(rsvps)
+    .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled")))
+    .limit(1);
+
+  if (plusOneRow) {
+    await db
+      .update(rsvps)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(rsvps.id, plusOneRow.id));
+
+    promoteWaitlist(row.eventId).catch(() => {});
+  }
+
+  revalidatePath("/dashboard");
   revalidatePath(returnTo);
   redirect(returnTo);
 }

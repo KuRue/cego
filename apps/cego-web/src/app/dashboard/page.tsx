@@ -302,7 +302,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                     label="Price"
                     value={
                       event.priceCents !== null
-                        ? plusOne && rsvp?.status !== "cancelled"
+                         ? plusOne && rsvp?.status !== "cancelled" && plusOne.status === "confirmed"
                           ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
                           : formatPrice(event.priceCents, event.currency)
                         : "Payment required"

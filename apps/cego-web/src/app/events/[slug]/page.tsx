@@ -6,7 +6,7 @@ import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction, markRsvpPendingAction } from "@/lib/event-actions";
+import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
@@ -321,7 +321,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
                   style={{
-                    background: rsvp.paymentStatus === "pending" ? "var(--color-warning)" : "var(--color-warning)",
+                    background: "var(--color-warning)",
                     color: "#fff",
                   }}
                 >
@@ -332,7 +332,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               {event.priceCents !== null ? (
                 <p className="mt-3 text-lg font-semibold">
                   {formatPrice(
-                    plusOne && plusOne.status !== "cancelled"
+                    plusOne && plusOne.status === "confirmed"
                       ? event.priceCents * 2
                       : event.priceCents,
                     event.currency,
@@ -340,10 +340,31 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 </p>
               ) : null}
 
+              {plusOne && plusOne.status === "waitlisted" ? (
+                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
+                  <p className="font-semibold">Your +1 is on the waitlist</p>
+                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>
+                    {plusOne.plusOneName} is waitlisted and doesn't need payment yet. You can wait for a spot to open up, or drop them from your registration.
+                  </p>
+                  <form action={dropPlusOneAction} className="mt-2">
+                    <input type="hidden" name="rsvpId" value={rsvp.id} />
+                    <input type="hidden" name="returnTo" value={`/events/${event.slug}`} />
+                    <ConfirmButton
+                      type="submit"
+                      message={`Remove ${plusOne.plusOneName} from your RSVP?`}
+                      className="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                      style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", color: "var(--color-foreground)" }}
+                    >
+                      Drop +1
+                    </ConfirmButton>
+                  </form>
+                </div>
+              ) : null}
+
               <div className="mt-3 grid gap-2">
                 {parsePaymentMethods(event.paymentMethods).map((m, i) => {
-                  const hasPlusOne = plusOne && plusOne.status !== "cancelled" && rsvp?.status !== "cancelled";
-                  const price = hasPlusOne ? event.priceCents! * 2 : event.priceCents;
+                  const hasConfirmedPlusOne = plusOne && plusOne.status === "confirmed";
+                  const price = hasConfirmedPlusOne ? event.priceCents! * 2 : event.priceCents;
                   const url = getPaymentMethodUrl(m, price);
                   return (
                     <div key={i} className="flex items-center justify-between gap-2">
@@ -411,13 +432,34 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               {event.priceCents !== null ? (
                 <p className="mt-2 text-lg font-semibold">
                   {formatPrice(
-                    plusOne && plusOne.status !== "cancelled"
+                    plusOne && plusOne.status === "confirmed"
                       ? event.priceCents * 2
                       : event.priceCents,
                     event.currency,
                   )}
                 </p>
               ) : null}
+            </div>
+          ) : null}
+
+          {rsvp?.status === "confirmed" && event.paymentRequired && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") && plusOne && plusOne.status === "waitlisted" ? (
+            <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
+              <p className="font-semibold text-sm">Your +1 is on the waitlist</p>
+              <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                {plusOne.plusOneName} is waitlisted. You'll be notified if a spot opens up, or you can drop them below.
+              </p>
+              <form action={dropPlusOneAction} className="mt-2">
+                <input type="hidden" name="rsvpId" value={rsvp.id} />
+                <input type="hidden" name="returnTo" value={`/events/${event.slug}`} />
+                <ConfirmButton
+                  type="submit"
+                  message={`Remove ${plusOne.plusOneName} from your RSVP?`}
+                  className="rounded-lg px-4 py-2 text-sm font-semibold transition"
+                  style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", color: "var(--color-foreground)" }}
+                >
+                  Drop +1
+                </ConfirmButton>
+              </form>
             </div>
           ) : null}
 
