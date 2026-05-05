@@ -158,7 +158,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               <AvatarStack members={rsvpMembers} />
             </div>
           ) : null}
-          <h1 className="font-title mt-4 max-w-4xl text-4xl font-semibold leading-tight">
+          <h1 className="font-title mt-4 max-w-4xl text-4xl leading-tight">
             {event.title}
           </h1>
           {event.description ? (

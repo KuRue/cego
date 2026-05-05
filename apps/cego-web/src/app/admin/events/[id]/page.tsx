@@ -90,7 +90,7 @@ export default async function AdminEventDetailPage({
                 >
                   &larr; Events
                 </AppLink>
-                <h1 className="mt-1 font-title text-xl font-semibold sm:text-3xl">{detail.event.title}</h1>
+                <h1 className="mt-1 font-title text-xl sm:text-3xl">{detail.event.title}</h1>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusBadge status={detail.event.status} />
