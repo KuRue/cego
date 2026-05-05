@@ -117,7 +117,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
     confirmedCount,
   });
   const isCancelableRsvp =
-    rsvp?.status === "confirmed" || rsvp?.status === "waitlisted";
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
@@ -402,7 +402,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             </div>
           ) : null}
 
-          {rsvp && rsvp.status !== "cancelled" && survey && survey.schema.questions.length > 0 ? (
+          {rsvp && rsvp.status !== "cancelled" && !rsvp.checkedInAt && survey && survey.schema.questions.length > 0 ? (
             <div className="mt-5">
               <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
                 {survey.title}

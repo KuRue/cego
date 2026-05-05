@@ -453,7 +453,7 @@ export async function cancelRsvpAction(formData: FormData) {
       .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, member.id)));
 
     const parentRsvp = memberRsvps.find((r) => !r.parentRsvpId);
-    if (!parentRsvp || parentRsvp.status === "cancelled") return;
+    if (!parentRsvp || parentRsvp.status === "cancelled" || parentRsvp.checkedInAt) return;
 
     const now = new Date();
 

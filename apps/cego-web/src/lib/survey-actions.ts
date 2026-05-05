@@ -94,7 +94,7 @@ export async function submitSurveyResponseAction(formData: FormData) {
 
   if (survey.eventId) {
     const eligibleRows = await db
-      .select({ id: rsvps.id })
+      .select({ id: rsvps.id, checkedInAt: rsvps.checkedInAt })
       .from(rsvps)
       .where(
         and(
@@ -105,7 +105,7 @@ export async function submitSurveyResponseAction(formData: FormData) {
       )
       .limit(1);
 
-    if (!eligibleRows[0]) {
+    if (!eligibleRows[0] || eligibleRows[0].checkedInAt) {
       redirect("/dashboard");
     }
   }
