@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   and,
+  asc,
   count,
   eq,
   eventExpenses,
@@ -50,6 +51,8 @@ export async function updateEventAction(formData: FormData) {
     .update(events)
     .set({ ...parseEventForm(formData), updatedAt: new Date() })
     .where(eq(events.id, eventId));
+
+  promoteWaitlist(eventId).catch(() => {});
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
@@ -478,6 +481,8 @@ export async function cancelRsvpAction(formData: FormData) {
     template: "rsvp_cancelled",
   }).catch(() => {});
 
+  promoteWaitlist(eventId).catch(() => {});
+
   redirect(returnTo);
 }
 
@@ -549,6 +554,10 @@ export async function updateRsvpStatusAction(formData: FormData) {
 
     if (template) {
       sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
+    }
+
+    if (status === "cancelled") {
+      promoteWaitlist(r.eventId).catch(() => {});
     }
   }
 
@@ -840,6 +849,76 @@ function isNextRedirect(err: unknown): boolean {
     typeof (err as { digest: string }).digest === "string" &&
     (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
   );
+}
+
+async function promoteWaitlist(eventId: string): Promise<void> {
+  const db = getDb();
+
+  const eventRows = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  const event = eventRows[0];
+  if (!event) return;
+
+  const waitlistedRows = await db
+    .select({ id: rsvps.id, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
+    .from(rsvps)
+    .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "waitlisted"), sql`${rsvps.parentRsvpId} IS NULL`))
+    .orderBy(asc(rsvps.createdAt));
+
+  if (waitlistedRows.length === 0) return;
+
+  const confirmedCountRow = await db
+    .select({ total: count() })
+    .from(rsvps)
+    .where(and(eq(rsvps.eventId, eventId), inArray(rsvps.status, capacityBearingStatuses)));
+  let confirmedCount = Number(confirmedCountRow[0]?.total ?? 0);
+
+  for (const entry of waitlistedRows) {
+    const needed = 1;
+
+    const plusOneRows = await db
+      .select({ id: rsvps.id })
+      .from(rsvps)
+      .where(and(eq(rsvps.parentRsvpId, entry.id), eq(rsvps.status, "waitlisted")))
+      .limit(1);
+    const hasWaitlistedPlusOne = plusOneRows.length > 0;
+    const totalNeeded = hasWaitlistedPlusOne ? 2 : needed;
+
+    const slotsLeft = event.capacity - confirmedCount;
+    if (slotsLeft < needed) break;
+
+    const parentStatus: RsvpStatus = "confirmed";
+    const plusOneStatus: RsvpStatus = slotsLeft >= totalNeeded ? "confirmed" : "waitlisted";
+
+    await db
+      .update(rsvps)
+      .set({ status: parentStatus, updatedAt: new Date() })
+      .where(eq(rsvps.id, entry.id));
+
+    confirmedCount++;
+
+    if (hasWaitlistedPlusOne) {
+      await db
+        .update(rsvps)
+        .set({ status: plusOneStatus, updatedAt: new Date() })
+        .where(eq(rsvps.id, plusOneRows[0].id));
+
+      if (plusOneStatus === "confirmed") {
+        confirmedCount++;
+      }
+    }
+
+    sendNotification({
+      memberId: entry.memberId,
+      eventId,
+      template: "rsvp_promoted",
+    }).catch(() => {});
+
+    if (slotsLeft - totalNeeded < needed) break;
+  }
 }
 
 export async function updateRsvpNotesAction(formData: FormData) {
