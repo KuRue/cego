@@ -967,6 +967,45 @@ async function promoteWaitlist(eventId: string): Promise<void> {
   const event = eventRows[0];
   if (!event) return;
 
+  const now = new Date();
+  const paymentDeadline = event.paymentRequired
+    ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
+        ? event.paymentDueDate
+        : new Date(now.getTime() + 24 * 60 * 60 * 1000))
+    : null;
+
+  const waitlistedPlusOneRows = await db
+    .select({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId })
+    .from(rsvps)
+    .where(and(
+      eq(rsvps.eventId, eventId),
+      eq(rsvps.status, "waitlisted"),
+      sql`${rsvps.parentRsvpId} IS NOT NULL`,
+    ));
+
+  for (const po of waitlistedPlusOneRows) {
+    const parentRows = await db
+      .select({ status: rsvps.status, memberId: rsvps.memberId })
+      .from(rsvps)
+      .where(eq(rsvps.id, po.parentRsvpId!))
+      .limit(1);
+    if (!parentRows[0] || parentRows[0].status !== "confirmed") continue;
+
+    const countRow = await db
+      .select({ total: count() })
+      .from(rsvps)
+      .where(and(eq(rsvps.eventId, eventId), inArray(rsvps.status, capacityBearingStatuses)));
+    const slotsLeft = event.capacity - Number(countRow[0]?.total ?? 0);
+    if (slotsLeft < 1) break;
+
+    await db
+      .update(rsvps)
+      .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
+      .where(eq(rsvps.id, po.id));
+
+    sendNotification({ memberId: parentRows[0].memberId, eventId, template: "rsvp_promoted" }).catch(() => {});
+  }
+
   const waitlistedRows = await db
     .select({ id: rsvps.id, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
     .from(rsvps)
@@ -995,17 +1034,9 @@ async function promoteWaitlist(eventId: string): Promise<void> {
 
     if (slotsLeft < totalNeeded) continue;
 
-    const now = new Date();
-    const activeStatus: RsvpStatus = "confirmed";
-    const paymentDeadline = event.paymentRequired
-      ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
-          ? event.paymentDueDate
-          : new Date(now.getTime() + 24 * 60 * 60 * 1000))
-      : null;
-
     await db
       .update(rsvps)
-      .set({ status: activeStatus, paymentDeadlineAt: paymentDeadline, updatedAt: now })
+      .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
       .where(eq(rsvps.id, entry.id));
 
     confirmedCount++;
@@ -1013,7 +1044,7 @@ async function promoteWaitlist(eventId: string): Promise<void> {
     if (hasWaitlistedPlusOne) {
       await db
         .update(rsvps)
-        .set({ status: activeStatus, paymentDeadlineAt: paymentDeadline, updatedAt: now })
+        .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
         .where(eq(rsvps.id, plusOneRows[0].id));
 
       confirmedCount++;
