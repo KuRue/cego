@@ -719,6 +719,7 @@ function parseEventForm(formData: FormData) {
     rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),
     costCents: readOptionalPriceCents(formData, "cost"),
     paymentNotifyMemberId: readOptionalText(formData, "paymentNotifyMemberId") || null,
+    qrCheckInEnabled: readCheckbox(formData, "qrCheckInEnabled"),
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };
 }

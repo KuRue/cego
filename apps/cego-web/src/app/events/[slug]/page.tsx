@@ -10,6 +10,7 @@ import { cancelRsvpAction, markRsvpPendingAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
+import QrCodeDisplay from "@/components/qr-code-display";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -384,6 +385,20 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                   Payment due by {formatDateOnly(event.paymentDueDate)}.
                 </p>
               ) : null}
+            </div>
+          ) : null}
+
+          {rsvp && rsvp.status === "confirmed" && canSeeAddress && event.qrCheckInEnabled && !rsvp.checkedInAt ? (
+            <div className="mt-5">
+              <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
+                Check-in QR
+              </p>
+              <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
+                Present this at the door
+              </p>
+              <div className="mt-3 flex justify-center rounded-xl p-4" style={{ background: "#ffffff" }}>
+                <QrCodeDisplay data={rsvp.id} />
+              </div>
             </div>
           ) : null}
 

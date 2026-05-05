@@ -99,6 +99,7 @@ export default async function AdminPage() {
           <NavButton href="/admin/events">Events</NavButton>
           <NavButton href="/admin/surveys">Surveys</NavButton>
           <NavButton href="/admin/members">Members</NavButton>
+          <NavButton href="/admin/check-in">Check-in Scanner</NavButton>
           <NavButton href="/admin/settings">Settings</NavButton>
           <NavButton href="/admin/diagnostics">Diagnostics</NavButton>
         </nav>

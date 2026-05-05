@@ -421,6 +421,10 @@ function EventForm({
           ))}
         </select>
       </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input name="qrCheckInEnabled" type="checkbox" defaultChecked={event?.qrCheckInEnabled ?? false} className="h-4 w-4" />
+        <span className="font-medium">QR check-in</span>
+      </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Payment due date">
           <input
