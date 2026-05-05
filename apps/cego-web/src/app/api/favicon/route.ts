@@ -34,5 +34,5 @@ export async function GET() {
     }
   }
 
-  return NextResponse.rewrite(new URL("/favicon.ico", "http://localhost"));
+  return new NextResponse(null, { status: 404 });
 }
