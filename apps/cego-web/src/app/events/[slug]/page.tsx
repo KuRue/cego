@@ -242,7 +242,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 className="flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
                 style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
               >
-                Start RSVP
+                {effective === "full" ? "Join waitlist" : "Start RSVP"}
               </AppLink>
             ) : null}
 
