@@ -39,20 +39,14 @@ export default async function CheckInPage() {
         }}
         brand={brand}
       />
-      <main className="mx-auto max-w-2xl px-4 pb-16 pt-8">
-        <a
-          href="/admin"
-          className="text-sm font-semibold"
-          style={{ color: "var(--color-accent)" }}
-        >
-          &larr; Admin
-        </a>
-        <h1 className="mt-1 text-2xl font-semibold">Check-in Scanner</h1>
-
+      <main className="mx-auto max-w-2xl px-4 pb-16 pt-4">
         {eligible.length === 0 ? (
-          <p className="mt-4 text-sm" style={{ color: "var(--color-muted)" }}>
-            No events with QR check-in enabled.
-          </p>
+          <>
+            <a href="/admin" className="text-sm font-semibold" style={{ color: "var(--color-accent)" }}>&larr; Admin</a>
+            <p className="mt-4 text-sm" style={{ color: "var(--color-muted)" }}>
+              No events with QR check-in enabled.
+            </p>
+          </>
         ) : (
           <CheckInScanner events={eligible} />
         )}
