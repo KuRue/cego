@@ -78,6 +78,7 @@ export async function rsvpForEventAction(formData: FormData) {
 
   const db = getDb();
   let rsvpStatus: "confirmed" | "waitlisted" | null = null;
+  let plusOneWaitlisted = false;
 
   try {
     await db.transaction(async (tx) => {
@@ -147,6 +148,7 @@ export async function rsvpForEventAction(formData: FormData) {
       const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       rsvpStatus = activeStatus;
+      plusOneWaitlisted = plusOneName !== null && plusOneStatus === "waitlisted";
 
       const now = new Date();
       const paymentDeadline = event.paymentRequired
@@ -315,12 +317,15 @@ export async function rsvpForEventAction(formData: FormData) {
   revalidatePath("/admin");
 
   if (rsvpStatus) {
+    const template = rsvpStatus === "confirmed" && plusOneWaitlisted
+      ? "rsvp_confirmed_plusone_waitlisted"
+      : rsvpStatus === "confirmed"
+        ? "rsvp_confirmed"
+        : "rsvp_waitlisted";
     sendNotification({
       memberId: member.id,
       eventId,
-      template: rsvpStatus === "confirmed"
-        ? "rsvp_confirmed"
-        : "rsvp_waitlisted",
+      template,
     }).catch(() => {});
   }
 

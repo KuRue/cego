@@ -145,13 +145,24 @@ export default async function RsvpPage({
 function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; displayName: string }) {
   return (
     <div className="glass-lg mt-8 rounded-2xl p-6">
-      <p className="text-lg font-semibold">You&apos;re registered!</p>
-      <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-        Your RSVP status: <strong>{rsvpStatusLabel(data.rsvp!.status)}</strong>
-        {data.plusOne && data.plusOne.status !== "cancelled" ? (
-          <> · +1: <strong>{data.plusOne.plusOneName}</strong> ({rsvpStatusLabel(data.plusOne.status)})</>
-        ) : null}
-      </p>
+      {data.rsvp?.status === "confirmed" && data.plusOne && data.plusOne.status === "waitlisted" ? (
+        <>
+          <p className="text-lg font-semibold">You&apos;re confirmed!</p>
+          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+            Your spot is confirmed, but {data.plusOne.plusOneName} is on the waitlist. You can wait for a spot to open up or drop them to pay for just yourself.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-lg font-semibold">You&apos;re registered!</p>
+          <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+            Your RSVP status: <strong>{rsvpStatusLabel(data.rsvp!.status)}</strong>
+            {data.plusOne && data.plusOne.status !== "cancelled" ? (
+              <> · +1: <strong>{data.plusOne.plusOneName}</strong> ({rsvpStatusLabel(data.plusOne.status)})</>
+            ) : null}
+          </p>
+        </>
+      )}
 
       {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>

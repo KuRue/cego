@@ -11,6 +11,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
 type NotificationTemplate =
   | "rsvp_confirmed"
+  | "rsvp_confirmed_plusone_waitlisted"
   | "rsvp_waitlisted"
   | "rsvp_promoted"
   | "rsvp_cancelled"
@@ -28,6 +29,14 @@ function buildMessage(
   switch (template) {
     case "rsvp_confirmed": {
       let msg = `✅ You're confirmed for *${event.title}*!`;
+      if (event.paymentDueDate) {
+        const due = formatDate(event.paymentDueDate);
+        msg += `\n\n💳 Payment is due by ${due}.`;
+      }
+      return msg;
+    }
+    case "rsvp_confirmed_plusone_waitlisted": {
+      let msg = `✅ You're confirmed for *${event.title}*, but your +1 is on the waitlist.`;
       if (event.paymentDueDate) {
         const due = formatDate(event.paymentDueDate);
         msg += `\n\n💳 Payment is due by ${due}.`;
@@ -90,6 +99,7 @@ export async function sendNotification({
   const prefs = member.notifyPrefs ?? { rsvpUpdates: true, newEvents: true };
   const isRsvpNotification = [
     "rsvp_confirmed",
+    "rsvp_confirmed_plusone_waitlisted",
     "rsvp_waitlisted",
     "rsvp_promoted",
     "rsvp_cancelled",
