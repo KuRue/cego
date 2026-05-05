@@ -268,18 +268,27 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
           {rsvp && rsvp.status !== "cancelled" ? (
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
-              <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-                Your RSVP
-              </p>
-              <div className="mt-3 flex items-center gap-2">
-      <span className="text-sm font-medium">{memberName}</span>
-      <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} />
-    </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                  RSVP
+                </p>
+                <span
+                  className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
+                  style={{
+                    background: rsvp.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)",
+                    color: "#fff",
+                  }}
+                >
+                  {rsvpStatusLabel(rsvp.status)}
+                </span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm font-medium">{memberName}</span>
+              </div>
               {plusOne && plusOne.status !== "cancelled" ? (
-                <div className="mt-3 flex items-center gap-2" style={{ borderTop: "1px solid var(--color-surface-border)", paddingTop: "0.75rem" }}>
+                <div className="mt-2 flex items-center gap-2" style={{ borderTop: "1px solid var(--color-surface-border)", paddingTop: "0.75rem" }}>
                   <span className="text-sm" style={{ color: "var(--color-muted)" }}>+1:</span>
                   <span className="text-sm font-medium">{plusOne.plusOneName}</span>
-                  <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
                 </div>
               ) : null}
             </div>
