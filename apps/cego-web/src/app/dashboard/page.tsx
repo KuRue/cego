@@ -185,22 +185,15 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
           {/* Top row pills */}
           <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-            <div>
-              <span
-                className="inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
-                style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
-              >
-                {getCountdownLabel(event)}
-              </span>
-              {rsvpMembers.length > 0 ? (
-                <div className="mt-1.5">
-                  <AvatarStack members={rsvpMembers} />
-                </div>
-              ) : null}
-            </div>
+            <span
+              className="inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+              style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
+            >
+              {getCountdownLabel(event)}
+            </span>
             {rsvp && rsvp.status !== "cancelled" ? (
               <span
-                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
                 style={{
                   background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : "rgba(234,179,8,0.85)",
                   color: rsvp.status === "confirmed" ? "#fff" : "#1a1d23",
@@ -211,6 +204,12 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               </span>
             ) : null}
           </div>
+
+          {rsvpMembers.length > 0 ? (
+            <div className="absolute top-12 left-3">
+              <AvatarStack members={rsvpMembers} />
+            </div>
+          ) : null}
 
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
