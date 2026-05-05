@@ -6,12 +6,13 @@ import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction } from "@/lib/event-actions";
+import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction, expirePastDeadlineRsvps } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
 import QrCodeDisplay from "@/components/qr-code-display";
 import PaymentLink from "@/components/payment-link";
+import ParallaxImage from "@/components/parallax-image";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand } from "@/lib/settings";
@@ -90,6 +91,8 @@ export default async function EventDetailPage({
   if (!eventState) {
     notFound();
   }
+
+  expirePastDeadlineRsvps().catch(() => {});
 
   return (
     <>
@@ -182,7 +185,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         </div>
       ) : event.promoImageUrl ? (
         <div className="promo-shimmer mt-6 overflow-hidden rounded-2xl">
-          <Image src={event.promoImageUrl} alt="" width={1200} height={600} className="w-full" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px" />
+          <ParallaxImage src={event.promoImageUrl} alt="" width={1200} height={600} className="w-full" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px" />
         </div>
       ) : null}
 
