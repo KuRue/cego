@@ -166,8 +166,8 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
       </section>
 
       {rsvp && rsvp.status === "confirmed" && canSeeAddress && event.qrCheckInEnabled && !rsvp.checkedInAt ? (
-        <div className="mt-6 overflow-hidden rounded-2xl" style={{ background: "#ffffff" }}>
-          <div className="flex flex-col items-center py-8">
+        <div className="qr-ants mt-6 rounded-2xl" style={{ background: "#ffffff", padding: "3px" }}>
+          <div className="flex flex-col items-center rounded-2xl py-8" style={{ background: "#ffffff" }}>
             <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "#888" }}>
               Check-in QR
             </p>
