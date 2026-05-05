@@ -222,7 +222,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 className="flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
                 style={{ background: "var(--color-accent)", color: "var(--color-on-accent)", opacity: 0.8 }}
               >
-                RSVP (admin early access)
+                Early RSVP
               </AppLink>
             ) : null}
 
