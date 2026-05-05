@@ -148,7 +148,13 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
             <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
-            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
+            {rsvp ? (
+              effective === "closed" ? (
+                <StatusBadge status="closed" label="Closed" />
+              ) : (
+                <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} />
+              )
+            ) : null}
           </div>
           {rsvpMembers.length > 0 ? (
             <div className="mt-3">
@@ -279,11 +285,11 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
                   style={{
-                    background: rsvp.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)",
+                    background: effective === "closed" ? "var(--color-danger)" : rsvp.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)",
                     color: "#fff",
                   }}
                 >
-                  {rsvpStatusLabel(rsvp.status)}
+                  {effective === "closed" ? "Closed" : rsvpStatusLabel(rsvp.status)}
                 </span>
               </div>
               {plusOne && plusOne.status !== "cancelled" ? (
@@ -295,11 +301,11 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                   <span
                     className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
                     style={{
-                      background: plusOne.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)",
+                      background: effective === "closed" ? "var(--color-danger)" : plusOne.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)",
                       color: "#fff",
                     }}
                   >
-                    {rsvpStatusLabel(plusOne.status)}
+                    {effective === "closed" ? "Closed" : rsvpStatusLabel(plusOne.status)}
                   </span>
                 </div>
               ) : null}

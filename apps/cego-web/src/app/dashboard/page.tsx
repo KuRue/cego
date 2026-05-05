@@ -199,16 +199,29 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               ) : null}
             </div>
             {rsvp && rsvp.status !== "cancelled" ? (
-              <span
-                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
-                style={{
-                  background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : "rgba(234,179,8,0.85)",
-                  color: rsvp.status === "confirmed" ? "#fff" : "#1a1d23",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                {rsvpStatusLabel(rsvp.status)}
-              </span>
+              effective === "closed" ? (
+                <span
+                  className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                  style={{
+                    background: "rgba(239,68,68,0.85)",
+                    color: "#fff",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  Closed
+                </span>
+              ) : (
+                <span
+                  className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                  style={{
+                    background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : "rgba(234,179,8,0.85)",
+                    color: rsvp.status === "confirmed" ? "#fff" : "#1a1d23",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  {rsvpStatusLabel(rsvp.status)}
+                </span>
+              )
             ) : null}
           </div>
 
@@ -274,7 +287,13 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
-                {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
+                {rsvp ? (
+                  effective === "closed" ? (
+                    <StatusBadge status="closed" label="Closed" />
+                  ) : (
+                    <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} />
+                  )
+                ) : null}
               </div>
               <h3 className="font-title mt-3 text-2xl font-semibold">{event.title}</h3>
               {rsvpMembers.length > 0 ? (
@@ -333,7 +352,11 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-sm" style={{ background: "var(--color-surface-hover)" }}>
                   <span style={{ color: "var(--color-muted)" }}>+1:</span>
                   <span className="font-medium">{plusOne.plusOneName}</span>
-                  <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
+                  {effective === "closed" ? (
+                    <StatusBadge status="closed" label="Closed" />
+                  ) : (
+                    <StatusBadge status={plusOne.status} label={rsvpStatusLabel(plusOne.status)} />
+                  )}
                 </div>
               ) : null}
             </div>
