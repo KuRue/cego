@@ -92,6 +92,7 @@ export const events = pgTable(
     rsvpOpensAt: timestamp("rsvp_opens_at", { withTimezone: true }),
     rsvpClosesAt: timestamp("rsvp_closes_at", { withTimezone: true }),
     costCents: integer("cost_cents"),
+    paymentNotifyMemberId: uuid("payment_notify_member_id").references(() => members.id, { onDelete: "set null" }),
     status: eventStatusEnum("status").default("draft").notNull(),
     ...lifecycleColumns,
   },

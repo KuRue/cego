@@ -8,6 +8,8 @@ import {
 import AppLink from "@/components/app-link";
 import { getAdminEvents, getAdminDeletedEvents, type AdminEventWithRsvps } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
+import { getDb, members } from "@cego/db";
+import { asc } from "@cego/db";
 import Navbar from "@/components/navbar";
 import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
@@ -29,6 +31,11 @@ export default async function AdminEventsPage() {
   const settings = await getSiteSettings();
   const eventOverviews = await getAdminEvents();
   const deletedEvents = await getAdminDeletedEvents();
+  const db = getDb();
+  const allMembers = await db
+    .select({ id: members.id, telegramDisplayName: members.telegramDisplayName })
+    .from(members)
+    .orderBy(asc(members.telegramDisplayName));
 
   return (
     <>
@@ -65,7 +72,7 @@ export default async function AdminEventsPage() {
             </div>
           ) : (
             eventOverviews.map((overview) => (
-              <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} />
+              <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} />
             ))
           )}
         </div>
@@ -77,7 +84,7 @@ export default async function AdminEventsPage() {
             </summary>
             <div className="mt-5 grid gap-5">
               {deletedEvents.map((overview) => (
-                <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} />
+                <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} />
               ))}
             </div>
           </details>
@@ -107,7 +114,7 @@ function CreateEventButton({ defaultType }: { defaultType: string }) {
   );
 }
 
-function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eventTypes: string[] }) {
+function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWithRsvps; eventTypes: string[]; allMembers: { id: string; telegramDisplayName: string }[] }) {
   const { event, confirmedCount, waitlistedCount, rsvps } = overview;
 
   return (
@@ -157,7 +164,7 @@ function EventRow({ overview, eventTypes }: { overview: AdminEventWithRsvps; eve
         <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
           Edit event
         </summary>
-        <EventForm action={updateEventAction} submitLabel="Save event" event={event} eventTypes={eventTypes} />
+        <EventForm action={updateEventAction} submitLabel="Save event" event={event} eventTypes={eventTypes} allMembers={allMembers} />
       </details>
 
       {rsvps.length > 0 ? (
@@ -280,11 +287,13 @@ function EventForm({
   submitLabel,
   event,
   eventTypes,
+  allMembers,
 }: {
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
   event?: AdminEventWithRsvps["event"];
   eventTypes?: string[];
+  allMembers?: { id: string; telegramDisplayName: string }[];
 }) {
   return (
     <form action={action} className="mt-4 grid gap-4 overflow-hidden">
@@ -401,6 +410,14 @@ function EventForm({
       </div>
       <Field label="Payment methods">
         <PaymentMethodsEditor name="paymentMethods" defaultValue={event?.paymentMethods ?? null} />
+      </Field>
+      <Field label="Payment notification recipient">
+        <select name="paymentNotifyMemberId" defaultValue={event?.paymentNotifyMemberId ?? ""} className="form-select">
+          <option value="">None</option>
+          {allMembers?.map((m) => (
+            <option key={m.id} value={m.id}>{m.telegramDisplayName}</option>
+          ))}
+        </select>
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Payment due date">

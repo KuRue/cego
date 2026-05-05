@@ -11,6 +11,7 @@ import {
   events,
   getDb,
   inArray,
+  members,
   rsvps,
   sql,
   surveyResponses,
@@ -717,6 +718,7 @@ function parseEventForm(formData: FormData) {
     rsvpOpensAt: readOptionalDate(formData, "rsvpOpensAt"),
     rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),
     costCents: readOptionalPriceCents(formData, "cost"),
+    paymentNotifyMemberId: readOptionalText(formData, "paymentNotifyMemberId") || null,
     status: readEnum(formData, "status", eventStatuses) satisfies EventStatus,
   };
 }
@@ -907,13 +909,44 @@ export async function markRsvpPendingAction(formData: FormData) {
   if (!rsvpId) redirect(returnTo);
 
   const db = getDb();
-  const [row] = await db.select({ memberId: rsvps.memberId }).from(rsvps).where(eq(rsvps.id, rsvpId)).limit(1);
+  const [row] = await db
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId })
+    .from(rsvps)
+    .where(eq(rsvps.id, rsvpId))
+    .limit(1);
   if (!row || row.memberId !== member.id) redirect(returnTo);
 
   await db
     .update(rsvps)
     .set({ paymentStatus: "pending", updatedAt: new Date() })
     .where(eq(rsvps.id, rsvpId));
+
+  const [eventRow] = await db
+    .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title })
+    .from(events)
+    .where(eq(events.id, row.eventId))
+    .limit(1);
+
+  if (eventRow?.paymentNotifyMemberId) {
+    const [notifyMember] = await db
+      .select({ telegramId: members.telegramId })
+      .from(members)
+      .where(eq(members.id, eventRow.paymentNotifyMemberId))
+      .limit(1);
+
+    if (notifyMember?.telegramId) {
+      const { sendTelegramMessage } = await import("@cego/telegram");
+      const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
+      if (BOT_TOKEN) {
+        sendTelegramMessage({
+          botToken: BOT_TOKEN,
+          chatId: notifyMember.telegramId,
+          text: `💰 *${member.telegramDisplayName}* marked their payment as pending for *${eventRow.title}*.`,
+          parseMode: "Markdown",
+        }).catch(() => {});
+      }
+    }
+  }
 
   revalidatePath(returnTo);
   redirect(returnTo);

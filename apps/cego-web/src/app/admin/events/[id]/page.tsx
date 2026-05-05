@@ -7,6 +7,8 @@ import {
 import AppLink from "@/components/app-link";
 import { getAdminEventDetail } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
+import { getDb, members } from "@cego/db";
+import { asc } from "@cego/db";
 import Navbar from "@/components/navbar";
 import { StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
@@ -35,6 +37,12 @@ export default async function AdminEventDetailPage({
   const detail = await getAdminEventDetail(id);
 
   if (!detail) notFound();
+
+  const db = getDb();
+  const allMembers = await db
+    .select({ id: members.id, telegramDisplayName: members.telegramDisplayName })
+    .from(members)
+    .orderBy(asc(members.telegramDisplayName));
 
   const returnTo = `/admin/events/${detail.event.id}`;
 
@@ -235,7 +243,7 @@ export default async function AdminEventDetailPage({
           <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
             Edit event
           </summary>
-          <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} />
+          <EventForm action={updateEventAction} event={detail.event} eventTypes={settings.eventTypes} allMembers={allMembers} />
         </details>
         {detail.event.status === "archived" && (
           <form action={deleteEventAction} className="mt-4 sm:hidden">
@@ -294,10 +302,12 @@ function EventForm({
   action,
   event,
   eventTypes,
+  allMembers,
 }: {
   action: (formData: FormData) => Promise<void>;
   event: import("@cego/db").Event;
   eventTypes?: string[];
+  allMembers?: { id: string; telegramDisplayName: string }[];
 }) {
   return (
     <form action={action} className="mt-4 grid gap-4 overflow-hidden">
@@ -401,6 +411,14 @@ function EventForm({
       </div>
       <Field label="Payment methods">
         <PaymentMethodsEditor name="paymentMethods" defaultValue={event.paymentMethods ?? null} />
+      </Field>
+      <Field label="Payment notification recipient">
+        <select name="paymentNotifyMemberId" defaultValue={event.paymentNotifyMemberId ?? ""} className="form-select">
+          <option value="">None</option>
+          {allMembers?.map((m) => (
+            <option key={m.id} value={m.id}>{m.telegramDisplayName}</option>
+          ))}
+        </select>
       </Field>
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Rules">
