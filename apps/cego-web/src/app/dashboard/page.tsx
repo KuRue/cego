@@ -518,15 +518,23 @@ function getCountdownLabel(event: {
   startsAt: Date;
   rsvpOpensAt: Date | null;
   rsvpClosesAt: Date | null;
-}): string {
+}, tz?: string): string {
   const now = Date.now();
-  const fmtDays = (ms: number) => {
-    const d = Math.ceil(ms / 86400000);
+  const fmtDuration = (ms: number) => {
+    if (ms <= 0) return "soon";
+    const totalMin = Math.ceil(ms / 60000);
+    const d = Math.floor(totalMin / 1440);
     if (d > 1) return `${d} days`;
-    if (d === 1) return "1 day";
-    const h = Math.ceil(ms / 3600000);
-    if (h > 1) return `${h}h`;
-    return "soon";
+    if (d === 1) {
+      const remH = Math.floor((totalMin - 1440) / 60);
+      return remH > 0 ? `1 day ${remH}h` : "1 day";
+    }
+    const h = Math.floor(totalMin / 60);
+    if (h > 0) {
+      const remM = totalMin - h * 60;
+      return remM > 0 ? `${h}h ${remM}m` : `${h}h`;
+    }
+    return `${totalMin}m`;
   };
 
   if (event.status === "archived") return "Archived";
@@ -534,16 +542,16 @@ function getCountdownLabel(event: {
 
   if (event.rsvpOpensAt) {
     const diff = event.rsvpOpensAt.getTime() - now;
-    if (diff > 0) return `RSVP opens in ${fmtDays(diff)}`;
+    if (diff > 0) return `RSVP opens in ${fmtDuration(diff)}`;
   }
 
   if (event.rsvpClosesAt) {
     const diff = event.rsvpClosesAt.getTime() - now;
-    if (diff > 0) return `RSVP closes in ${fmtDays(diff)}`;
+    if (diff > 0) return `RSVP closes in ${fmtDuration(diff)}`;
   }
 
   const diff = event.startsAt.getTime() - now;
-  if (diff > 0) return `Event in ${fmtDays(diff)}`;
+  if (diff > 0) return `Event in ${fmtDuration(diff)}`;
 
   return "Past";
 }

@@ -28,6 +28,34 @@ import { sendNotification } from "@/lib/notifications";
 
 const capacityBearingStatuses = ["confirmed"] as const;
 
+function calcPaymentDeadline(event: {
+  paymentRequired: boolean | null;
+  paymentDueDate: Date | null;
+  rsvpClosesAt: Date | null;
+}): Date | null {
+  if (!event.paymentRequired) return null;
+
+  const now = new Date();
+  const softClosed = event.rsvpClosesAt != null && event.rsvpClosesAt.getTime() <= now.getTime();
+
+  if (softClosed) {
+    return new Date(now.getTime() + 60 * 60 * 1000);
+  }
+
+  let deadline: Date;
+  if (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()) {
+    deadline = event.paymentDueDate;
+  } else {
+    deadline = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  }
+
+  if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() < deadline.getTime()) {
+    deadline = event.rsvpClosesAt;
+  }
+
+  return deadline;
+}
+
 export async function createEventAction(formData: FormData) {
   await requireAdminMember();
   const db = getDb();
@@ -151,11 +179,7 @@ export async function rsvpForEventAction(formData: FormData) {
       plusOneWaitlisted = plusOneName !== null && plusOneStatus === "waitlisted";
 
       const now = new Date();
-      const paymentDeadline = event.paymentRequired
-        ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
-            ? event.paymentDueDate
-            : new Date(now.getTime() + 24 * 60 * 60 * 1000))
-        : null;
+      const paymentDeadline = calcPaymentDeadline(event);
 
       const cancelledRsvp = currentRsvpRows.find(
         (r) => r.status === "cancelled" && !r.parentRsvpId,
@@ -385,11 +409,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
       const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       const now = new Date();
-      const paymentDeadline = event.paymentRequired
-        ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
-            ? event.paymentDueDate
-            : new Date(now.getTime() + 24 * 60 * 60 * 1000))
-        : null;
+      const paymentDeadline = calcPaymentDeadline(event);
 
     const cancelledRsvp = currentRsvpRows.find(
       (r) => r.status === "cancelled" && !r.parentRsvpId,
@@ -968,11 +988,7 @@ async function promoteWaitlist(eventId: string): Promise<void> {
   if (!event) return;
 
   const now = new Date();
-  const paymentDeadline = event.paymentRequired
-    ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
-        ? event.paymentDueDate
-        : new Date(now.getTime() + 24 * 60 * 60 * 1000))
-    : null;
+  const paymentDeadline = calcPaymentDeadline(event);
 
   const waitlistedPlusOneRows = await db
     .select({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId })
@@ -1208,7 +1224,7 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
   const db = getDb();
   const now = new Date();
 
-  const expiredRows = await db
+  const expiredByDeadline = await db
     .select({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
     .from(rsvps)
     .where(
@@ -1220,25 +1236,53 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
       ),
     );
 
-  if (expiredRows.length === 0) return;
+  const softClosedEvents = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(
+      and(
+        inArray(events.status, ["show"]),
+        sql`${events.rsvpClosesAt} IS NOT NULL AND ${events.rsvpClosesAt} <= ${now}`,
+      ),
+    );
 
-  const parentIds = expiredRows.filter((r) => !r.parentRsvpId).map((r) => r.id);
-  const plusOneIds = expiredRows.filter((r) => r.parentRsvpId).map((r) => r.id);
-  const allIds = [...parentIds, ...plusOneIds];
+  const softClosedEventIds = softClosedEvents.map((e) => e.id);
+  const expiredBySoftClose = softClosedEventIds.length > 0
+    ? await db
+        .select({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
+        .from(rsvps)
+        .where(
+          and(
+            inArray(rsvps.eventId, softClosedEventIds),
+            eq(rsvps.status, "confirmed"),
+            ne(rsvps.paymentStatus, "paid"),
+            ne(rsvps.paymentStatus, "waived"),
+          ),
+        )
+    : [];
 
-  if (allIds.length > 0) {
-    await db
-      .update(rsvps)
-      .set({ status: "expired", updatedAt: now })
-      .where(inArray(rsvps.id, allIds));
-  }
+  const seen = new Set<string>();
+  const allRows = [...expiredByDeadline, ...expiredBySoftClose].filter((r) => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
 
-  const eventIds = [...new Set(expiredRows.map((r) => r.eventId))];
+  if (allRows.length === 0) return;
+
+  const allIds = allRows.map((r) => r.id);
+
+  await db
+    .update(rsvps)
+    .set({ status: "expired", updatedAt: now })
+    .where(inArray(rsvps.id, allIds));
+
+  const eventIds = [...new Set(allRows.map((r) => r.eventId))];
   for (const eventId of eventIds) {
     promoteWaitlist(eventId).catch(() => {});
   }
 
-  for (const row of parentIds.length > 0 ? expiredRows.filter((r) => parentIds.includes(r.id)) : []) {
+  for (const row of allRows.filter((r) => !r.parentRsvpId)) {
     sendNotification({ memberId: row.memberId, eventId: row.eventId, template: "rsvp_expired" }).catch(() => {});
   }
 }

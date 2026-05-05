@@ -23,6 +23,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
     heroBody: readText(formData, "heroBody") || "",
     footerText: readText(formData, "footerText") || "",
     eventTypes: readEventTypes(formData, "eventTypes"),
+    timezone: readText(formData, "timezone") || "America/New_York",
     updatedAt: new Date(),
   };
 

@@ -38,16 +38,14 @@ export function getEffectiveRsvpStatus(event: {
     return "closed";
   }
 
-  if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() <= now) {
-    return "closed";
-  }
-
-  if (event.rsvpOpensAt && event.rsvpOpensAt.getTime() > now) {
-    return "before";
-  }
-
   if (event.startsAt.getTime() <= now) {
     return "past";
+  }
+
+  const softClosed = event.rsvpClosesAt != null && event.rsvpClosesAt.getTime() <= now;
+
+  if (event.rsvpOpensAt && event.rsvpOpensAt.getTime() > now) {
+    if (!softClosed) return "before";
   }
 
   if (event.confirmedCount >= event.capacity) {

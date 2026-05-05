@@ -12,6 +12,7 @@ export interface BrandSettings {
   heroTitle: string;
   heroBody: string;
   footerText: string;
+  timezone: string;
 }
 
 export const defaults: BrandSettings = {
@@ -27,6 +28,7 @@ export const defaults: BrandSettings = {
   heroBody:
     "cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.",
   footerText: "AGPLv3. Self-hosted.",
+  timezone: "America/New_York",
 };
 
 let cachedSettings: BrandSettings | null = null;
@@ -73,6 +75,7 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     heroTitle: row.heroTitle || defaults.heroTitle,
     heroBody: row.heroBody || defaults.heroBody,
     footerText: row.footerText || defaults.footerText,
+    timezone: row.timezone || defaults.timezone,
   };
 }
 

@@ -275,6 +275,7 @@ export const siteSettings = pgTable("site_settings", {
   heroBody: text("hero_body").default("cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.").notNull(),
   footerText: text("footer_text").default("AGPLv3. Self-hosted.").notNull(),
   eventTypes: text("event_types").default('["major_event","local_event"]').notNull(),
+  timezone: text("timezone").default("America/New_York"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -123,6 +123,37 @@ export default async function AdminSettingsPage() {
           </section>
 
           <section className="glass-lg rounded-2xl p-5">
+            <h2 className="text-lg font-semibold">Timezone</h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              Used for countdown labels and date display.
+            </p>
+            <div className="mt-4">
+              <Field label="Timezone">
+                <select name="timezone" defaultValue={settings.timezone} className="form-select">
+                  <option value="America/New_York">Eastern Time (US & Canada)</option>
+                  <option value="America/Chicago">Central Time (US & Canada)</option>
+                  <option value="America/Denver">Mountain Time (US & Canada)</option>
+                  <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                  <option value="America/Anchorage">Alaska</option>
+                  <option value="Pacific/Honolulu">Hawaii</option>
+                  <option value="America/Sao_Paulo">São Paulo</option>
+                  <option value="Europe/London">London</option>
+                  <option value="Europe/Paris">Paris</option>
+                  <option value="Europe/Berlin">Berlin</option>
+                  <option value="Europe/Moscow">Moscow</option>
+                  <option value="Asia/Dubai">Dubai</option>
+                  <option value="Asia/Kolkata">India</option>
+                  <option value="Asia/Bangkok">Bangkok</option>
+                  <option value="Asia/Shanghai">Shanghai</option>
+                  <option value="Asia/Tokyo">Tokyo</option>
+                  <option value="Australia/Sydney">Sydney</option>
+                  <option value="Pacific/Auckland">Auckland</option>
+                </select>
+              </Field>
+            </div>
+          </section>
+
+          <section className="glass-lg rounded-2xl p-5">
             <h2 className="text-lg font-semibold">Colors</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <Field label="Accent (light)">
