@@ -121,7 +121,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
     confirmedCount,
   });
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "pending_payment" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
@@ -309,7 +309,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             </div>
           ) : null}
 
-          {rsvp?.status === "pending_payment" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && plusOne && plusOne.status === "waitlisted" ? (
+          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && plusOne && plusOne.status === "waitlisted" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{
@@ -334,7 +334,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 </ConfirmButton>
               </form>
             </div>
-          ) : rsvp?.status === "pending_payment" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+          ) : rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{

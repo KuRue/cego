@@ -26,7 +26,7 @@ import { parseSurveySchema } from "@/lib/surveys";
 import { getEffectiveRsvpStatus } from "@/lib/events";
 import { sendNotification } from "@/lib/notifications";
 
-const capacityBearingStatuses = ["pending_payment", "confirmed"] as const;
+const capacityBearingStatuses = ["confirmed"] as const;
 
 export async function createEventAction(formData: FormData) {
   await requireAdminMember();
@@ -77,7 +77,7 @@ export async function rsvpForEventAction(formData: FormData) {
   }
 
   const db = getDb();
-  let rsvpStatus: "pending_payment" | "confirmed" | "waitlisted" | null = null;
+  let rsvpStatus: "confirmed" | "waitlisted" | null = null;
 
   try {
     await db.transaction(async (tx) => {
@@ -143,12 +143,8 @@ export async function rsvpForEventAction(formData: FormData) {
       const slotsLeft = event.capacity - confirmedCount;
 
       const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = fitsCapacity
-        ? (event.paymentRequired ? "pending_payment" : "confirmed")
-        : "waitlisted";
-      const plusOneStatus: RsvpStatus = fitsCapacity
-        ? (event.paymentRequired ? "pending_payment" : "confirmed")
-        : "waitlisted";
+      const activeStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       rsvpStatus = activeStatus;
 
@@ -324,9 +320,7 @@ export async function rsvpForEventAction(formData: FormData) {
       eventId,
       template: rsvpStatus === "confirmed"
         ? "rsvp_confirmed"
-        : rsvpStatus === "pending_payment"
-          ? "rsvp_pending_payment"
-          : "rsvp_waitlisted",
+        : "rsvp_waitlisted",
     }).catch(() => {});
   }
 
@@ -382,12 +376,8 @@ export async function adminRsvpForEventAction(formData: FormData) {
       const slotsLeft = event.capacity - confirmedCount;
 
       const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = fitsCapacity
-        ? (event.paymentRequired ? "pending_payment" : "confirmed")
-        : "waitlisted";
-      const plusOneStatus: RsvpStatus = fitsCapacity
-        ? (event.paymentRequired ? "pending_payment" : "confirmed")
-        : "waitlisted";
+      const activeStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
 
       const now = new Date();
       const paymentDeadline = event.paymentRequired
@@ -587,7 +577,6 @@ export async function updateRsvpStatusAction(formData: FormData) {
   const rsvpId = readText(formData, "rsvpId");
   const status = readEnum(formData, "status", [
     "confirmed",
-    "pending_payment",
     "waitlisted",
     "cancelled",
     "expired",
@@ -636,17 +625,15 @@ export async function updateRsvpStatusAction(formData: FormData) {
     const template =
       status === "confirmed" && r.prevStatus === "waitlisted"
         ? "rsvp_promoted"
-        : status === "confirmed" && r.prevStatus === "pending_payment"
+        : status === "confirmed"
           ? "rsvp_confirmed"
-          : status === "confirmed"
-            ? "rsvp_confirmed"
-            : status === "waitlisted"
-              ? "rsvp_waitlisted"
-              : status === "cancelled"
-                ? "rsvp_cancelled"
-                : status === "expired"
-                  ? "rsvp_expired"
-                  : null;
+          : status === "waitlisted"
+            ? "rsvp_waitlisted"
+            : status === "cancelled"
+              ? "rsvp_cancelled"
+              : status === "expired"
+                ? "rsvp_expired"
+                : null;
 
     if (template) {
       sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
@@ -1004,7 +991,7 @@ async function promoteWaitlist(eventId: string): Promise<void> {
     if (slotsLeft < totalNeeded) continue;
 
     const now = new Date();
-    const activeStatus: RsvpStatus = event.paymentRequired ? "pending_payment" : "confirmed";
+    const activeStatus: RsvpStatus = "confirmed";
     const paymentDeadline = event.paymentRequired
       ? (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()
           ? event.paymentDueDate
@@ -1030,7 +1017,7 @@ async function promoteWaitlist(eventId: string): Promise<void> {
     sendNotification({
       memberId: entry.memberId,
       eventId,
-      template: activeStatus === "confirmed" ? "rsvp_promoted" : "rsvp_promoted_pending",
+      template: "rsvp_promoted",
     }).catch(() => {});
   }
 }
@@ -1190,7 +1177,7 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
     .from(rsvps)
     .where(
       and(
-        eq(rsvps.status, "pending_payment"),
+        eq(rsvps.status, "confirmed"),
         ne(rsvps.paymentStatus, "paid"),
         ne(rsvps.paymentStatus, "waived"),
         sql`${rsvps.paymentDeadlineAt} IS NOT NULL AND ${rsvps.paymentDeadlineAt} <= ${now}`,

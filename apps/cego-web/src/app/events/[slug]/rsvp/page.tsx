@@ -153,7 +153,7 @@ function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awai
         ) : null}
       </p>
 
-      {data.rsvp!.status === "pending_payment" && data.event.paymentRequired && data.event.paymentMethods ? (
+      {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
           <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateOnly(data.event.paymentDueDate)}` : ""}</p>
           <div className="mt-2 grid gap-2">

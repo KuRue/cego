@@ -151,7 +151,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
     confirmedCount,
   });
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "pending_payment" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled");
@@ -197,7 +197,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
               <span
                 className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
                 style={{
-                  background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : rsvp.status === "pending_payment" ? "rgba(234,179,8,0.85)" : "rgba(234,179,8,0.85)",
+                  background: rsvp.status === "confirmed" ? "rgba(34,197,94,0.85)" : "rgba(234,179,8,0.85)",
                   color: rsvp.status === "confirmed" ? "#fff" : "#1a1d23",
                   backdropFilter: "blur(8px)",
                 }}
@@ -235,7 +235,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                       : "Full"}
                 </span>
               ) : null}
-              {rsvp?.status === "pending_payment" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+              {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
                 <span
                   className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
                   style={{ background: "rgba(234,179,8,0.8)", color: "#1a1d23" }}
@@ -313,7 +313,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 ) : null}
               </dl>
 
-              {rsvp?.status === "pending_payment" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+              {rsvp?.status === "confirmed" && event.paymentRequired && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
                 <span
                   className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
                   style={{ background: "rgba(234,179,8,0.8)", color: "#1a1d23" }}

@@ -11,10 +11,8 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
 type NotificationTemplate =
   | "rsvp_confirmed"
-  | "rsvp_pending_payment"
   | "rsvp_waitlisted"
   | "rsvp_promoted"
-  | "rsvp_promoted_pending"
   | "rsvp_cancelled"
   | "rsvp_expired"
   | "payment_confirmed"
@@ -36,20 +34,10 @@ function buildMessage(
       }
       return msg;
     }
-    case "rsvp_pending_payment": {
-      let msg = `📋 You're registered for *${event.title}*! Please complete payment to confirm your spot.`;
-      if (event.paymentDueDate) {
-        const due = formatDate(event.paymentDueDate);
-        msg += `\n\n💳 Payment is due by ${due}.`;
-      }
-      return msg;
-    }
     case "rsvp_waitlisted":
       return `⏳ You've been waitlisted for *${event.title}*. You'll be notified if a spot opens up.`;
     case "rsvp_promoted":
       return `🎉 A spot opened up — you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDate(event.paymentDueDate)}.` : ""}`;
-    case "rsvp_promoted_pending":
-      return `🎉 A spot opened up for *${event.title}*! Please complete payment within 24 hours to confirm your spot.`;
     case "rsvp_cancelled":
       return `❌ Your RSVP for *${event.title}* has been cancelled.`;
     case "rsvp_expired":
@@ -102,10 +90,8 @@ export async function sendNotification({
   const prefs = member.notifyPrefs ?? { rsvpUpdates: true, newEvents: true };
   const isRsvpNotification = [
     "rsvp_confirmed",
-    "rsvp_pending_payment",
     "rsvp_waitlisted",
     "rsvp_promoted",
-    "rsvp_promoted_pending",
     "rsvp_cancelled",
     "rsvp_expired",
     "payment_confirmed",

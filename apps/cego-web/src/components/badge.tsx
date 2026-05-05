@@ -75,7 +75,6 @@ export function eventStatusLabel(
 
 export function rsvpStatusLabel(status: string): string {
   switch (status) {
-    case "pending_payment": return "Pending payment";
     case "confirmed": return "Confirmed";
     case "waitlisted": return "On waitlist";
     case "cancelled": return "Cancelled";

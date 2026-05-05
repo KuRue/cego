@@ -202,7 +202,6 @@ function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWi
                               border: "1px solid var(--color-surface-border)",
                             }}
                           >
-                            <option value="pending_payment">pending payment</option>
                             <option value="confirmed">confirmed</option>
                             <option value="waitlisted">waitlisted</option>
                             <option value="cancelled">cancelled</option>
@@ -259,10 +258,9 @@ function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWi
                                     background: "var(--color-background)",
                                     border: "1px solid var(--color-surface-border)",
                                   }}
-                                >
-                                  <option value="pending_payment">pending payment</option>
-                                  <option value="confirmed">confirmed</option>
-                                  <option value="waitlisted">waitlisted</option>
+                                  >
+                                    <option value="confirmed">confirmed</option>
+                                    <option value="waitlisted">waitlisted</option>
                                   <option value="cancelled">cancelled</option>
                                   <option value="expired">expired</option>
                                 </select>
