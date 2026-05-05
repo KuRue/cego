@@ -314,9 +314,9 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 background: "var(--color-warning-bg)",
               }}
             >
-              <p className="font-semibold">Your +1 is on the waitlist</p>
+              <p className="font-semibold">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                {plusOne.plusOneName} is waitlisted. Payment will be available once both spots are confirmed. You can wait for a spot to open up, or drop them to proceed with payment for just yourself.
+                You can wait until {event.paymentDueDate ? formatDateOnly(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
               </p>
               <form action={dropPlusOneAction} className="mt-3">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -448,9 +448,9 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
           {rsvp?.status === "confirmed" && event.paymentRequired && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") && plusOne && plusOne.status === "waitlisted" ? (
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
-              <p className="font-semibold text-sm">Your +1 is on the waitlist</p>
+              <p className="font-semibold text-sm">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                {plusOne.plusOneName} is waitlisted. You'll be notified if a spot opens up, or you can drop them below.
+                You can wait until {event.paymentDueDate ? formatDateOnly(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
               </p>
               <form action={dropPlusOneAction} className="mt-2">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
