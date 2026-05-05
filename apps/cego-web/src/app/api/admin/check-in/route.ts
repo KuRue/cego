@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb, events, rsvps, members } from "@cego/db";
 import { and, eq } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
+import { sendNotification } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   try {
@@ -111,6 +112,12 @@ export async function POST(request: Request) {
     .from(members)
     .where(eq(members.id, rsvpRow.memberId))
     .limit(1);
+
+  sendNotification({
+    memberId: rsvpRow.memberId,
+    eventId,
+    template: "checked_in",
+  }).catch(() => {});
 
   return NextResponse.json({
     ok: true,

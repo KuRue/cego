@@ -17,7 +17,8 @@ type NotificationTemplate =
   | "payment_confirmed"
   | "payment_waived"
   | "payment_reminder"
-  | "new_event";
+  | "new_event"
+  | "checked_in";
 
 function buildMessage(
   template: NotificationTemplate,
@@ -48,6 +49,8 @@ function buildMessage(
     }
     case "new_event":
       return `🎉 New event: *${event.title}*. Check it out and RSVP!`;
+    case "checked_in":
+      return `✅ You've been checked in for *${event.title}*. Welcome!`;
   }
 }
 
