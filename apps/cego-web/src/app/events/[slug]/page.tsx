@@ -380,15 +380,36 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
           ) : null}
 
           {rsvp?.status === "confirmed" && event.paymentRequired && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") ? (
-            <div className="mt-5 flex items-center gap-2 rounded-xl px-4 py-3" style={{ background: "var(--color-success-bg)", border: "1px solid var(--color-success)" }}>
-              <span className="rounded-lg px-2.5 py-0.5 text-xs font-bold" style={{ background: "var(--color-success)", color: "#fff" }}>
-                {rsvp.paymentStatus === "paid" ? "Paid" : "Waived"}
-              </span>
+            <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                  Payment
+                </p>
+                <span
+                  className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
+                  style={{
+                    background: "var(--color-success)",
+                    color: "#fff",
+                  }}
+                >
+                  {rsvp.paymentStatus === "paid" ? "Payment confirmed" : "Waived"}
+                </span>
+              </div>
+              {event.priceCents !== null ? (
+                <p className="mt-2 text-lg font-semibold">
+                  {formatPrice(
+                    plusOne && plusOne.status !== "cancelled"
+                      ? event.priceCents * 2
+                      : event.priceCents,
+                    event.currency,
+                  )}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
           {rsvp && rsvp.status !== "cancelled" && !rsvp.checkedInAt && survey && survey.schema.questions.length > 0 ? (
-            <div className="mt-5">
+            <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
                 {survey.title}
               </p>
