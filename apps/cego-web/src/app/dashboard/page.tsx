@@ -529,6 +529,7 @@ function getCountdownLabel(event: {
   };
 
   if (event.status === "archived") return "Archived";
+  if (event.status === "closed") return "RSVPs closed";
 
   if (event.rsvpOpensAt) {
     const diff = event.rsvpOpensAt.getTime() - now;
