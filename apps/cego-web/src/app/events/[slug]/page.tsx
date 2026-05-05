@@ -165,7 +165,21 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         </div>
       </section>
 
-      {event.promoImageUrl ? (
+      {rsvp && rsvp.status === "confirmed" && canSeeAddress && event.qrCheckInEnabled && !rsvp.checkedInAt ? (
+        <div className="mt-6 overflow-hidden rounded-2xl" style={{ background: "#ffffff" }}>
+          <div className="flex flex-col items-center py-8">
+            <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "#888" }}>
+              Check-in QR
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "#aaa" }}>
+              Present this at the door
+            </p>
+            <div className="mt-4">
+              <QrCodeDisplay data={rsvp.id} size={280} />
+            </div>
+          </div>
+        </div>
+      ) : event.promoImageUrl ? (
         <div className="promo-shimmer mt-6 overflow-hidden rounded-2xl">
           <Image src={event.promoImageUrl} alt="" width={1200} height={600} className="w-full" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px" />
         </div>
@@ -274,16 +288,12 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             </div>
           ) : null}
 
-          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods ? (
+          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{
-                border: rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived"
-                  ? "1px solid var(--color-surface-border)"
-                  : "2px solid var(--color-warning)",
-                background: rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived"
-                  ? undefined
-                  : "var(--color-warning-bg)",
+                border: "2px solid var(--color-warning)",
+                background: "var(--color-warning-bg)",
               }}
             >
               <div className="flex items-center justify-between">
@@ -293,15 +303,11 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
                   style={{
-                    background: rsvp.paymentStatus === "paid"
-                      ? "var(--color-success)"
-                      : rsvp.paymentStatus === "waived"
-                        ? "var(--color-surface-hover)"
-                        : "var(--color-warning)",
-                    color: rsvp.paymentStatus === "waived" ? "var(--color-muted)" : "#fff",
+                    background: rsvp.paymentStatus === "pending" ? "var(--color-warning)" : "var(--color-warning)",
+                    color: "#fff",
                   }}
                 >
-                  {rsvp.paymentStatus === "paid" ? "Paid" : rsvp.paymentStatus === "waived" ? "Waived" : "Unpaid"}
+                  {rsvp.paymentStatus === "pending" ? "Pending" : "Unpaid"}
                 </span>
               </div>
 
@@ -368,19 +374,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 </div>
               ) : null}
 
-              {rsvp.paymentStatus === "paid" ? (
-                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-success-bg)" }}>
-                  <p className="font-semibold" style={{ color: "var(--color-success)" }}>Payment confirmed</p>
-                </div>
-              ) : null}
-
-              {rsvp.paymentStatus === "waived" ? (
-                <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-                  <p className="font-semibold" style={{ color: "var(--color-muted)" }}>Payment waived</p>
-                </div>
-              ) : null}
-
-              {event.paymentDueDate && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+              {event.paymentDueDate ? (
                 <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
                   Payment due by {formatDateOnly(event.paymentDueDate)}.
                 </p>
@@ -388,17 +382,11 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             </div>
           ) : null}
 
-          {rsvp && rsvp.status === "confirmed" && canSeeAddress && event.qrCheckInEnabled && !rsvp.checkedInAt ? (
-            <div className="mt-5">
-              <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
-                Check-in QR
-              </p>
-              <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
-                Present this at the door
-              </p>
-              <div className="mt-3 flex justify-center rounded-xl p-4" style={{ background: "#ffffff" }}>
-                <QrCodeDisplay data={rsvp.id} />
-              </div>
+          {rsvp?.status === "confirmed" && event.paymentRequired && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") ? (
+            <div className="mt-5 flex items-center gap-2 rounded-xl px-4 py-3" style={{ background: "var(--color-success-bg)", border: "1px solid var(--color-success)" }}>
+              <span className="rounded-lg px-2.5 py-0.5 text-xs font-bold" style={{ background: "var(--color-success)", color: "#fff" }}>
+                {rsvp.paymentStatus === "paid" ? "Paid" : "Waived"}
+              </span>
             </div>
           ) : null}
 
