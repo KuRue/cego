@@ -224,37 +224,31 @@ export default async function AdminEventDetailPage({
 
     <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
 
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
-      <div className="min-w-0">
-        <AppLink
-          href="/admin/events"
-          className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-semibold transition"
-          style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-        >
-          &larr; Edit event
-        </AppLink>
-      </div>
-
-      <aside className="min-w-0 h-fit lg:sticky lg:top-24">
-        {detail.rsvps.length > 0 ? (
-          <section>
-            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
-              RSVPs ({activeRsvps.length})
-            </h2>
-            <div className="mt-2">
-              <AdminRsvpManager
-                rsvps={detail.rsvps}
-                eventId={detail.event.id}
-                paymentRequired={detail.event.paymentRequired ?? false}
-                survey={detail.survey ?? null}
-              />
-            </div>
-          </section>
-        ) : (
-          <p className="text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
-        )}
-      </aside>
+    <div className="flex items-center justify-between gap-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
+        RSVPs ({activeRsvps.length})
+      </h2>
+      <AppLink
+        href="/admin/events"
+        className="inline-flex h-9 items-center rounded-lg px-4 text-sm font-semibold transition"
+        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+      >
+        &larr; Edit event
+      </AppLink>
     </div>
+
+    {detail.rsvps.length > 0 ? (
+      <div className="mt-2">
+        <AdminRsvpManager
+          rsvps={detail.rsvps}
+          eventId={detail.event.id}
+          paymentRequired={detail.event.paymentRequired ?? false}
+          survey={detail.survey ?? null}
+        />
+      </div>
+    ) : (
+      <p className="mt-2 text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
+    )}
         </div>
       </main>
     </>
