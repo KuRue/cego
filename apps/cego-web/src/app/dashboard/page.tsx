@@ -215,7 +215,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
 
           {/* Bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="font-title text-[26px] font-bold text-white leading-tight">{event.title}</h3>
+            <h3 className="font-title text-[26px] font-bold text-white leading-tight text-left">{event.title}</h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span
                 className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
