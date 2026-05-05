@@ -240,24 +240,6 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               </AppLink>
             ) : null}
 
-          {isCancelableRsvp ? (
-            <form action={cancelRsvpAction}>
-              <input type="hidden" name="eventId" value={event.id} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <CancelRsvpButton
-                type="submit"
-                className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
-                style={{
-                  background: "var(--color-surface-hover)",
-                  border: "1px solid var(--color-surface-border)",
-                  color: "var(--color-foreground)",
-                }}
-              >
-                Cancel RSVP
-              </CancelRsvpButton>
-            </form>
-          ) : null}
-
             {!canRsvp && !isCancelableRsvp && !adminCanRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
                 {effective === "before"
@@ -408,6 +390,24 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 returnTo={`/events/${event.slug}`}
               />
             </div>
+          ) : null}
+
+          {isCancelableRsvp ? (
+            <form action={cancelRsvpAction} className="mt-6">
+              <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <CancelRsvpButton
+                type="submit"
+                className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
+                style={{
+                  background: "var(--color-surface-hover)",
+                  border: "1px solid var(--color-surface-border)",
+                  color: "var(--color-foreground)",
+                }}
+              >
+                Cancel RSVP
+              </CancelRsvpButton>
+            </form>
           ) : null}
         </aside>
       </section>
