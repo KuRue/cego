@@ -100,7 +100,7 @@ export interface AdminEventWithRsvps {
   }>;
 }
 
-const capacityBearingStatuses = ["confirmed"] as const;
+const capacityBearingStatuses = ["pending_payment", "confirmed"] as const;
 
 export async function getDashboardEvents(
   memberId: string,

@@ -309,9 +309,11 @@ function DetailPanel({
             }}
             disabled={pending}
           >
+            <option value="pending_payment">Pending payment</option>
             <option value="confirmed">Confirmed</option>
             <option value="waitlisted">Waitlisted</option>
             <option value="cancelled">Cancelled</option>
+            <option value="expired">Expired</option>
           </select>
         </form>
 

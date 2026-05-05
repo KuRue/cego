@@ -19,9 +19,11 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
     closed: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
     draft: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
     archived: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
+    pending_payment: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
     confirmed: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
     waitlisted: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
     cancelled: { bg: "var(--color-surface-hover)", text: "var(--color-muted)" },
+    expired: { bg: "var(--color-danger-bg)", text: "var(--color-danger)" },
     pass: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
     warn: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
     fail: { bg: "var(--color-danger-bg)", text: "var(--color-danger)" },
@@ -73,9 +75,11 @@ export function eventStatusLabel(
 
 export function rsvpStatusLabel(status: string): string {
   switch (status) {
-    case "confirmed": return "RSVP confirmed";
+    case "pending_payment": return "Pending payment";
+    case "confirmed": return "Confirmed";
     case "waitlisted": return "On waitlist";
-    case "cancelled": return "RSVP cancelled";
+    case "cancelled": return "Cancelled";
+    case "expired": return "Expired";
     default: return status;
   }
 }

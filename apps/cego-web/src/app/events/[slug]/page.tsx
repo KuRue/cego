@@ -121,11 +121,11 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
     confirmedCount,
   });
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
+    (rsvp?.status === "confirmed" || rsvp?.status === "pending_payment" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
   const canRsvp =
     (effective === "open" || effective === "full") &&
-    (!rsvp || rsvp.status === "cancelled");
-  const adminCanRsvp = !canRsvp && isAdmin && effective === "before" && (!rsvp || rsvp.status === "cancelled");
+    (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
+  const adminCanRsvp = !canRsvp && isAdmin && effective === "before" && (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
   const canSeeAddress =
     rsvp?.status === "confirmed" &&
     (!event.paymentRequired || rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived");
@@ -270,7 +270,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             ) : null}
           </div>
 
-          {rsvp && rsvp.status !== "cancelled" ? (
+          {rsvp && rsvp.status !== "cancelled" && rsvp.status !== "expired" ? (
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <div className="flex items-center justify-between">
                 <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
@@ -309,7 +309,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             </div>
           ) : null}
 
-          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && plusOne && plusOne.status === "waitlisted" ? (
+          {rsvp?.status === "pending_payment" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && plusOne && plusOne.status === "waitlisted" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{
@@ -334,7 +334,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 </ConfirmButton>
               </form>
             </div>
-          ) : rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+          ) : rsvp?.status === "pending_payment" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{

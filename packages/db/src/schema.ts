@@ -122,6 +122,7 @@ export const rsvps = pgTable(
     parentRsvpId: uuid("parent_rsvp_id"),
     notes: text("notes"),
     tags: text("tags").array(),
+    paymentDeadlineAt: timestamp("payment_deadline_at", { withTimezone: true }),
     ...lifecycleColumns,
   },
   (table) => [
