@@ -117,7 +117,7 @@ export default async function RsvpPage({
         {alreadyRsvpd ? (
           <AlreadyRegistered data={data} slug={slug} displayName={member.telegramDisplayName} timezone={settings.timezone} />
         ) : canRsvp || adminCanRsvp ? (
-          <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} />
+          <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} spotsLeft={data.event.capacity - data.confirmedCount} />
         ) : (
           <div className="glass-lg mt-8 rounded-2xl p-6 text-center">
             <p className="text-lg font-semibold">RSVPs are not open yet</p>
@@ -239,11 +239,13 @@ function RsvpForm({
   slug,
   action,
   adminBypass,
+  spotsLeft,
 }: {
   data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>;
   slug: string;
   action: (formData: FormData) => Promise<void>;
   adminBypass: boolean;
+  spotsLeft: number;
 }) {
   return (
     <form action={action} className="mt-8 grid gap-8">
@@ -281,20 +283,28 @@ function RsvpForm({
       ) : null}
 
       <Section title="Plus one">
-        <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-          Bringing a partner or someone you live with that isn&apos;t in the group? Add them here! This will double your total.
-        </p>
-        <input
-          name="plusOneName"
-          type="text"
-          placeholder="Plus one's name (optional)"
-          className="mt-3 h-11 w-full rounded-xl px-4 text-sm outline-none"
-          style={{
-            background: "var(--color-surface-hover)",
-            border: "1px solid var(--color-surface-border)",
-            color: "var(--color-foreground)",
-          }}
-        />
+        {spotsLeft < 2 ? (
+          <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+            Only 1 spot remaining — plus ones not available.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+              Bringing a partner or someone you live with that isn&apos;t in the group? Add them here! This will double your total.
+            </p>
+            <input
+              name="plusOneName"
+              type="text"
+              placeholder="Plus one's name (optional)"
+              className="mt-3 h-11 w-full rounded-xl px-4 text-sm outline-none"
+              style={{
+                background: "var(--color-surface-hover)",
+                border: "1px solid var(--color-surface-border)",
+                color: "var(--color-foreground)",
+              }}
+            />
+          </>
+        )}
       </Section>
 
       {data.survey && data.survey.schema.questions.length > 0 ? (
