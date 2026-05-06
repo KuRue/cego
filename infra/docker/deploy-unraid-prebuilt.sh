@@ -37,7 +37,10 @@ echo "==> Running database migrations"
 "${compose[@]}" --profile tools run --rm cego-migrate
 
 echo "==> Recreating services"
-"${compose[@]}" up -d
+"${compose[@]}" up -d --force-recreate cego-web cego-deadline-worker cloudflared
 
 echo "==> Current service status"
 "${compose[@]}" ps
+
+echo "==> Running cego-web build"
+"${compose[@]}" exec -T cego-web sh -lc 'printf "CEGO_BUILD_SHA=%s\n" "${CEGO_BUILD_SHA:-missing}"'
