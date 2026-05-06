@@ -1563,7 +1563,6 @@ export type DeadlineProcessingResult = {
 
 export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResult> {
   const db = getDb();
-  const now = new Date();
 
   const expiredRows = await db
     .select({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId, paymentDeadlineAt: rsvps.paymentDeadlineAt })
@@ -1578,12 +1577,14 @@ export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResul
           WHERE e.id = ${rsvps.eventId}
             AND e.payment_required = true
             AND COALESCE(${rsvps.paymentDeadlineAt}, e.payment_due_date) IS NOT NULL
-            AND COALESCE(${rsvps.paymentDeadlineAt}, e.payment_due_date) <= ${now}
+            AND COALESCE(${rsvps.paymentDeadlineAt}, e.payment_due_date) <= now()
         )`,
       ),
     );
 
-  console.log("[expirePastDeadlineRsvps] found rows:", expiredRows.length, "now:", now.toISOString(), expiredRows.length > 0 ? expiredRows.map(r => ({ id: r.id, deadline: r.paymentDeadlineAt })) : "");
+  console.log("[expirePastDeadlineRsvps] found rows:", expiredRows.length, expiredRows.length > 0 ? expiredRows.map(r => ({ id: r.id, deadline: r.paymentDeadlineAt })) : "");
+
+  const now = new Date();
 
   if (expiredRows.length === 0) {
     return { expiredRsvpCount: 0, processedEventIds: [] };
