@@ -104,16 +104,45 @@ export async function updateEventAction(formData: FormData) {
   }
 
   const db = getDb();
-  await db
-    .update(events)
-    .set({ ...(await parseEventForm(formData)), updatedAt: new Date() })
-    .where(eq(events.id, eventId));
+  const parsedEvent = await parseEventForm(formData);
+  const now = new Date();
+
+  await db.transaction(async (tx) => {
+    const [previousEvent] = await tx
+      .select({ paymentDueDate: events.paymentDueDate })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+
+    await tx
+      .update(events)
+      .set({ ...parsedEvent, updatedAt: now })
+      .where(eq(events.id, eventId));
+
+    if (previousEvent && !sameDate(previousEvent.paymentDueDate, parsedEvent.paymentDueDate)) {
+      await tx
+        .update(rsvps)
+        .set({ paymentDeadlineAt: parsedEvent.paymentDueDate, updatedAt: now })
+        .where(
+          and(
+            eq(rsvps.eventId, eventId),
+            eq(rsvps.status, "confirmed"),
+            eq(rsvps.paymentStatus, "unpaid"),
+            sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate})`,
+          ),
+        );
+    }
+  });
 
   promoteWaitlist(eventId).catch(() => {});
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
   redirect("/admin/events");
+}
+
+function sameDate(left: Date | null, right: Date | null): boolean {
+  return left?.getTime() === right?.getTime();
 }
 
 export async function rsvpForEventAction(formData: FormData) {
