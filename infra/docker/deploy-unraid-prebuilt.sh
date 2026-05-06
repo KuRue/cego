@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-SOURCE_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
-APPDATA_DIR="$(dirname -- "${SOURCE_DIR}")"
+SCRIPT_DIR=$(dirname -- "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(cd -- "${SCRIPT_DIR}" && pwd -P)
+SOURCE_DIR="${SCRIPT_DIR}/../.."
+SOURCE_DIR=$(cd -- "${SOURCE_DIR}" && pwd -P)
+APPDATA_DIR=$(dirname -- "${SOURCE_DIR}")
 
 ENV_FILE="${CEGO_ENV_FILE:-${APPDATA_DIR}/.env}"
 COMPOSE_FILE="${CEGO_COMPOSE_FILE:-${SOURCE_DIR}/infra/docker/compose.unraid.prebuilt.yml}"
