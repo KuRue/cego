@@ -143,7 +143,7 @@ export async function updateEventAction(formData: FormData) {
 
       if (previousEvent && !sameDate(previousEvent.paymentDueDate, parsedEvent.paymentDueDate)) {
         const previousDeadlineCondition = previousEvent.paymentDueDate
-          ? sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate})`
+          ? sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate.toISOString()})`
           : sql`${rsvps.paymentDeadlineAt} IS NULL`;
 
         await tx
