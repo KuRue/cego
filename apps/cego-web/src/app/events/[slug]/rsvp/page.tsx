@@ -178,7 +178,7 @@ function AlreadyRegistered({ data, slug, displayName, timezone }: { data: NonNul
 
       {data.rsvp!.status === "confirmed" && showPayment ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
-          <p className="font-semibold">Payment{paymentDeadline ? ` due ${fmtDateWithTime(paymentDeadline, timezone)}` : ""}</p>
+          <p className="text-center font-bold">Payment{paymentDeadline ? ` due ${fmtDateWithTime(paymentDeadline, timezone)}` : ""}</p>
           <div className="mt-2 grid gap-2">
             {parsePaymentMethods(data.event.paymentMethods!).map((m, i) => {
               const price = plusOneNeedsPayment
