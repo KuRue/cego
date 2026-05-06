@@ -345,7 +345,7 @@ function EventForm({
         <Field label="RSVP opens">
           <input name="rsvpOpensAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpOpensAt) : ""} className="form-input" />
         </Field>
-        <Field label="RSVP closes">
+        <Field label="RSVP deadline">
           <input name="rsvpClosesAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpClosesAt) : ""} className="form-input" />
         </Field>
       </div>
@@ -428,7 +428,7 @@ function EventForm({
         <span className="font-medium">QR check-in</span>
       </label>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Payment due date">
+        <Field label="Initial payment deadline">
           <input
             name="paymentDueDate"
             type="datetime-local"

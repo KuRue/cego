@@ -27,30 +27,56 @@ import { getEffectiveRsvpStatus } from "@/lib/events";
 import { sendNotification } from "@/lib/notifications";
 
 const capacityBearingStatuses = ["confirmed"] as const;
+const waitlistPaymentWindowMs = 12 * 60 * 60 * 1000;
+const latePaymentWindowMs = 60 * 60 * 1000;
+const finalRsvpWindowMs = 3 * 24 * 60 * 60 * 1000;
 
 function calcPaymentDeadline(event: {
   paymentRequired: boolean | null;
   paymentDueDate: Date | null;
   rsvpClosesAt: Date | null;
-}): Date | null {
+}, options: {
+  source?: "initial_rsvp" | "waitlist_promotion";
+  waitlistExhausted?: boolean;
+  now?: Date;
+} = {}): Date | null {
   if (!event.paymentRequired) return null;
 
-  const now = new Date();
-  const softClosed = event.rsvpClosesAt != null && event.rsvpClosesAt.getTime() <= now.getTime();
+  const now = options.now ?? new Date();
+  const source = options.source ?? "initial_rsvp";
+  const inFinalRsvpWindow = isInFinalRsvpWindow(event, now);
+  const initialDeadlinePassed =
+    event.paymentDueDate != null && event.paymentDueDate.getTime() <= now.getTime();
 
-  if (softClosed) {
-    return new Date(now.getTime() + 60 * 60 * 1000);
+  if (source === "waitlist_promotion") {
+    const windowMs = inFinalRsvpWindow ? latePaymentWindowMs : waitlistPaymentWindowMs;
+    return capDeadlineAtRsvpDeadline(new Date(now.getTime() + windowMs), event);
   }
 
-  let deadline: Date;
+  if (inFinalRsvpWindow || options.waitlistExhausted || initialDeadlinePassed) {
+    return capDeadlineAtRsvpDeadline(new Date(now.getTime() + latePaymentWindowMs), event);
+  }
+
   if (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()) {
-    deadline = event.paymentDueDate;
-  } else {
-    deadline = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    return capDeadlineAtRsvpDeadline(event.paymentDueDate, event);
   }
 
+  return capDeadlineAtRsvpDeadline(new Date(now.getTime() + 24 * 60 * 60 * 1000), event);
+}
+
+function isInFinalRsvpWindow(event: { rsvpClosesAt: Date | null }, now = new Date()): boolean {
+  if (!event.rsvpClosesAt) return false;
+  const diff = event.rsvpClosesAt.getTime() - now.getTime();
+  return diff <= finalRsvpWindowMs;
+}
+
+function isPastRsvpDeadline(event: { rsvpClosesAt: Date | null }, now = new Date()): boolean {
+  return event.rsvpClosesAt != null && event.rsvpClosesAt.getTime() <= now.getTime();
+}
+
+function capDeadlineAtRsvpDeadline(deadline: Date, event: { rsvpClosesAt: Date | null }): Date {
   if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() < deadline.getTime()) {
-    deadline = event.rsvpClosesAt;
+    return event.rsvpClosesAt;
   }
 
   return deadline;
@@ -107,9 +133,12 @@ export async function rsvpForEventAction(formData: FormData) {
   const db = getDb();
   let rsvpStatus: "confirmed" | "waitlisted" | null = null;
   let plusOneWaitlisted = false;
+  let shouldRunWaitlist = false;
 
   try {
     await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
       const eventRows = await tx
         .select()
         .from(events)
@@ -170,16 +199,30 @@ export async function rsvpForEventAction(formData: FormData) {
         );
       const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
       const slotsLeft = event.capacity - confirmedCount;
+      const waitlistedRows = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "waitlisted")));
+      const waitlistedCount = Number(waitlistedRows[0]?.total ?? 0);
+      const hasWaitlistAhead = waitlistedCount > 0;
 
-      const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = slotsLeft >= 1 ? "confirmed" : "waitlisted";
-      const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const fitsCapacity = !hasWaitlistAhead && slotsLeft >= needed;
+      const activeStatus: RsvpStatus = !hasWaitlistAhead && slotsLeft >= 1 ? "confirmed" : "waitlisted";
+      const plusOneStatus: RsvpStatus = activeStatus === "confirmed" && fitsCapacity ? "confirmed" : "waitlisted";
 
       rsvpStatus = activeStatus;
       plusOneWaitlisted = plusOneName !== null && plusOneStatus === "waitlisted";
+      shouldRunWaitlist = hasWaitlistAhead && slotsLeft > 0;
 
       const now = new Date();
-      const paymentDeadline = calcPaymentDeadline(event);
+      const paymentDeadline = activeStatus === "confirmed"
+        ? calcPaymentDeadline(event, {
+            source: "initial_rsvp",
+            waitlistExhausted: waitlistedCount === 0 && (event.paymentDueDate?.getTime() ?? Number.POSITIVE_INFINITY) <= now.getTime(),
+            now,
+          })
+        : null;
+      const plusOnePaymentDeadline = plusOneStatus === "confirmed" ? paymentDeadline : null;
 
       const cancelledRsvp = currentRsvpRows.find(
         (r) => r.status === "cancelled" && !r.parentRsvpId,
@@ -257,7 +300,7 @@ export async function rsvpForEventAction(formData: FormData) {
               notes: null,
               tags: sql`ARRAY[]::text[]`,
               paymentStatus: "unpaid",
-              paymentDeadlineAt: paymentDeadline,
+              paymentDeadlineAt: plusOnePaymentDeadline,
               updatedAt: now,
             })
             .where(eq(rsvps.id, cancelledPlusOne.id));
@@ -277,7 +320,7 @@ export async function rsvpForEventAction(formData: FormData) {
                 notes: null,
                 tags: sql`ARRAY[]::text[]`,
                 paymentStatus: "unpaid",
-                paymentDeadlineAt: paymentDeadline,
+                paymentDeadlineAt: plusOnePaymentDeadline,
                 updatedAt: now,
               })
               .where(eq(rsvps.id, expiredPlusOne.id));
@@ -289,17 +332,29 @@ export async function rsvpForEventAction(formData: FormData) {
               plusOneName,
               parentRsvpId,
               paymentStatus: "unpaid",
-              paymentDeadlineAt: paymentDeadline,
+              paymentDeadlineAt: plusOnePaymentDeadline,
             });
           }
         }
+      } else {
+        await tx
+          .update(rsvps)
+          .set({ status: "cancelled", updatedAt: now })
+          .where(
+            and(
+              eq(rsvps.eventId, eventId),
+              eq(rsvps.memberId, member.id),
+              sql`${rsvps.parentRsvpId} IS NOT NULL`,
+              ne(rsvps.status, "cancelled"),
+            ),
+          );
       }
 
       if (surveyId) {
         const surveyRows = await tx
           .select()
           .from(surveys)
-          .where(and(eq(surveys.id, surveyId), eq(surveys.status, "published")))
+          .where(and(eq(surveys.id, surveyId), eq(surveys.eventId, eventId), eq(surveys.status, "published")))
           .limit(1);
         const survey = surveyRows[0];
 
@@ -340,6 +395,10 @@ export async function rsvpForEventAction(formData: FormData) {
   revalidatePath(returnTo);
   revalidatePath("/admin");
 
+  if (shouldRunWaitlist) {
+    await promoteWaitlist(eventId);
+  }
+
   if (rsvpStatus) {
     const template = rsvpStatus === "confirmed" && plusOneWaitlisted
       ? "rsvp_confirmed_plusone_waitlisted"
@@ -368,9 +427,12 @@ export async function adminRsvpForEventAction(formData: FormData) {
   }
 
   const db = getDb();
+  let shouldRunWaitlist = false;
 
   try {
     await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
       const eventRows = await tx
         .select()
         .from(events)
@@ -403,13 +465,27 @@ export async function adminRsvpForEventAction(formData: FormData) {
         );
       const confirmedCount = Number(confirmedRows[0]?.total ?? 0);
       const slotsLeft = event.capacity - confirmedCount;
+      const waitlistedRows = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "waitlisted")));
+      const waitlistedCount = Number(waitlistedRows[0]?.total ?? 0);
+      const hasWaitlistAhead = waitlistedCount > 0;
 
-      const fitsCapacity = slotsLeft >= needed;
-      const activeStatus: RsvpStatus = slotsLeft >= 1 ? "confirmed" : "waitlisted";
-      const plusOneStatus: RsvpStatus = fitsCapacity ? "confirmed" : "waitlisted";
+      const fitsCapacity = !hasWaitlistAhead && slotsLeft >= needed;
+      const activeStatus: RsvpStatus = !hasWaitlistAhead && slotsLeft >= 1 ? "confirmed" : "waitlisted";
+      const plusOneStatus: RsvpStatus = activeStatus === "confirmed" && fitsCapacity ? "confirmed" : "waitlisted";
 
       const now = new Date();
-      const paymentDeadline = calcPaymentDeadline(event);
+      const paymentDeadline = activeStatus === "confirmed"
+        ? calcPaymentDeadline(event, {
+            source: "initial_rsvp",
+            waitlistExhausted: waitlistedCount === 0 && (event.paymentDueDate?.getTime() ?? Number.POSITIVE_INFINITY) <= now.getTime(),
+            now,
+          })
+        : null;
+      const plusOnePaymentDeadline = plusOneStatus === "confirmed" ? paymentDeadline : null;
+      shouldRunWaitlist = hasWaitlistAhead && slotsLeft > 0;
 
     const cancelledRsvp = currentRsvpRows.find(
       (r) => r.status === "cancelled" && !r.parentRsvpId,
@@ -435,17 +511,39 @@ export async function adminRsvpForEventAction(formData: FormData) {
         .where(eq(rsvps.id, cancelledRsvp.id));
       parentRsvpId = cancelledRsvp.id;
     } else {
-      const [inserted] = await tx
-        .insert(rsvps)
-        .values({
-          memberId: member.id,
-          eventId,
-          status: activeStatus,
-          paymentStatus: "unpaid",
-          paymentDeadlineAt: paymentDeadline,
-        })
-        .returning({ id: rsvps.id });
-      parentRsvpId = inserted.id;
+      const expiredRsvp = currentRsvpRows.find(
+        (r) => r.status === "expired" && !r.parentRsvpId,
+      );
+      if (expiredRsvp) {
+        await tx
+          .update(rsvps)
+          .set({
+            status: activeStatus,
+            ticketType: null,
+            checkedInAt: null,
+            plusOneName: null,
+            parentRsvpId: null,
+            notes: null,
+            tags: sql`ARRAY[]::text[]`,
+            paymentStatus: "unpaid",
+            paymentDeadlineAt: paymentDeadline,
+            updatedAt: now,
+          })
+          .where(eq(rsvps.id, expiredRsvp.id));
+        parentRsvpId = expiredRsvp.id;
+      } else {
+        const [inserted] = await tx
+          .insert(rsvps)
+          .values({
+            memberId: member.id,
+            eventId,
+            status: activeStatus,
+            paymentStatus: "unpaid",
+            paymentDeadlineAt: paymentDeadline,
+          })
+          .returning({ id: rsvps.id });
+        parentRsvpId = inserted.id;
+      }
     }
 
     if (plusOneName) {
@@ -465,28 +563,61 @@ export async function adminRsvpForEventAction(formData: FormData) {
             notes: null,
             tags: sql`ARRAY[]::text[]`,
             paymentStatus: "unpaid",
-            paymentDeadlineAt: paymentDeadline,
+            paymentDeadlineAt: plusOnePaymentDeadline,
             updatedAt: now,
           })
           .where(eq(rsvps.id, cancelledPlusOne.id));
       } else {
-        await tx.insert(rsvps).values({
-          memberId: member.id,
-          eventId,
-          status: plusOneStatus,
-          plusOneName,
-          parentRsvpId,
-          paymentStatus: "unpaid",
-          paymentDeadlineAt: paymentDeadline,
-        });
+        const expiredPlusOne = currentRsvpRows.find(
+          (r) => r.status === "expired" && r.parentRsvpId,
+        );
+        if (expiredPlusOne) {
+          await tx
+            .update(rsvps)
+            .set({
+              status: plusOneStatus,
+              plusOneName,
+              parentRsvpId,
+              ticketType: null,
+              checkedInAt: null,
+              notes: null,
+              tags: sql`ARRAY[]::text[]`,
+              paymentStatus: "unpaid",
+              paymentDeadlineAt: plusOnePaymentDeadline,
+              updatedAt: now,
+            })
+            .where(eq(rsvps.id, expiredPlusOne.id));
+        } else {
+          await tx.insert(rsvps).values({
+            memberId: member.id,
+            eventId,
+            status: plusOneStatus,
+            plusOneName,
+            parentRsvpId,
+            paymentStatus: "unpaid",
+            paymentDeadlineAt: plusOnePaymentDeadline,
+          });
+        }
       }
+    } else {
+      await tx
+        .update(rsvps)
+        .set({ status: "cancelled", updatedAt: now })
+        .where(
+          and(
+            eq(rsvps.eventId, eventId),
+            eq(rsvps.memberId, member.id),
+            sql`${rsvps.parentRsvpId} IS NOT NULL`,
+            ne(rsvps.status, "cancelled"),
+          ),
+        );
     }
 
       if (surveyId) {
         const surveyRows = await tx
           .select()
           .from(surveys)
-          .where(and(eq(surveys.id, surveyId), eq(surveys.status, "published")))
+          .where(and(eq(surveys.id, surveyId), eq(surveys.eventId, eventId), eq(surveys.status, "published")))
           .limit(1);
         const survey = surveyRows[0];
 
@@ -526,6 +657,9 @@ export async function adminRsvpForEventAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath(returnTo);
   revalidatePath("/admin");
+  if (shouldRunWaitlist) {
+    await promoteWaitlist(eventId);
+  }
   redirect(returnTo);
 }
 
@@ -541,6 +675,8 @@ export async function cancelRsvpAction(formData: FormData) {
   const db = getDb();
 
   await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
     const memberRsvps = await tx
       .select()
       .from(rsvps)
@@ -613,60 +749,153 @@ export async function updateRsvpStatusAction(formData: FormData) {
   }
 
   const db = getDb();
+  let notification: { memberId: string; eventId: string; template: "rsvp_confirmed" | "rsvp_promoted" | "rsvp_waitlisted" | "rsvp_cancelled" | "rsvp_expired" } | null = null;
+  let promoteEventId: string | null = null;
 
-  const rsvpRows = await db
-    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, prevStatus: rsvps.status, parentRsvpId: rsvps.parentRsvpId })
-    .from(rsvps)
-    .where(eq(rsvps.id, rsvpId))
-    .limit(1);
-
-  await db
-    .update(rsvps)
-    .set({
-      status,
-      updatedAt: new Date(),
-    })
-    .where(eq(rsvps.id, rsvpId));
-
-  if (status === "confirmed" && rsvpRows[0] && !rsvpRows[0].parentRsvpId) {
-    const plusOneRows = await db
-      .select({ id: rsvps.id })
+  await db.transaction(async (tx) => {
+    const rsvpRows = await tx
+      .select({
+        memberId: rsvps.memberId,
+        eventId: rsvps.eventId,
+        prevStatus: rsvps.status,
+        parentRsvpId: rsvps.parentRsvpId,
+        paymentStatus: rsvps.paymentStatus,
+        paymentDeadlineAt: rsvps.paymentDeadlineAt,
+      })
       .from(rsvps)
-      .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")))
+      .where(eq(rsvps.id, rsvpId))
       .limit(1);
-    if (plusOneRows.length > 0) {
-      await db
+    const row = rsvpRows[0];
+    if (!row) return;
+
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+
+    const now = new Date();
+    let actualStatus: RsvpStatus = status;
+
+    if (status === "confirmed") {
+      const eventRows = await tx
+        .select()
+        .from(events)
+        .where(eq(events.id, row.eventId))
+        .limit(1);
+      const event = eventRows[0];
+      if (!event) return;
+
+      const countRows = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, row.eventId), inArray(rsvps.status, capacityBearingStatuses)));
+      let confirmedCount = Number(countRows[0]?.total ?? 0);
+      let slotsLeft = event.capacity - confirmedCount;
+      const needsSlot = row.prevStatus === "confirmed" ? 0 : 1;
+
+      if (needsSlot > 0 && slotsLeft < needsSlot) {
+        actualStatus = "waitlisted";
+        await tx
+          .update(rsvps)
+          .set({ status: "waitlisted", updatedAt: now })
+          .where(eq(rsvps.id, rsvpId));
+      } else {
+        const paymentDeadline = row.paymentStatus === "unpaid" && !row.paymentDeadlineAt
+          ? calcPaymentDeadline(event, {
+              source: row.prevStatus === "waitlisted" ? "waitlist_promotion" : "initial_rsvp",
+              now,
+            })
+          : row.paymentDeadlineAt;
+
+        await tx
+          .update(rsvps)
+          .set({
+            status: "confirmed",
+            paymentDeadlineAt: paymentDeadline,
+            updatedAt: now,
+          })
+          .where(eq(rsvps.id, rsvpId));
+
+        if (needsSlot > 0) {
+          confirmedCount++;
+          slotsLeft--;
+        }
+
+        if (!row.parentRsvpId) {
+          const plusOneRows = await tx
+            .select({
+              id: rsvps.id,
+              status: rsvps.status,
+              paymentStatus: rsvps.paymentStatus,
+              paymentDeadlineAt: rsvps.paymentDeadlineAt,
+            })
+            .from(rsvps)
+            .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")))
+            .limit(1);
+          const plusOne = plusOneRows[0];
+          if (plusOne) {
+            const plusOneNeedsSlot = plusOne.status === "confirmed" ? 0 : 1;
+            if (plusOneNeedsSlot === 0 || slotsLeft >= plusOneNeedsSlot) {
+              const plusOneDeadline = plusOne.paymentStatus === "unpaid" && !plusOne.paymentDeadlineAt
+                ? calcPaymentDeadline(event, { source: "waitlist_promotion", now })
+                : plusOne.paymentDeadlineAt;
+              await tx
+                .update(rsvps)
+                .set({
+                  status: "confirmed",
+                  paymentDeadlineAt: plusOneDeadline,
+                  updatedAt: now,
+                })
+                .where(eq(rsvps.id, plusOne.id));
+            }
+          }
+        }
+      }
+    } else {
+      await tx
         .update(rsvps)
-        .set({ status: "confirmed", updatedAt: new Date() })
-        .where(eq(rsvps.id, plusOneRows[0].id));
+        .set({
+          status,
+          updatedAt: now,
+        })
+        .where(eq(rsvps.id, rsvpId));
+
+      if (!row.parentRsvpId && (status === "waitlisted" || status === "cancelled" || status === "expired")) {
+        await tx
+          .update(rsvps)
+          .set({ status, updatedAt: now })
+          .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")));
+      }
     }
-  }
+
+    const template =
+      actualStatus === "confirmed" && row.prevStatus === "waitlisted"
+        ? "rsvp_promoted"
+        : actualStatus === "confirmed"
+          ? "rsvp_confirmed"
+          : actualStatus === "waitlisted"
+            ? "rsvp_waitlisted"
+            : actualStatus === "cancelled"
+              ? "rsvp_cancelled"
+              : actualStatus === "expired"
+                ? "rsvp_expired"
+                : null;
+
+    if (!row.parentRsvpId && template) {
+      notification = { memberId: row.memberId, eventId: row.eventId, template };
+    }
+
+    if (status === "cancelled" || status === "expired") {
+      promoteEventId = row.eventId;
+    }
+  });
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
 
-  if (rsvpRows[0] && !rsvpRows[0].parentRsvpId) {
-    const r = rsvpRows[0];
-    const template =
-      status === "confirmed" && r.prevStatus === "waitlisted"
-        ? "rsvp_promoted"
-        : status === "confirmed"
-          ? "rsvp_confirmed"
-          : status === "waitlisted"
-            ? "rsvp_waitlisted"
-            : status === "cancelled"
-              ? "rsvp_cancelled"
-              : status === "expired"
-                ? "rsvp_expired"
-                : null;
+  if (notification) {
+    sendNotification(notification).catch(() => {});
+  }
 
-    if (template) {
-      sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
-    }
-
-    if (status === "cancelled" || status === "expired") {
-      promoteWaitlist(r.eventId).catch(() => {});
-    }
+  if (promoteEventId) {
+    await promoteWaitlist(promoteEventId);
   }
 
   redirect(returnTo);
@@ -689,42 +918,61 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 
   const db = getDb();
 
-  const rsvpRows = await db
-    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId })
-    .from(rsvps)
-    .where(eq(rsvps.id, rsvpId))
-    .limit(1);
-
   const setConfirmed = paymentStatus === "paid" || paymentStatus === "waived";
+  let notification: { memberId: string; eventId: string; template: "payment_confirmed" | "payment_waived" } | null = null;
 
-  await db
-    .update(rsvps)
-    .set({
-      paymentStatus,
-      ...(setConfirmed ? { status: "confirmed" as const } : {}),
-      updatedAt: new Date(),
-    })
-    .where(eq(rsvps.id, rsvpId));
-
-  if (setConfirmed) {
-    const plusOneRows = await db
-      .select({ id: rsvps.id })
+  await db.transaction(async (tx) => {
+    const rsvpRows = await tx
+      .select({
+        memberId: rsvps.memberId,
+        eventId: rsvps.eventId,
+        status: rsvps.status,
+        parentRsvpId: rsvps.parentRsvpId,
+      })
       .from(rsvps)
-      .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")))
+      .where(eq(rsvps.id, rsvpId))
       .limit(1);
-    if (plusOneRows.length > 0) {
-      await db
-        .update(rsvps)
-        .set({ status: "confirmed", updatedAt: new Date() })
-        .where(eq(rsvps.id, plusOneRows[0].id));
+    const row = rsvpRows[0];
+    if (!row) return;
+
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+
+    const now = new Date();
+    let nextStatus: RsvpStatus | undefined;
+
+    if (setConfirmed && row.status !== "confirmed") {
+      const eventRows = await tx
+        .select({ capacity: events.capacity })
+        .from(events)
+        .where(eq(events.id, row.eventId))
+        .limit(1);
+      const event = eventRows[0];
+      const countRows = await tx
+        .select({ total: count() })
+        .from(rsvps)
+        .where(and(eq(rsvps.eventId, row.eventId), inArray(rsvps.status, capacityBearingStatuses)));
+      const slotsLeft = (event?.capacity ?? 0) - Number(countRows[0]?.total ?? 0);
+      if (slotsLeft >= 1) {
+        nextStatus = "confirmed";
+      }
     }
-  }
 
-  revalidatePath("/admin/events");
-  revalidatePath("/dashboard");
+    await tx
+      .update(rsvps)
+      .set({
+        paymentStatus,
+        ...(nextStatus ? { status: nextStatus } : {}),
+        updatedAt: now,
+      })
+      .where(eq(rsvps.id, rsvpId));
 
-  if (rsvpRows[0]) {
-    const r = rsvpRows[0];
+    if (!row.parentRsvpId) {
+      await tx
+        .update(rsvps)
+        .set({ paymentStatus, updatedAt: now })
+        .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed")));
+    }
+
     const template =
       paymentStatus === "paid"
         ? "payment_confirmed"
@@ -733,8 +981,15 @@ export async function updateRsvpPaymentAction(formData: FormData) {
           : null;
 
     if (template) {
-      sendNotification({ memberId: r.memberId, eventId: r.eventId, template }).catch(() => {});
+      notification = { memberId: row.memberId, eventId: row.eventId, template };
     }
+  });
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+
+  if (notification) {
+    sendNotification(notification).catch(() => {});
   }
 
   redirect(returnTo);
@@ -750,11 +1005,35 @@ export async function deleteRsvpAction(formData: FormData) {
   }
 
   const db = getDb();
+  let promoteEventId: string | null = null;
 
-  await db.delete(rsvps).where(eq(rsvps.id, rsvpId));
+  await db.transaction(async (tx) => {
+    const rsvpRows = await tx
+      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, status: rsvps.status })
+      .from(rsvps)
+      .where(eq(rsvps.id, rsvpId))
+      .limit(1);
+    const row = rsvpRows[0];
+    if (!row) return;
+
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+
+    if (!row.parentRsvpId) {
+      await tx.delete(rsvps).where(eq(rsvps.parentRsvpId, rsvpId));
+    }
+
+    await tx.delete(rsvps).where(eq(rsvps.id, rsvpId));
+
+    if (row.status === "confirmed") {
+      promoteEventId = row.eventId;
+    }
+  });
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
+  if (promoteEventId) {
+    await promoteWaitlist(promoteEventId);
+  }
   redirect(returnTo);
 }
 
@@ -978,99 +1257,85 @@ function isNextRedirect(err: unknown): boolean {
 
 async function promoteWaitlist(eventId: string): Promise<void> {
   const db = getDb();
+  const promotedMemberIds = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
 
-  const eventRows = await db
-    .select()
-    .from(events)
-    .where(eq(events.id, eventId))
-    .limit(1);
-  const event = eventRows[0];
-  if (!event) return;
-
-  const now = new Date();
-  const paymentDeadline = calcPaymentDeadline(event);
-
-  const waitlistedPlusOneRows = await db
-    .select({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId })
-    .from(rsvps)
-    .where(and(
-      eq(rsvps.eventId, eventId),
-      eq(rsvps.status, "waitlisted"),
-      sql`${rsvps.parentRsvpId} IS NOT NULL`,
-    ));
-
-  for (const po of waitlistedPlusOneRows) {
-    const parentRows = await db
-      .select({ status: rsvps.status, memberId: rsvps.memberId })
-      .from(rsvps)
-      .where(eq(rsvps.id, po.parentRsvpId!))
+    const eventRows = await tx
+      .select()
+      .from(events)
+      .where(eq(events.id, eventId))
       .limit(1);
-    if (!parentRows[0] || parentRows[0].status !== "confirmed") continue;
+    const event = eventRows[0];
+    const now = new Date();
+    if (!event || event.status !== "show" || event.startsAt.getTime() <= now.getTime() || isPastRsvpDeadline(event, now)) {
+      return [];
+    }
 
-    const countRow = await db
+    const confirmedCountRow = await tx
       .select({ total: count() })
       .from(rsvps)
       .where(and(eq(rsvps.eventId, eventId), inArray(rsvps.status, capacityBearingStatuses)));
-    const slotsLeft = event.capacity - Number(countRow[0]?.total ?? 0);
-    if (slotsLeft < 1) break;
+    let slotsLeft = event.capacity - Number(confirmedCountRow[0]?.total ?? 0);
+    if (slotsLeft < 1) return [];
 
-    await db
-      .update(rsvps)
-      .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
-      .where(eq(rsvps.id, po.id));
-
-    sendNotification({ memberId: parentRows[0].memberId, eventId, template: "rsvp_promoted" }).catch(() => {});
-  }
-
-  const waitlistedRows = await db
-    .select({ id: rsvps.id, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
-    .from(rsvps)
-    .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "waitlisted"), sql`${rsvps.parentRsvpId} IS NULL`))
-    .orderBy(asc(rsvps.createdAt));
-
-  if (waitlistedRows.length === 0) return;
-
-  const confirmedCountRow = await db
-    .select({ total: count() })
-    .from(rsvps)
-    .where(and(eq(rsvps.eventId, eventId), inArray(rsvps.status, capacityBearingStatuses)));
-  let confirmedCount = Number(confirmedCountRow[0]?.total ?? 0);
-
-  for (const entry of waitlistedRows) {
-    const slotsLeft = event.capacity - confirmedCount;
-    if (slotsLeft < 1) break;
-
-    const plusOneRows = await db
-      .select({ id: rsvps.id })
+    const waitlistedRows = await tx
+      .select({
+        id: rsvps.id,
+        memberId: rsvps.memberId,
+        parentRsvpId: rsvps.parentRsvpId,
+      })
       .from(rsvps)
-      .where(and(eq(rsvps.parentRsvpId, entry.id), eq(rsvps.status, "waitlisted")))
-      .limit(1);
-    const hasWaitlistedPlusOne = plusOneRows.length > 0;
-    const totalNeeded = hasWaitlistedPlusOne ? 2 : 1;
+      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.status, "waitlisted")))
+      .orderBy(asc(rsvps.createdAt));
 
-    if (slotsLeft < totalNeeded) continue;
+    const promoted = new Set<string>();
 
-    await db
-      .update(rsvps)
-      .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
-      .where(eq(rsvps.id, entry.id));
+    for (const entry of waitlistedRows) {
+      if (slotsLeft < 1) break;
 
-    confirmedCount++;
+      if (entry.parentRsvpId) {
+        const parentRows = await tx
+          .select({ status: rsvps.status, memberId: rsvps.memberId })
+          .from(rsvps)
+          .where(eq(rsvps.id, entry.parentRsvpId))
+          .limit(1);
+        const parent = parentRows[0];
+        if (!parent || parent.status !== "confirmed") continue;
 
-    if (hasWaitlistedPlusOne) {
-      await db
+        await tx
+          .update(rsvps)
+          .set({
+            status: "confirmed",
+            paymentStatus: "unpaid",
+            paymentDeadlineAt: calcPaymentDeadline(event, { source: "waitlist_promotion", now }),
+            updatedAt: now,
+          })
+          .where(eq(rsvps.id, entry.id));
+
+        slotsLeft--;
+        promoted.add(parent.memberId);
+        continue;
+      }
+
+      await tx
         .update(rsvps)
-        .set({ status: "confirmed", paymentDeadlineAt: paymentDeadline, updatedAt: now })
-        .where(eq(rsvps.id, plusOneRows[0].id));
+        .set({
+          status: "confirmed",
+          paymentStatus: "unpaid",
+          paymentDeadlineAt: calcPaymentDeadline(event, { source: "waitlist_promotion", now }),
+          updatedAt: now,
+        })
+        .where(eq(rsvps.id, entry.id));
 
-      confirmedCount++;
+      slotsLeft--;
+      promoted.add(entry.memberId);
     }
 
-    sendNotification({
-      memberId: entry.memberId,
-      eventId,
-      template: "rsvp_promoted",
-    }).catch(() => {});
+    return Array.from(promoted);
+  });
+
+  for (const memberId of promotedMemberIds) {
+    sendNotification({ memberId, eventId, template: "rsvp_promoted" }).catch(() => {});
   }
 }
 
@@ -1143,16 +1408,28 @@ export async function markRsvpPendingAction(formData: FormData) {
 
   const db = getDb();
   const [row] = await db
-    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId })
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId })
     .from(rsvps)
     .where(eq(rsvps.id, rsvpId))
     .limit(1);
   if (!row || row.memberId !== member.id) redirect(returnTo);
 
-  await db
-    .update(rsvps)
-    .set({ paymentStatus: "pending", updatedAt: new Date() })
-    .where(eq(rsvps.id, rsvpId));
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+    const now = new Date();
+
+    await tx
+      .update(rsvps)
+      .set({ paymentStatus: "pending", updatedAt: now })
+      .where(eq(rsvps.id, rsvpId));
+
+    if (!row.parentRsvpId) {
+      await tx
+        .update(rsvps)
+        .set({ paymentStatus: "pending", updatedAt: now })
+        .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed")));
+    }
+  });
 
   const [eventRow] = await db
     .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title })
@@ -1207,10 +1484,13 @@ export async function dropPlusOneAction(formData: FormData) {
     .limit(1);
 
   if (plusOneRow) {
-    await db
-      .update(rsvps)
-      .set({ status: "cancelled", updatedAt: new Date() })
-      .where(eq(rsvps.id, plusOneRow.id));
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+      await tx
+        .update(rsvps)
+        .set({ status: "cancelled", updatedAt: new Date() })
+        .where(eq(rsvps.id, plusOneRow.id));
+    });
 
     promoteWaitlist(row.eventId).catch(() => {});
   }
@@ -1224,65 +1504,72 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
   const db = getDb();
   const now = new Date();
 
-  const expiredByDeadline = await db
+  const expiredRows = await db
     .select({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
     .from(rsvps)
     .where(
       and(
         eq(rsvps.status, "confirmed"),
-        ne(rsvps.paymentStatus, "paid"),
-        ne(rsvps.paymentStatus, "waived"),
-        sql`${rsvps.paymentDeadlineAt} IS NOT NULL AND ${rsvps.paymentDeadlineAt} <= ${now}`,
+        eq(rsvps.paymentStatus, "unpaid"),
+        sql`EXISTS (
+          SELECT 1
+          FROM events e
+          WHERE e.id = ${rsvps.eventId}
+            AND e.payment_required = true
+            AND COALESCE(${rsvps.paymentDeadlineAt}, e.payment_due_date) IS NOT NULL
+            AND COALESCE(${rsvps.paymentDeadlineAt}, e.payment_due_date) <= ${now}
+        )`,
       ),
     );
 
-  const softClosedEvents = await db
-    .select({ id: events.id })
-    .from(events)
-    .where(
-      and(
-        inArray(events.status, ["show"]),
-        sql`${events.rsvpClosesAt} IS NOT NULL AND ${events.rsvpClosesAt} <= ${now}`,
-      ),
-    );
+  if (expiredRows.length === 0) return;
 
-  const softClosedEventIds = softClosedEvents.map((e) => e.id);
-  const expiredBySoftClose = softClosedEventIds.length > 0
-    ? await db
-        .select({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
-        .from(rsvps)
-        .where(
-          and(
-            inArray(rsvps.eventId, softClosedEventIds),
-            eq(rsvps.status, "confirmed"),
-            ne(rsvps.paymentStatus, "paid"),
-            ne(rsvps.paymentStatus, "waived"),
-          ),
-        )
-    : [];
+  const expiredIds = expiredRows.map((r) => r.id);
+  const eventIds = [...new Set(expiredRows.map((r) => r.eventId))];
 
-  const seen = new Set<string>();
-  const allRows = [...expiredByDeadline, ...expiredBySoftClose].filter((r) => {
-    if (seen.has(r.id)) return false;
-    seen.add(r.id);
-    return true;
+  const allRows = await db.transaction(async (tx) => {
+    for (const eventId of eventIds) {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+    }
+
+    const updatedExpiredRows = await tx
+      .update(rsvps)
+      .set({ status: "expired", updatedAt: now })
+      .where(and(inArray(rsvps.id, expiredIds), eq(rsvps.status, "confirmed"), eq(rsvps.paymentStatus, "unpaid")))
+      .returning({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId });
+
+    const updatedParentIds = updatedExpiredRows.filter((r) => !r.parentRsvpId).map((r) => r.id);
+    const updatedChildRows = updatedParentIds.length > 0
+      ? await tx
+          .update(rsvps)
+          .set({ status: "expired", updatedAt: now })
+          .where(
+            and(
+              inArray(rsvps.parentRsvpId, updatedParentIds),
+              ne(rsvps.status, "cancelled"),
+              ne(rsvps.status, "expired"),
+            ),
+          )
+          .returning({ id: rsvps.id, eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId })
+      : [];
+
+    const seen = new Set<string>();
+    return [...updatedExpiredRows, ...updatedChildRows].filter((r) => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
   });
 
   if (allRows.length === 0) return;
 
-  const allIds = allRows.map((r) => r.id);
-
-  await db
-    .update(rsvps)
-    .set({ status: "expired", updatedAt: now })
-    .where(inArray(rsvps.id, allIds));
-
-  const eventIds = [...new Set(allRows.map((r) => r.eventId))];
-  for (const eventId of eventIds) {
-    promoteWaitlist(eventId).catch(() => {});
-  }
+  const promotedEventIds = [...new Set(allRows.map((r) => r.eventId))];
 
   for (const row of allRows.filter((r) => !r.parentRsvpId)) {
     sendNotification({ memberId: row.memberId, eventId: row.eventId, template: "rsvp_expired" }).catch(() => {});
+  }
+
+  for (const eventId of promotedEventIds) {
+    await promoteWaitlist(eventId);
   }
 }

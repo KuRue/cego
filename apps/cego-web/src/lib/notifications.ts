@@ -3,8 +3,9 @@ import {
   getDb,
   members,
   notifications,
+  rsvps,
 } from "@cego/db";
-import { eq } from "@cego/db";
+import { and, eq, sql } from "@cego/db";
 import { sendTelegramMessage } from "@cego/telegram";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
@@ -126,7 +127,16 @@ export async function sendNotification({
   const event = eventRows[0];
   if (!event) return;
 
-  const text = buildMessage(template, event);
+  const rsvpRows = await db
+    .select({ paymentDeadlineAt: rsvps.paymentDeadlineAt })
+    .from(rsvps)
+    .where(and(eq(rsvps.memberId, memberId), eq(rsvps.eventId, eventId), sql`${rsvps.parentRsvpId} IS NULL`))
+    .limit(1);
+
+  const text = buildMessage(template, {
+    ...event,
+    paymentDueDate: rsvpRows[0]?.paymentDeadlineAt ?? event.paymentDueDate,
+  });
   const chatId = member.telegramId;
 
   const [row] = await db

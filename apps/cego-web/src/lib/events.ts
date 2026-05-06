@@ -30,7 +30,7 @@ export function getEffectiveRsvpStatus(event: {
 }): EffectiveRsvpStatus {
   const now = Date.now();
 
-  if (event.status === "draft" || event.status === "archived") {
+  if (event.status === "draft" || event.status === "archived" || event.status === "deleted") {
     return "before";
   }
 
@@ -42,10 +42,12 @@ export function getEffectiveRsvpStatus(event: {
     return "past";
   }
 
-  const softClosed = event.rsvpClosesAt != null && event.rsvpClosesAt.getTime() <= now;
-
   if (event.rsvpOpensAt && event.rsvpOpensAt.getTime() > now) {
-    if (!softClosed) return "before";
+    return "before";
+  }
+
+  if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() <= now) {
+    return "closed";
   }
 
   if (event.confirmedCount >= event.capacity) {

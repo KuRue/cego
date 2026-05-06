@@ -143,6 +143,16 @@ export default async function RsvpPage({
 }
 
 function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; displayName: string }) {
+  const hasConfirmedPlusOne = data.plusOne?.status === "confirmed";
+  const parentPaymentSettled = data.rsvp!.paymentStatus === "paid" || data.rsvp!.paymentStatus === "waived";
+  const plusOneNeedsPayment =
+    parentPaymentSettled &&
+    hasConfirmedPlusOne &&
+    data.plusOne!.paymentStatus !== "paid" &&
+    data.plusOne!.paymentStatus !== "waived";
+  const showPayment = data.event.paymentRequired && data.event.paymentMethods && (!parentPaymentSettled || plusOneNeedsPayment);
+  const paymentDeadline = plusOneNeedsPayment ? data.plusOne!.paymentDeadlineAt : data.rsvp!.paymentDeadlineAt;
+
   return (
     <div className="glass-lg mt-8 rounded-2xl p-6">
       {data.rsvp?.status === "confirmed" && data.plusOne && data.plusOne.status === "waitlisted" ? (
@@ -164,12 +174,16 @@ function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awai
         </>
       )}
 
-      {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
+      {data.rsvp!.status === "confirmed" && showPayment ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
-          <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateWithTime(data.event.paymentDueDate)}` : ""}</p>
+          <p className="font-semibold">Payment{paymentDeadline ? ` due ${formatDateWithTime(paymentDeadline)}` : ""}</p>
           <div className="mt-2 grid gap-2">
-            {parsePaymentMethods(data.event.paymentMethods).map((m, i) => {
-              const price = data.plusOne && data.plusOne.status !== "cancelled" ? data.event.priceCents! * 2 : data.event.priceCents;
+            {parsePaymentMethods(data.event.paymentMethods!).map((m, i) => {
+              const price = plusOneNeedsPayment
+                ? data.event.priceCents
+                : hasConfirmedPlusOne
+                  ? data.event.priceCents! * 2
+                  : data.event.priceCents;
               const url = getPaymentMethodUrl(m, price);
               return (
                 <div key={i} className="flex items-center justify-between gap-2">
@@ -186,8 +200,18 @@ function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awai
           </div>
           <p className="mt-3 text-sm">
             <span style={{ color: "var(--color-muted)" }}>Status: </span>
-            <strong style={{ color: data.rsvp!.paymentStatus === "paid" ? "var(--color-success)" : data.rsvp!.paymentStatus === "waived" ? "var(--color-muted)" : "var(--color-warning)" }}>
-              {data.rsvp!.paymentStatus === "paid" ? "Paid" : data.rsvp!.paymentStatus === "waived" ? "Waived" : "Unpaid — organizer will confirm when received"}
+            <strong style={{ color: plusOneNeedsPayment || data.rsvp!.paymentStatus === "pending" || data.rsvp!.paymentStatus === "unpaid" ? "var(--color-warning)" : data.rsvp!.paymentStatus === "paid" ? "var(--color-success)" : "var(--color-muted)" }}>
+              {plusOneNeedsPayment
+                ? data.plusOne!.paymentStatus === "pending"
+                  ? "+1 payment pending review"
+                  : "+1 unpaid — organizer will confirm when received"
+                : data.rsvp!.paymentStatus === "paid"
+                  ? "Paid"
+                  : data.rsvp!.paymentStatus === "waived"
+                    ? "Waived"
+                    : data.rsvp!.paymentStatus === "pending"
+                      ? "Payment pending review"
+                      : "Unpaid — organizer will confirm when received"}
             </strong>
           </p>
         </div>

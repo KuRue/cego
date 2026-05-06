@@ -72,6 +72,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: `Payment is ${rsvpRow.paymentStatus}` }, { status: 400 });
   }
 
+  const plusOneRows = await db
+    .select({ id: rsvps.id, status: rsvps.status, paymentStatus: rsvps.paymentStatus, checkedInAt: rsvps.checkedInAt })
+    .from(rsvps)
+    .where(and(eq(rsvps.parentRsvpId, rsvpRow.id), eq(rsvps.status, "confirmed")));
+
+  if (
+    eventRow.paymentRequired &&
+    plusOneRows.some((po) => po.paymentStatus !== "paid" && po.paymentStatus !== "waived")
+  ) {
+    return NextResponse.json({ ok: false, error: "+1 payment is not confirmed" }, { status: 400 });
+  }
+
   if (rsvpRow.checkedInAt) {
     const [memberRow] = await db
       .select({
@@ -103,11 +115,6 @@ export async function POST(request: Request) {
     .update(rsvps)
     .set({ checkedInAt: now, updatedAt: now })
     .where(eq(rsvps.id, rsvpRow.id));
-
-  const plusOneRows = await db
-    .select({ id: rsvps.id, status: rsvps.status, checkedInAt: rsvps.checkedInAt })
-    .from(rsvps)
-    .where(and(eq(rsvps.parentRsvpId, rsvpRow.id), eq(rsvps.status, "confirmed")));
 
   for (const po of plusOneRows) {
     if (!po.checkedInAt) {

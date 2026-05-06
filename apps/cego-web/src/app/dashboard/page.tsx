@@ -154,7 +154,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
     (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
   const canRsvp =
     (effective === "open" || effective === "full") &&
-    (!rsvp || rsvp.status === "cancelled");
+    (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
   const spotsLeft = event.capacity - confirmedCount;
 
   return (
@@ -304,7 +304,10 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                     label="Price"
                     value={
                       event.priceCents !== null
-                         ? plusOne && rsvp?.status !== "cancelled" && plusOne.status === "confirmed"
+                         ? plusOne &&
+                           rsvp?.status !== "cancelled" &&
+                           plusOne.status === "confirmed" &&
+                           (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived")
                           ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
                           : formatPrice(event.priceCents, event.currency)
                         : "Payment required"
@@ -321,7 +324,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                   Payment due
                 </span>
               ) : null}
-              {rsvp?.status === "confirmed" && event.paymentRequired ? (
+              {rsvp?.status === "confirmed" && event.paymentRequired && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") ? (
                 <span
                   className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
                   style={{ background: "rgba(34,197,94,0.8)", color: "#fff" }}

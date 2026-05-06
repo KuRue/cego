@@ -129,6 +129,13 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
   const canSeeAddress =
     rsvp?.status === "confirmed" &&
     (!event.paymentRequired || rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived");
+  const plusOneNeedsPayment =
+    rsvp?.status === "confirmed" &&
+    event.paymentRequired &&
+    (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived") &&
+    plusOne?.status === "confirmed" &&
+    plusOne.paymentStatus !== "paid" &&
+    plusOne.paymentStatus !== "waived";
 
   return (
     <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
@@ -319,7 +326,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             >
               <p className="font-semibold">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
+                You do not need to pay for them unless their spot is confirmed. You can also drop them to proceed with payment for just yourself.
               </p>
               <form action={dropPlusOneAction} className="mt-3">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -361,6 +368,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                 <p className="mt-3 text-lg font-semibold">
                   {formatPrice(
                     plusOne && plusOne.status === "confirmed"
+                      && (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived")
                       ? event.priceCents * 2
                       : event.priceCents,
                     event.currency,
@@ -400,7 +408,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
                     Mark as paid
                   </ConfirmButton>
                   <p className="mt-2 text-xs text-center" style={{ color: "var(--color-muted)" }}>
-                    This lets the organizer know you've sent payment. They'll confirm once received.
+                    This lets the organizer know you&apos;ve sent payment. They&apos;ll confirm once received.
                   </p>
                 </form>
               ) : null}
@@ -408,13 +416,82 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               {rsvp.paymentStatus === "pending" ? (
                 <div className="mt-3 rounded-lg p-3 text-sm" style={{ background: "var(--color-warning-bg)" }}>
                   <p className="font-semibold" style={{ color: "var(--color-warning)" }}>Payment pending review</p>
-                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>You've marked this as paid. The organizer will confirm once they receive it.</p>
+                  <p className="mt-1" style={{ color: "var(--color-muted)" }}>You&apos;ve marked this as paid. The organizer will confirm once they receive it.</p>
                 </div>
               ) : null}
 
-              {event.paymentDueDate ? (
+              {rsvp.paymentDeadlineAt ? (
                 <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
-                  Payment due by {formatDateWithTime(event.paymentDueDate)}.
+                  Payment due by {formatDateWithTime(rsvp.paymentDeadlineAt)}.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {plusOneNeedsPayment && event.paymentMethods ? (
+            <div
+              className="mt-5 rounded-xl p-4"
+              style={{
+                border: "2px solid var(--color-warning)",
+                background: "var(--color-warning-bg)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
+                  +1 Payment
+                </p>
+                <span
+                  className="rounded-lg px-2.5 py-0.5 text-xs font-bold"
+                  style={{
+                    background: "var(--color-warning)",
+                    color: "#fff",
+                  }}
+                >
+                  {plusOne.paymentStatus === "pending" ? "Pending" : "Unpaid"}
+                </span>
+              </div>
+
+              {event.priceCents !== null ? (
+                <p className="mt-3 text-lg font-semibold">
+                  {formatPrice(event.priceCents, event.currency)}
+                </p>
+              ) : null}
+
+              <div className="mt-3 grid gap-2">
+                {parsePaymentMethods(event.paymentMethods).map((m, i) => {
+                  const url = getPaymentMethodUrl(m, event.priceCents);
+                  return (
+                    <div key={i} className="flex items-center justify-between gap-2">
+                      <span className="text-sm">
+                        <span className="font-semibold">{getPaymentMethodLabel(m.type)}</span>{" "}
+                        <span style={{ color: "var(--color-muted)" }}>{m.handle}</span>
+                      </span>
+                      {url ? (
+                        <PaymentLink href={url} label="Pay" displayName={memberName} />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {plusOne.paymentStatus === "unpaid" ? (
+                <form action={markRsvpPendingAction} className="mt-3">
+                  <input type="hidden" name="rsvpId" value={plusOne.id} />
+                  <input type="hidden" name="returnTo" value={`/events/${event.slug}`} />
+                  <ConfirmButton
+                    type="submit"
+                    message="Mark this +1 payment as sent? The organizer will review and confirm."
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition"
+                    style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+                  >
+                    Mark as paid
+                  </ConfirmButton>
+                </form>
+              ) : null}
+
+              {plusOne.paymentDeadlineAt ? (
+                <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
+                  Payment due by {formatDateWithTime(plusOne.paymentDeadlineAt)}.
                 </p>
               ) : null}
             </div>
@@ -439,7 +516,9 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
               {event.priceCents !== null ? (
                 <p className="mt-2 text-lg font-semibold">
                   {formatPrice(
-                    plusOne && plusOne.status === "confirmed"
+                    plusOne &&
+                      plusOne.status === "confirmed" &&
+                      (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived")
                       ? event.priceCents * 2
                       : event.priceCents,
                     event.currency,
@@ -453,7 +532,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="font-semibold text-sm">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
+                You do not need to pay for them unless their spot is confirmed. You can also drop them below.
               </p>
               <form action={dropPlusOneAction} className="mt-2">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
