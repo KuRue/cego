@@ -64,6 +64,125 @@
       "when": 1778200000000,
       "tag": "0008_custom_event_types",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778280000000,
+      "tag": "0009_plus_one_rsvps",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778360000000,
+      "tag": "0010_payment_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1778440000000,
+      "tag": "0011_fix_plus_one_unique_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778520000000,
+      "tag": "0012_rsvp_dates",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1778600000000,
+      "tag": "0013_rename_event_statuses",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1778680000000,
+      "tag": "0014_event_cost_cents",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1778760000000,
+      "tag": "0015_event_expenses",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1778840000000,
+      "tag": "0016_rsvp_notes_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1778920000000,
+      "tag": "0017_rsvp_pending_payment",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0018_event_deleted_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1779080000000,
+      "tag": "0019_event_promo_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1779160000000,
+      "tag": "0020_event_address",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1779240000000,
+      "tag": "0021_member_notify_prefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1779320000000,
+      "tag": "0022_event_payment_notify",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1779400000000,
+      "tag": "0023_event_qr_check_in",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779480000000,
+      "tag": "0024_rsvp_pending_payment_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1779560000000,
+      "tag": "0025_timezone_setting",
+      "breakpoints": true
     }
   ]
 }
