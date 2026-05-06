@@ -9,6 +9,8 @@ The development Compose file starts only the shared services needed by the custo
 
 The production Compose file builds the cego web app, runs cego Postgres and Redis, exposes the app only through cloudflared, and includes manual migration/backup tool profiles. External CRM services are deferred while cego grows built-in member admin tools.
 
+The stack also includes `cego-deadline-worker`, a small internal loop that calls the protected cego task endpoint every minute by default. This is what expires unpaid RSVPs after their payment deadline and advances the waitlist without waiting for someone to load the dashboard.
+
 ## Local Development
 
 Copy the example environment and fill in local values:

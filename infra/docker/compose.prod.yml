@@ -17,6 +17,7 @@ services:
       DATABASE_URL: postgres://${CEGO_POSTGRES_USER:-cego}:${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}@cego-postgres:5432/${CEGO_POSTGRES_DB:-cego}
       REDIS_URL: redis://cego-redis:6379
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      CEGO_TASK_SECRET: ${CEGO_TASK_SECRET:?set CEGO_TASK_SECRET}
       CEGO_ADMIN_TELEGRAM_IDS: ${CEGO_ADMIN_TELEGRAM_IDS:?set CEGO_ADMIN_TELEGRAM_IDS}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
@@ -41,6 +42,27 @@ services:
     networks:
       - cego_edge
       - cego_data
+
+  cego-deadline-worker:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command: >-
+      while true; do
+        curl -fsS -X POST
+        -H "Authorization: Bearer $${CEGO_TASK_SECRET}"
+        http://cego-web:3000/api/tasks/process-rsvp-deadlines
+        || true;
+        sleep $${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60};
+      done
+    environment:
+      CEGO_TASK_SECRET: ${CEGO_TASK_SECRET:?set CEGO_TASK_SECRET}
+      CEGO_DEADLINE_WORKER_INTERVAL_SECONDS: ${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60}
+    depends_on:
+      cego-web:
+        condition: service_healthy
+    networks:
+      - cego_edge
 
   cego-migrate:
     build:

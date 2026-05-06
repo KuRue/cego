@@ -1523,7 +1523,12 @@ export async function dropPlusOneAction(formData: FormData) {
   redirect(returnTo);
 }
 
-export async function expirePastDeadlineRsvps(): Promise<void> {
+export type DeadlineProcessingResult = {
+  expiredRsvpCount: number;
+  processedEventIds: string[];
+};
+
+export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResult> {
   const db = getDb();
   const now = new Date();
 
@@ -1545,7 +1550,9 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
       ),
     );
 
-  if (expiredRows.length === 0) return;
+  if (expiredRows.length === 0) {
+    return { expiredRsvpCount: 0, processedEventIds: [] };
+  }
 
   const expiredIds = expiredRows.map((r) => r.id);
   const eventIds = [...new Set(expiredRows.map((r) => r.eventId))];
@@ -1584,7 +1591,9 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
     });
   });
 
-  if (allRows.length === 0) return;
+  if (allRows.length === 0) {
+    return { expiredRsvpCount: 0, processedEventIds: eventIds };
+  }
 
   const promotedEventIds = [...new Set(allRows.map((r) => r.eventId))];
 
@@ -1595,4 +1604,9 @@ export async function expirePastDeadlineRsvps(): Promise<void> {
   for (const eventId of promotedEventIds) {
     await promoteWaitlist(eventId);
   }
+
+  return {
+    expiredRsvpCount: allRows.length,
+    processedEventIds: promotedEventIds,
+  };
 }

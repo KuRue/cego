@@ -10,14 +10,15 @@ Implemented cego-owned service groups:
 
 - `cloudflared`: Cloudflare Tunnel connector.
 - `cego-web`: Next.js cego public site, Mini App, dashboard, API routes if monolithic.
+- `cego-deadline-worker`: internal scheduled task loop that processes RSVP payment deadlines and waitlist promotion.
 - `cego-postgres`: cego database.
 - `cego-redis`: queue/cache if needed.
 - `cego-migrate`: manual migration tool profile.
 - `cego-postgres-backup`: manual backup tool profile.
 
-Deferred or external service groups:
+Deferred service groups:
 
-- `cego-worker`: async jobs, Telegram notifications, CRM-lite reminders/rollups, and future payment reconciliation.
+- `cego-worker`: richer async jobs, Telegram notification batching, CRM-lite reminders/rollups, and future payment reconciliation beyond the current deadline loop.
 
 ## Network Exposure
 
@@ -37,6 +38,8 @@ cego app:
 - `DATABASE_URL`
 - `REDIS_URL`
 - `SESSION_SECRET`
+- `CEGO_TASK_SECRET`
+- `CEGO_DEADLINE_WORKER_INTERVAL_SECONDS`
 - `CEGO_ADMIN_TELEGRAM_IDS`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_BOT_USERNAME`

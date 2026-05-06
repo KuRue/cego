@@ -6,7 +6,7 @@ import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction, expirePastDeadlineRsvps } from "@/lib/event-actions";
+import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
@@ -91,8 +91,6 @@ export default async function EventDetailPage({
   if (!eventState) {
     notFound();
   }
-
-  expirePastDeadlineRsvps().catch(() => {});
 
   return (
     <>
@@ -326,7 +324,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             >
               <p className="font-semibold">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You do not need to pay for them unless their spot is confirmed. You can also drop them to proceed with payment for just yourself.
+                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
               </p>
               <form action={dropPlusOneAction} className="mt-3">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -532,7 +530,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="font-semibold text-sm">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You do not need to pay for them unless their spot is confirmed. You can also drop them below.
+                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
               </p>
               <form action={dropPlusOneAction} className="mt-2">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
