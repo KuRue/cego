@@ -6,7 +6,7 @@ import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
 import Navbar from "@/components/navbar";
-import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction } from "@/lib/event-actions";
+import { cancelRsvpAction, markRsvpPendingAction, dropPlusOneAction, expirePastDeadlineRsvps } from "@/lib/event-actions";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
 import ConfirmButton from "@/components/confirm-button";
 import RichText from "@/components/rich-text";
@@ -93,6 +93,8 @@ export default async function EventDetailPage({
   if (!eventState) {
     notFound();
   }
+
+  expirePastDeadlineRsvps().catch(() => {});
 
   return (
     <>
