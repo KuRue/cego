@@ -161,7 +161,7 @@ export async function updateEventAction(formData: FormData) {
     });
   } catch (error) {
     if (isNextRedirect(error)) throw error;
-    console.error("Event update failed:", { eventId, error });
+    console.error("Event update failed:", { eventId, error: error instanceof Error ? error.message : error, stack: error instanceof Error ? error.stack : undefined });
     redirect("/admin/events?event_error=update_failed");
   }
 
