@@ -95,6 +95,26 @@ export async function createEventAction(formData: FormData) {
   redirect("/admin/events");
 }
 
+export async function createDraftEventAction(formData: FormData) {
+  await requireAdminMember();
+  const db = getDb();
+  const now = new Date();
+  const defaultType = readText(formData, "type") || "meet";
+
+  await db.insert(events).values({
+    type: defaultType,
+    title: "New event",
+    slug: `event-${now.getTime()}`,
+    startsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+    capacity: 12,
+    status: "draft",
+  });
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect("/admin/events");
+}
+
 export async function updateEventAction(formData: FormData) {
   await requireAdminMember();
   const eventId = readText(formData, "eventId");
@@ -1190,33 +1210,6 @@ function readEnum<T extends string>(
   }
 
   return value as T;
-}
-
-function readDate(formData: FormData, key: string): Date {
-  const value = readText(formData, key);
-  const date = new Date(value);
-
-  if (!value || Number.isNaN(date.getTime())) {
-    throw new Error(`${key} is required.`);
-  }
-
-  return date;
-}
-
-function readOptionalDate(formData: FormData, key: string): Date | null {
-  const value = readText(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    throw new Error(`${key} is invalid.`);
-  }
-
-  return date;
 }
 
 function readDateTz(formData: FormData, key: string, tz: string): Date {

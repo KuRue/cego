@@ -1,5 +1,5 @@
 import {
-  createEventAction,
+  createDraftEventAction,
   deleteEventAction,
   updateEventAction,
   updateRsvpPaymentAction,
@@ -98,13 +98,8 @@ export default async function AdminEventsPage() {
 
 function CreateEventButton({ defaultType }: { defaultType: string }) {
   return (
-    <form action={createEventAction} className="inline-block">
-      <input type="hidden" name="title" value="New event" />
-      <input type="hidden" name="slug" value={`event-${Date.now()}`} />
+    <form action={createDraftEventAction} className="inline-block">
       <input type="hidden" name="type" value={defaultType} />
-      <input type="hidden" name="status" value="draft" />
-      <input type="hidden" name="capacity" value="12" />
-      <input type="hidden" name="startsAt" value={new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16)} />
       <button
         type="submit"
         className="inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"

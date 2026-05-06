@@ -7,6 +7,7 @@ import {
 } from "@cego/db";
 import { and, eq, sql } from "@cego/db";
 import { sendTelegramMessage } from "@cego/telegram";
+import { formatDateWithTime } from "@/lib/format-date";
 import { getSiteSettings } from "@/lib/settings";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
@@ -33,7 +34,7 @@ function buildMessage(
     case "rsvp_confirmed": {
       let msg = `✅ You're confirmed for *${event.title}*!`;
       if (event.paymentDueDate) {
-        const due = formatDate(event.paymentDueDate, tz);
+        const due = formatDateWithTime(event.paymentDueDate, tz);
         msg += `\n\n💳 Payment is due by ${due}.`;
       }
       return msg;
@@ -41,7 +42,7 @@ function buildMessage(
     case "rsvp_confirmed_plusone_waitlisted": {
       let msg = `✅ You're confirmed for *${event.title}*, but your +1 is on the waitlist.`;
       if (event.paymentDueDate) {
-        const due = formatDate(event.paymentDueDate, tz);
+        const due = formatDateWithTime(event.paymentDueDate, tz);
         msg += `\n\n💳 Payment is due by ${due}.`;
       }
       return msg;
@@ -49,7 +50,7 @@ function buildMessage(
     case "rsvp_waitlisted":
       return `⏳ You've been waitlisted for *${event.title}*. You'll be notified if a spot opens up.`;
     case "rsvp_promoted":
-      return `🎉 A spot opened up - you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDate(event.paymentDueDate, tz)}.` : ""}`;
+      return `🎉 A spot opened up - you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDateWithTime(event.paymentDueDate, tz)}.` : ""}`;
     case "rsvp_cancelled":
       return `❌ Your RSVP for *${event.title}* has been cancelled.`;
     case "rsvp_expired":
@@ -59,7 +60,7 @@ function buildMessage(
     case "payment_waived":
       return `✅ Payment has been waived for *${event.title}*. You're all set!`;
     case "payment_reminder": {
-      const due = event.paymentDueDate ? formatDate(event.paymentDueDate, tz) : "soon";
+      const due = event.paymentDueDate ? formatDateWithTime(event.paymentDueDate, tz) : "soon";
       return `⏰ Reminder: Payment for *${event.title}* is due by ${due}.`;
     }
     case "new_event":
@@ -67,15 +68,6 @@ function buildMessage(
     case "checked_in":
       return `✅ You've been checked in for *${event.title}*. Welcome!`;
   }
-}
-
-function formatDate(date: Date, tz: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    timeZone: tz,
-  }).format(date);
 }
 
 export async function sendNotification({

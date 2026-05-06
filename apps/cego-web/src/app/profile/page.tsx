@@ -1,7 +1,8 @@
 import AppLink from "@/components/app-link";
 import Avatar from "@/components/avatar";
+import { formatDateOnly } from "@/lib/format-date";
 import { getCurrentMember } from "@/lib/session";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import Navbar from "@/components/navbar";
 import SignOutButton from "./sign-out-button";
 import NotifyPrefsForm from "./notify-prefs-form";
@@ -15,6 +16,7 @@ export const metadata = {
 export default async function ProfilePage() {
   const member = await getCurrentMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
 
   if (!member) {
     return (
@@ -98,11 +100,7 @@ export default async function ProfilePage() {
                 Joined
               </span>
               <span className="text-sm">
-                {member.createdAt.toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {formatDateOnly(member.createdAt, settings.timezone)}
               </span>
             </div>
           </div>
