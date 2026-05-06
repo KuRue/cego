@@ -67,6 +67,24 @@ Acceptance checks:
 - Existing event RSVP review remains easy to find.
 - Settings are reachable from admin without leaving the organizer workflow.
 
+## Phase 2.5: Deployment Status
+
+Goal: make updates visible to organizers without giving the web app direct Docker control.
+
+Tasks:
+
+- Add an admin settings panel that checks the deployed cego version against the latest GitHub `main` commit and GHCR image tag.
+- Show whether the server appears up to date, behind, or unable to check.
+- Link to the documented one-command Unraid deploy script.
+- Keep update application outside the web app unless a dedicated deploy agent is added.
+
+Acceptance checks:
+
+- Admins can see whether an update is available.
+- The check works without exposing GitHub tokens in the browser.
+- The web app does not mount the Docker socket or run shell commands.
+- Update instructions match the prebuilt-image deployment path.
+
 ## Phase 3: Event Configuration Expansion
 
 Goal: support richer event setup without needing external event software.

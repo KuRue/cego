@@ -124,3 +124,21 @@ docker compose --env-file /mnt/user/appdata/cego/.env \
   -f /mnt/user/appdata/cego/source/infra/docker/compose.unraid.prebuilt.yml \
   up -d
 ```
+
+After the source directory has this script, the same deploy can be run as one command:
+
+```sh
+bash /mnt/user/appdata/cego/source/infra/docker/deploy-unraid-prebuilt.sh
+```
+
+The script infers the appdata directory from its location, so it also works for a legacy path such as `/mnt/user/appdata/arf/source`:
+
+```sh
+bash /mnt/user/appdata/arf/source/infra/docker/deploy-unraid-prebuilt.sh
+```
+
+Optional overrides:
+
+- `CEGO_DEPLOY_BRANCH=main`
+- `CEGO_ENV_FILE=/mnt/user/appdata/arf/.env`
+- `CEGO_COMPOSE_FILE=/mnt/user/appdata/arf/source/infra/docker/compose.unraid.prebuilt.yml`
