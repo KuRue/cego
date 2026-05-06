@@ -166,7 +166,7 @@ function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awai
 
       {data.rsvp!.status === "confirmed" && data.event.paymentRequired && data.event.paymentMethods ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
-          <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateOnly(data.event.paymentDueDate)}` : ""}</p>
+          <p className="font-semibold">Payment{data.event.paymentDueDate ? ` due ${formatDateWithTime(data.event.paymentDueDate)}` : ""}</p>
           <div className="mt-2 grid gap-2">
             {parsePaymentMethods(data.event.paymentMethods).map((m, i) => {
               const price = data.plusOne && data.plusOne.status !== "cancelled" ? data.event.priceCents! * 2 : data.event.priceCents;
@@ -364,6 +364,16 @@ function formatDateOnly(date: Date): string {
     month: "short",
     day: "numeric",
     year: "numeric",
+  }).format(date);
+}
+
+function formatDateWithTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(date);
 }
 

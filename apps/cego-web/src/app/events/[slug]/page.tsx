@@ -319,7 +319,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             >
               <p className="font-semibold">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateOnly(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
+                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
               </p>
               <form action={dropPlusOneAction} className="mt-3">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -414,7 +414,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
               {event.paymentDueDate ? (
                 <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
-                  Payment due by {formatDateOnly(event.paymentDueDate)}.
+                  Payment due by {formatDateWithTime(event.paymentDueDate)}.
                 </p>
               ) : null}
             </div>
@@ -453,7 +453,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="font-semibold text-sm">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateOnly(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
+                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
               </p>
               <form action={dropPlusOneAction} className="mt-2">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -596,6 +596,16 @@ function formatDateOnly(date: Date): string {
     month: "short",
     day: "numeric",
     year: "numeric",
+  }).format(date);
+}
+
+function formatDateWithTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(date);
 }
 
