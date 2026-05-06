@@ -285,7 +285,7 @@ function RsvpForm({
       <Section title="Plus one">
         {spotsLeft < 2 ? (
           <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-            Only 1 spot remaining — plus ones not available.
+            Only 1 spot remaining - plus ones not available.
           </p>
         ) : (
           <>
