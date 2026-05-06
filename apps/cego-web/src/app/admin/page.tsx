@@ -4,6 +4,7 @@ import { getCurrentMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { getSiteSettings } from "@/lib/settings";
 import { titleCase } from "@/components/badge";
+import { formatDateShort as fmtDateShort } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +88,7 @@ export default async function AdminPage() {
                     {overview.waitlistedCount > 0 ? (
                       <span>{overview.waitlistedCount} waitlisted</span>
                     ) : null}
-                    <span>{formatDateShort(overview.event.startsAt)}</span>
+                    <span>{fmtDateShort(overview.event.startsAt, settings.timezone)}</span>
                   </div>
                 </AppLink>
               ))}
@@ -119,11 +120,3 @@ function NavButton({ href, children }: { href: string; children: React.ReactNode
   );
 }
 
-function formatDateShort(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}

@@ -15,8 +15,9 @@ import PaymentLink from "@/components/payment-link";
 import ParallaxImage from "@/components/parallax-image";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
+import { formatDateRange as fmtDateRange, formatDateLines as fmtDateLines, formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
   const member = await getCurrentMember();
 
   if (!member) {
@@ -102,12 +104,12 @@ export default async function EventDetailPage({
         }}
         brand={brand}
       />
-      <EventDetail eventState={eventState} isAdmin={member.isAdmin} memberName={member.telegramDisplayName} />
+      <EventDetail eventState={eventState} isAdmin={member.isAdmin} memberName={member.telegramDisplayName} timezone={settings.timezone} />
     </>
   );
 }
 
-function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWithRsvpState; isAdmin: boolean; memberName: string }) {
+function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState: EventWithRsvpState; isAdmin: boolean; memberName: string; timezone: string }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers, survey } = eventState;
   const returnTo = `/events/${event.slug}`;
   const effective = getEffectiveRsvpStatus({
@@ -155,7 +157,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
+            <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, timezone)} />
             {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
           </div>
           {rsvpMembers.length > 0 ? (
@@ -198,7 +200,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
         <div className="grid gap-6">
           <Panel title="Event Details">
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Detail label="Date" value={formatDateLines(event.startsAt, event.endsAt)} />
+              <Detail label="Date" value={fmtDateLines(event.startsAt, event.endsAt, timezone)} />
               <Detail label="Location" value={event.locationText ?? "Location to be announced"} />
               {event.addressText && canSeeAddress ? (
                 <div>
@@ -324,7 +326,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             >
               <p className="font-semibold">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
+                You can wait until {event.paymentDueDate ? fmtDateWithTime(event.paymentDueDate, timezone) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them to proceed with payment for just yourself.
               </p>
               <form action={dropPlusOneAction} className="mt-3">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -420,7 +422,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
               {rsvp.paymentDeadlineAt ? (
                 <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
-                  Payment due by {formatDateWithTime(rsvp.paymentDeadlineAt)}.
+                  Payment due by {fmtDateWithTime(rsvp.paymentDeadlineAt, timezone)}.
                 </p>
               ) : null}
             </div>
@@ -489,7 +491,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
 
               {plusOne.paymentDeadlineAt ? (
                 <p className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>
-                  Payment due by {formatDateWithTime(plusOne.paymentDeadlineAt)}.
+                  Payment due by {fmtDateWithTime(plusOne.paymentDeadlineAt, timezone)}.
                 </p>
               ) : null}
             </div>
@@ -530,7 +532,7 @@ function EventDetail({ eventState, isAdmin, memberName }: { eventState: EventWit
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="font-semibold text-sm">{plusOne.plusOneName} is waitlisted</p>
               <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                You can wait until {event.paymentDueDate ? formatDateWithTime(event.paymentDueDate) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
+                You can wait until {event.paymentDueDate ? fmtDateWithTime(event.paymentDueDate, timezone) : "the payment deadline"} for a spot to open up or your RSVP will be canceled. You can also drop them below.
               </p>
               <form action={dropPlusOneAction} className="mt-2">
                 <input type="hidden" name="rsvpId" value={rsvp.id} />
@@ -652,38 +654,6 @@ function TextBlock({ title, body }: { title: string; body: string }) {
       </p>
     </section>
   );
-}
-
-function formatDateLines(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  if (!endsAt) return formatter.format(startsAt);
-  return `${formatter.format(startsAt)}\nto ${formatter.format(endsAt)}`;
-}
-
-function formatDateOnly(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatDateWithTime(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
 }
 
 function formatPrice(priceCents: number, currency: string): string {

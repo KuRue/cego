@@ -7,7 +7,8 @@ import {
 import { getCurrentMember } from "@/lib/session";
 import { Badge, TagBadge } from "@/components/badge";
 import Navbar from "@/components/navbar";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatShortDate as fmtShortDate } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function AdminMembersPage({
 }) {
   const member = await getCurrentMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
 
   if (!member || !member.isAdmin) {
     return (
@@ -194,7 +196,7 @@ export default async function AdminMembersPage({
             </div>
           ) : (
             directory.members.map((summary) => (
-              <MemberRow key={summary.member.id} summary={summary} />
+              <MemberRow key={summary.member.id} summary={summary} timezone={settings.timezone} />
             ))
           )}
         </section>
@@ -203,7 +205,7 @@ export default async function AdminMembersPage({
   );
 }
 
-function MemberRow({ summary }: { summary: AdminMemberSummary }) {
+function MemberRow({ summary, timezone }: { summary: AdminMemberSummary; timezone: string }) {
   const { member, tags } = summary;
 
   return (
@@ -241,7 +243,7 @@ function MemberRow({ summary }: { summary: AdminMemberSummary }) {
           <Metric label="Notes" value={String(summary.noteCount)} />
           <Metric
             label={summary.latestActivityLabel}
-            value={formatShortDate(summary.latestActivityAt)}
+            value={fmtShortDate(summary.latestActivityAt, timezone)}
           />
         </div>
 
@@ -268,9 +270,4 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatShortDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
+

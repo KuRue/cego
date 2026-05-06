@@ -8,7 +8,8 @@ import { getAdminEventDetail } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { StatusBadge, titleCase } from "@/components/badge";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import ConfirmButton from "@/components/confirm-button";
 import AdminRsvpManager from "@/components/admin-rsvp-manager";
 import { notFound } from "next/navigation";
@@ -26,6 +27,7 @@ export default async function AdminEventDetailPage({
 }) {
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
   const { id } = await params;
   const detail = await getAdminEventDetail(id);
 
@@ -111,7 +113,7 @@ export default async function AdminEventDetailPage({
             </div>
 
             <p className="mt-1 text-xs sm:text-sm" style={{ color: "var(--color-muted)" }}>
-              {titleCase(detail.event.type)} · {formatDateRange(detail.event.startsAt, detail.event.endsAt)} · {detail.event.locationText ?? "No location"}
+              {titleCase(detail.event.type)} · {fmtDateRange(detail.event.startsAt, detail.event.endsAt, settings.timezone)} · {detail.event.locationText ?? "No location"}
             </p>
           </div>
 
@@ -265,18 +267,6 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
       </p>
     </div>
   );
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  if (!endsAt) return formatter.format(startsAt);
-  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
 function formatPrice(priceCents: number): string {

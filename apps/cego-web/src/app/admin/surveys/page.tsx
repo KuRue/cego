@@ -15,7 +15,8 @@ import { requireAdminMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import ConfirmButton from "@/components/confirm-button";
 import { Badge, StatusBadge } from "@/components/badge";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatDateShort as fmtDateShort } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export const metadata = {
 export default async function AdminSurveysPage() {
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
   const [surveyOverviews, eventOverviews] = await Promise.all([
     getAdminSurveys(),
     getAdminEvents(),
@@ -73,7 +75,7 @@ export default async function AdminSurveysPage() {
             </div>
           ) : (
             surveyOverviews.map((overview) => (
-              <SurveyCard key={overview.survey.id} events={adminEvents} overview={overview} />
+              <SurveyCard key={overview.survey.id} events={adminEvents} overview={overview} tz={settings.timezone} />
             ))
           )}
         </div>
@@ -85,9 +87,11 @@ export default async function AdminSurveysPage() {
 function SurveyCard({
   events,
   overview,
+  tz,
 }: {
   events: { id: string; title: string }[];
   overview: AdminSurveyOverview;
+  tz: string;
 }) {
   const { survey, event, schema, responseCount, responses } = overview;
 
@@ -156,7 +160,7 @@ function SurveyCard({
                       </p>
                     </div>
                     <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                      {formatResponseDate(response.updatedAt)}
+                        {fmtDateShort(response.updatedAt, tz)}
                     </p>
                   </div>
                   <dl className="mt-4 grid gap-3">
@@ -260,12 +264,4 @@ function readAnswerRecord(value: unknown): Record<string, unknown> {
   return {};
 }
 
-function formatResponseDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
+

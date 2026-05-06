@@ -5,7 +5,8 @@ import Navbar from "@/components/navbar";
 import { rsvpForEventAction, adminRsvpForEventAction } from "@/lib/event-actions";
 import { getRsvpPageData, getEffectiveRsvpStatus } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 import PaymentLink from "@/components/payment-link";
 import RichText from "@/components/rich-text";
@@ -24,6 +25,7 @@ export default async function RsvpPage({
   searchParams: Promise<{ rsvp_error?: string }>;
 }) {
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
   const member = await getCurrentMember();
   const { rsvp_error } = await searchParams;
 
@@ -101,7 +103,7 @@ export default async function RsvpPage({
 
         <h1 className="font-title text-3xl">Register for {data.event.title}</h1>
         <div className="mt-2 flex flex-wrap gap-2">
-          <StatusBadge status={data.event.status} label={eventStatusLabel(data.event.status, data.event.startsAt)} />
+          <StatusBadge status={data.event.status} label={eventStatusLabel(data.event.status, data.event.startsAt, undefined, settings.timezone)} />
           {alreadyRsvpd ? (
             <StatusBadge status={data.rsvp!.status} label={rsvpStatusLabel(data.rsvp!.status)} />
           ) : null}
@@ -113,7 +115,7 @@ export default async function RsvpPage({
         </p>
 
         {alreadyRsvpd ? (
-          <AlreadyRegistered data={data} slug={slug} displayName={member.telegramDisplayName} />
+          <AlreadyRegistered data={data} slug={slug} displayName={member.telegramDisplayName} timezone={settings.timezone} />
         ) : canRsvp || adminCanRsvp ? (
           <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} />
         ) : (
@@ -142,7 +144,7 @@ export default async function RsvpPage({
   );
 }
 
-function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; displayName: string }) {
+function AlreadyRegistered({ data, slug, displayName, timezone }: { data: NonNullable<Awaited<ReturnType<typeof getRsvpPageData>>>; slug: string; displayName: string; timezone: string }) {
   const hasConfirmedPlusOne = data.plusOne?.status === "confirmed";
   const parentPaymentSettled = data.rsvp!.paymentStatus === "paid" || data.rsvp!.paymentStatus === "waived";
   const plusOneNeedsPayment =
@@ -176,7 +178,7 @@ function AlreadyRegistered({ data, slug, displayName }: { data: NonNullable<Awai
 
       {data.rsvp!.status === "confirmed" && showPayment ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
-          <p className="font-semibold">Payment{paymentDeadline ? ` due ${formatDateWithTime(paymentDeadline)}` : ""}</p>
+          <p className="font-semibold">Payment{paymentDeadline ? ` due ${fmtDateWithTime(paymentDeadline, timezone)}` : ""}</p>
           <div className="mt-2 grid gap-2">
             {parsePaymentMethods(data.event.paymentMethods!).map((m, i) => {
               const price = plusOneNeedsPayment
@@ -381,24 +383,6 @@ function TextBlock({ title, body }: { title: string; body: string }) {
       </div>
     </section>
   );
-}
-
-function formatDateOnly(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatDateWithTime(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
 }
 
 function formatPrice(priceCents: number, currency: string): string {

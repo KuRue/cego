@@ -46,6 +46,7 @@ export function eventStatusLabel(
   status: string,
   startsAt?: Date | null,
   rsvpOpensAt?: Date | null,
+  tz?: string,
 ): string {
   const now = Date.now();
 
@@ -55,6 +56,7 @@ export function eventStatusLabel(
         const date = new Intl.DateTimeFormat("en-US", {
           month: "short",
           day: "numeric",
+          ...(tz ? { timeZone: tz } : {}),
         }).format(rsvpOpensAt);
         return `RSVPs open ${date}`;
       }

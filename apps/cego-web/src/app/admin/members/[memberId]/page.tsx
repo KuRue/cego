@@ -15,7 +15,8 @@ import { getCurrentMember } from "@/lib/session";
 import { formatSurveyAnswer, parseSurveySchema } from "@/lib/surveys";
 import { Badge, getTagTone, StatusBadge, titleCase } from "@/components/badge";
 import Navbar from "@/components/navbar";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function AdminMemberDetailPage({
 }) {
   const currentMember = await getCurrentMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
 
   if (!currentMember || !currentMember.isAdmin) {
     return (
@@ -133,9 +135,9 @@ export default async function AdminMemberDetailPage({
 
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Fact label="Email" value={detail.member.email ?? "Not set"} />
-            <Fact label="Joined" value={formatDate(detail.member.createdAt)} />
-            <Fact label="Updated" value={formatDate(detail.member.updatedAt)} />
-            <Fact label="Last activity" value={formatDate(latestActivityAt)} />
+            <Fact label="Joined" value={fmtDateWithTime(detail.member.createdAt, settings.timezone)} />
+            <Fact label="Updated" value={fmtDateWithTime(detail.member.updatedAt, settings.timezone)} />
+            <Fact label="Last activity" value={fmtDateWithTime(latestActivityAt, settings.timezone)} />
           </div>
         </section>
 
@@ -315,7 +317,7 @@ export default async function AdminMemberDetailPage({
                       <p className="whitespace-pre-wrap leading-6">{note.body}</p>
                       <p className="mt-3 text-xs" style={{ color: "var(--color-muted)" }}>
                         {author?.telegramDisplayName ?? "Unknown organizer"} on{" "}
-                        {formatDate(note.createdAt)}
+                        {fmtDateWithTime(note.createdAt, settings.timezone)}
                       </p>
                     </article>
                   ))}
@@ -335,7 +337,7 @@ export default async function AdminMemberDetailPage({
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge>{item.kind}</Badge>
                         <p className="text-xs" style={{ color: "var(--color-muted)" }}>
-                          {formatDate(item.date)}
+                          {fmtDateWithTime(item.date, settings.timezone)}
                         </p>
                       </div>
                       <h3 className="mt-3 font-semibold">{item.title}</h3>
@@ -366,7 +368,7 @@ export default async function AdminMemberDetailPage({
                       </div>
                       <h3 className="mt-3 font-semibold">{event.title}</h3>
                       <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                        {formatDate(event.startsAt)}
+                        {fmtDateWithTime(event.startsAt, settings.timezone)}
                       </p>
                       {rsvp.ticketType ? (
                         <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -396,7 +398,7 @@ export default async function AdminMemberDetailPage({
                         </p>
                       ) : null}
                       <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                        Updated {formatDate(response.updatedAt)}
+                        Updated {fmtDateWithTime(response.updatedAt, settings.timezone)}
                       </p>
                       <dl className="mt-4 grid gap-3">
                         {formatSurveyResponse(
@@ -462,15 +464,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-}
+
 
 interface ActivityItem {
   id: string;

@@ -3,6 +3,7 @@ import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
 import { StatusBadge, eventStatusLabel } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
+import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import { getPublicEvents, type PublicEvent } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
@@ -65,7 +66,7 @@ export default async function Home() {
             </h2>
             <div className="mt-4 grid gap-6">
               {upcoming.map((entry) => (
-                <PublicEventCard key={entry.event.id} {...entry} />
+                <PublicEventCard key={entry.event.id} {...entry} tz={settings.timezone} />
               ))}
             </div>
           </section>
@@ -78,7 +79,7 @@ export default async function Home() {
             </h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {past.map((entry) => (
-                <PastEventCard key={entry.event.id} {...entry} />
+                <PastEventCard key={entry.event.id} {...entry} tz={settings.timezone} />
               ))}
             </div>
           </section>
@@ -98,7 +99,7 @@ export default async function Home() {
   );
 }
 
-function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number; rsvpMembers: Array<{ telegramDisplayName: string; telegramPhotoUrl: string | null }> }) {
+function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers, tz }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number; rsvpMembers: Array<{ telegramDisplayName: string; telegramPhotoUrl: string | null }>; tz: string }) {
   const spotsLeft = event.capacity - confirmedCount;
   const isFull = spotsLeft <= 0;
 
@@ -130,7 +131,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt)} />
+              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, undefined, tz)} />
               {isFull ? (
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-medium"
@@ -153,7 +154,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }
                 <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
                   Date
                 </dt>
-                <dd className="mt-1 leading-6">{formatDateRange(event.startsAt, event.endsAt)}</dd>
+                <dd className="mt-1 leading-6">{fmtDateRange(event.startsAt, event.endsAt, tz)}</dd>
               </div>
               {event.locationText ? (
                 <div>
@@ -211,7 +212,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers }
   );
 }
 
-function PastEventCard({ event, confirmedCount }: { event: import("@cego/db").Event; confirmedCount: number }) {
+function PastEventCard({ event, confirmedCount, tz }: { event: import("@cego/db").Event; confirmedCount: number; tz: string }) {
   return (
     <article className="glass glass-hover rounded-2xl p-4 transition">
       <div className="flex items-start gap-3">
@@ -234,7 +235,7 @@ function PastEventCard({ event, confirmedCount }: { event: import("@cego/db").Ev
         <div className="min-w-0">
           <p className="truncate font-title">{event.title}</p>
           <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
-            {formatDateRange(event.startsAt, event.endsAt)}
+            {fmtDateRange(event.startsAt, event.endsAt, tz)}
           </p>
           <p className="mt-0.5 text-xs" style={{ color: "var(--color-muted)" }}>
             {confirmedCount} attended
@@ -243,18 +244,4 @@ function PastEventCard({ event, confirmedCount }: { event: import("@cego/db").Ev
       </div>
     </article>
   );
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  if (!endsAt) {
-    return formatter.format(startsAt);
-  }
-
-  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }

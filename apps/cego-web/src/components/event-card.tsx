@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import type { Event } from "@cego/db";
+import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 
 /**
  * Shared event card layout used on the public landing and the dashboard.
@@ -36,6 +37,7 @@ export type EventCardProps = {
   actions: ReactNode;
   /** Visible on the right side of the price/capacity grid on desktop, hidden inside image overlay slot if you choose. */
   showFull?: boolean;
+  tz: string;
 };
 
 export function EventCard({
@@ -46,6 +48,7 @@ export function EventCard({
   extraDetails,
   actions,
   showFull = false,
+  tz,
 }: EventCardProps) {
   const hasImage = !!event.imageUrl;
 
@@ -92,7 +95,7 @@ export function EventCard({
                 {badgeRow}
                 <h3 className="mt-2 text-xl font-semibold leading-tight">{event.title}</h3>
                 <p className="mt-1 text-sm opacity-95">
-                  {formatDateRange(event.startsAt, event.endsAt)}
+{fmtDateRange(event.startsAt, event.endsAt, tz)}
                 </p>
                 {event.locationText ? (
                   <p className="text-sm opacity-95">{event.locationText}</p>
@@ -137,7 +140,7 @@ export function EventCard({
             <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
               {/* Date + location duplicated in the text block on desktop; hidden on mobile when image overlay shows them */}
               <div className={hasImage ? "hidden md:block" : ""}>
-                <Detail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
+                <Detail label="Date" value={fmtDateRange(event.startsAt, event.endsAt, tz)} />
               </div>
               {event.locationText ? (
                 <div className={hasImage ? "hidden md:block" : ""}>
@@ -170,20 +173,4 @@ function Detail({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 leading-6">{value}</dd>
     </div>
   );
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  if (!endsAt) {
-    return formatter.format(startsAt);
-  }
-
-  return `${formatter.format(startsAt)} – ${formatter.format(endsAt)}`;
 }

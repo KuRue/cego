@@ -10,7 +10,8 @@ import { getCurrentMember } from "@/lib/session";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
 import Navbar from "@/components/navbar";
-import { getNavbarBrand } from "@/lib/settings";
+import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { formatDateRange as fmtDateRange, formatDateRangeShort as fmtDateRangeShort } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export const metadata = {
 export default async function DashboardPage() {
   const member = await getCurrentMember();
   const brand = await getNavbarBrand();
+  const settings = await getSiteSettings();
 
   if (!member) {
     return (
@@ -111,7 +113,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="mt-6 grid gap-6">
               {eventStates.map((eventState) => (
-                <EventCard key={eventState.event.id} eventState={eventState} />
+                <EventCard key={eventState.event.id} eventState={eventState} settings={settings} />
               ))}
             </div>
           )}
@@ -128,6 +130,7 @@ export default async function DashboardPage() {
                 <SurveyCard
                   key={surveyState.survey.id}
                   surveyState={surveyState}
+                  settings={settings}
                 />
               ))}
             </div>
@@ -138,7 +141,7 @@ export default async function DashboardPage() {
   );
 }
 
-function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
+function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; settings: Awaited<ReturnType<typeof getSiteSettings>> }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers } = eventState;
   const effective = getEffectiveRsvpStatus({
     status: event.status,
@@ -219,7 +222,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-semibold text-white"
                 style={{ backdropFilter: "blur(8px)" }}
               >
-                {formatDateRangeShort(event.startsAt, event.endsAt)}
+                {fmtDateRangeShort(event.startsAt, event.endsAt, settings.timezone)}
               </span>
               {effective === "open" || effective === "full" ? (
                 <span
@@ -272,7 +275,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
           <div className="flex flex-1 flex-col justify-between p-5">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt)} />
+                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, settings.timezone)} />
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
               <h3 className="font-title mt-3 text-2xl">{event.title}</h3>
@@ -287,7 +290,7 @@ function EventCard({ eventState }: { eventState: EventWithRsvpState }) {
                 </p>
               ) : null}
               <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-                <EventDetail label="Date" value={formatDateRange(event.startsAt, event.endsAt)} />
+                <EventDetail label="Date" value={fmtDateRange(event.startsAt, event.endsAt, settings.timezone)} />
                 {event.locationText ? (
                   <EventDetail label="Location" value={event.locationText} />
                 ) : null}
@@ -397,7 +400,7 @@ function EventDetail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
+function SurveyCard({ surveyState, settings }: { surveyState: DashboardSurvey; settings: Awaited<ReturnType<typeof getSiteSettings>> }) {
   const { survey, event, schema, response } = surveyState;
   const hasQuestions = schema.questions.length > 0;
 
@@ -415,7 +418,7 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
       ) : null}
       {event ? (
         <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-          Linked to {event.title} on {formatDateRange(event.startsAt, null)}
+          Linked to {event.title} on {fmtDateRange(event.startsAt, null, settings.timezone)}
         </p>
       ) : null}
 
@@ -486,34 +489,6 @@ function SurveyCard({ surveyState }: { surveyState: DashboardSurvey }) {
   );
 }
 
-function formatDateRangeShort(startsAt: Date, endsAt: Date | null): string {
-  const monthDay = { month: "short", day: "numeric" } as const;
-  const full = { month: "short", day: "numeric", year: "numeric" } as const;
-
-  if (!endsAt) {
-    return new Intl.DateTimeFormat("en-US", full).format(startsAt);
-  }
-
-  const sameYear = startsAt.getFullYear() === endsAt.getFullYear();
-  const sameMonth = startsAt.getMonth() === endsAt.getMonth();
-
-  if (sameMonth && sameYear) {
-    const m = new Intl.DateTimeFormat("en-US", { month: "short" }).format(startsAt);
-    const d1 = startsAt.getDate();
-    const d2 = endsAt.getDate();
-    const y = startsAt.getFullYear();
-    return `${m} ${d1}-${d2}, ${y}`;
-  }
-
-  if (sameYear) {
-    const fmt = new Intl.DateTimeFormat("en-US", monthDay);
-    return `${fmt.format(startsAt)} - ${fmt.format(endsAt)}, ${startsAt.getFullYear()}`;
-  }
-
-  const fmt = new Intl.DateTimeFormat("en-US", full);
-  return `${fmt.format(startsAt)} - ${fmt.format(endsAt)}`;
-}
-
 function getCountdownLabel(event: {
   status: string;
   startsAt: Date;
@@ -555,22 +530,6 @@ function getCountdownLabel(event: {
   if (diff > 0) return `Event in ${fmtDuration(diff)}`;
 
   return "Past";
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  if (!endsAt) {
-    return formatter.format(startsAt);
-  }
-
-  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
 function readAnswer(answersJson: unknown, questionId: string): string {

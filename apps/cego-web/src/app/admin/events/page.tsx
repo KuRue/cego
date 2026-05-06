@@ -14,6 +14,7 @@ import Navbar from "@/components/navbar";
 import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { utcToDateTimeLocal } from "@/lib/tz";
+import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
 import { Suspense } from "react";
@@ -130,7 +131,7 @@ function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: Ad
             <AppLink href={`/admin/events/${event.id}`} style={{ color: "var(--color-foreground)" }}>{event.title}</AppLink>
           </h2>
           <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-            {formatDateRange(event.startsAt, event.endsAt)}
+            {fmtDateRange(event.startsAt, event.endsAt, timezone)}
           </p>
           {event.locationText ? (
             <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
@@ -472,18 +473,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </label>
   );
-}
-
-function formatDateRange(startsAt: Date, endsAt: Date | null): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  if (!endsAt) return formatter.format(startsAt);
-  return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
 function toDateTimeLocalValue(date: Date | null, tz: string): string {
