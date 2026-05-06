@@ -84,12 +84,12 @@ export default async function DashboardPage() {
     );
   }
 
+  await expirePastDeadlineRsvps().catch(() => {});
+
   const [eventStates, surveyStates] = await Promise.all([
     getDashboardEvents(member.id).catch(() => []),
     getDashboardSurveys(member.id).catch(() => []),
   ]);
-
-  expirePastDeadlineRsvps().catch(() => {});
 
   return (
     <>

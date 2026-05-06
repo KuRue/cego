@@ -88,13 +88,14 @@ export default async function EventDetailPage({
   }
 
   const { slug } = await params;
+
+  await expirePastDeadlineRsvps().catch(() => {});
+
   const eventState = await getDashboardEventBySlug(member.id, slug);
 
   if (!eventState) {
     notFound();
   }
-
-  expirePastDeadlineRsvps().catch(() => {});
 
   return (
     <>
