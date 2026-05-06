@@ -34,7 +34,17 @@ echo "==> Pulling prebuilt images"
 "${compose[@]}" --profile tools pull
 
 echo "==> Running database migrations"
+set +e
 "${compose[@]}" --profile tools run --rm cego-migrate
+migrate_status=$?
+set -e
+
+if [[ ${migrate_status} -ne 0 ]]; then
+  echo "Database migrations failed with exit code ${migrate_status}; services were not recreated." >&2
+  exit "${migrate_status}"
+fi
+
+echo "==> Database migrations complete"
 
 echo "==> Recreating services"
 "${compose[@]}" up -d --force-recreate cego-web cego-deadline-worker cloudflared
