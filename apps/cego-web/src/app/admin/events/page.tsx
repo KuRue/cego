@@ -27,10 +27,15 @@ export const metadata = {
   title: "Events",
 };
 
-export default async function AdminEventsPage() {
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ event_error?: string }>;
+}) {
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
   const settings = await getSiteSettings();
+  const params = searchParams ? await searchParams : {};
   const eventOverviews = await getAdminEvents();
   const deletedEvents = await getAdminDeletedEvents();
   const db = getDb();
@@ -65,6 +70,17 @@ export default async function AdminEventsPage() {
         </div>
 
         <div className="mt-8 grid gap-5">
+          {params.event_error === "update_failed" ? (
+            <div
+              className="rounded-2xl p-4 text-sm"
+              style={{
+                background: "var(--color-danger-bg)",
+                color: "var(--color-danger)",
+              }}
+            >
+              Event could not be saved. Check the app logs for the event update error.
+            </div>
+          ) : null}
           {eventOverviews.length === 0 ? (
             <div className="glass-lg rounded-2xl p-8 text-center">
               <p className="font-medium">No events yet</p>

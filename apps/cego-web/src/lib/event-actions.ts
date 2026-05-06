@@ -124,35 +124,46 @@ export async function updateEventAction(formData: FormData) {
   }
 
   const db = getDb();
-  const parsedEvent = await parseEventForm(formData);
   const now = new Date();
 
-  await db.transaction(async (tx) => {
-    const [previousEvent] = await tx
-      .select({ paymentDueDate: events.paymentDueDate })
-      .from(events)
-      .where(eq(events.id, eventId))
-      .limit(1);
+  try {
+    const parsedEvent = await parseEventForm(formData);
 
-    await tx
-      .update(events)
-      .set({ ...parsedEvent, updatedAt: now })
-      .where(eq(events.id, eventId));
+    await db.transaction(async (tx) => {
+      const [previousEvent] = await tx
+        .select({ paymentDueDate: events.paymentDueDate })
+        .from(events)
+        .where(eq(events.id, eventId))
+        .limit(1);
 
-    if (previousEvent && !sameDate(previousEvent.paymentDueDate, parsedEvent.paymentDueDate)) {
       await tx
-        .update(rsvps)
-        .set({ paymentDeadlineAt: parsedEvent.paymentDueDate, updatedAt: now })
-        .where(
-          and(
-            eq(rsvps.eventId, eventId),
-            eq(rsvps.status, "confirmed"),
-            eq(rsvps.paymentStatus, "unpaid"),
-            sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate})`,
-          ),
-        );
-    }
-  });
+        .update(events)
+        .set({ ...parsedEvent, updatedAt: now })
+        .where(eq(events.id, eventId));
+
+      if (previousEvent && !sameDate(previousEvent.paymentDueDate, parsedEvent.paymentDueDate)) {
+        const previousDeadlineCondition = previousEvent.paymentDueDate
+          ? sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate})`
+          : sql`${rsvps.paymentDeadlineAt} IS NULL`;
+
+        await tx
+          .update(rsvps)
+          .set({ paymentDeadlineAt: parsedEvent.paymentDueDate, updatedAt: now })
+          .where(
+            and(
+              eq(rsvps.eventId, eventId),
+              eq(rsvps.status, "confirmed"),
+              eq(rsvps.paymentStatus, "unpaid"),
+              previousDeadlineCondition,
+            ),
+          );
+      }
+    });
+  } catch (error) {
+    if (isNextRedirect(error)) throw error;
+    console.error("Event update failed:", { eventId, error });
+    redirect("/admin/events?event_error=update_failed");
+  }
 
   promoteWaitlist(eventId).catch(() => {});
 
