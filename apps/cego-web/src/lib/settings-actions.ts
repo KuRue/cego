@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq, getDb, siteSettings } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
-import { clearSettingsCache } from "@/lib/settings";
+import { clearSettingsCache, normalizeTimezone } from "@/lib/settings";
 
 export async function updateSiteSettingsAction(formData: FormData) {
   await requireAdminMember();
@@ -23,7 +23,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
     heroBody: readText(formData, "heroBody") || "",
     footerText: readText(formData, "footerText") || "",
     eventTypes: readEventTypes(formData, "eventTypes"),
-    timezone: readText(formData, "timezone") || "America/New_York",
+    timezone: normalizeTimezone(readText(formData, "timezone")),
     updatedAt: new Date(),
   };
 

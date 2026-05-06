@@ -15,6 +15,34 @@ export interface BrandSettings {
   timezone: string;
 }
 
+export const timezoneOptions = [
+  { value: "America/New_York", label: "Eastern Time (US & Canada)" },
+  { value: "America/Chicago", label: "Central Time (US & Canada)" },
+  { value: "America/Denver", label: "Mountain Time (US & Canada)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (US & Canada)" },
+  { value: "America/Anchorage", label: "Alaska" },
+  { value: "Pacific/Honolulu", label: "Hawaii" },
+  { value: "America/Sao_Paulo", label: "Sao Paulo" },
+  { value: "Europe/London", label: "London" },
+  { value: "Europe/Paris", label: "Paris" },
+  { value: "Europe/Berlin", label: "Berlin" },
+  { value: "Europe/Moscow", label: "Moscow" },
+  { value: "Asia/Dubai", label: "Dubai" },
+  { value: "Asia/Kolkata", label: "India" },
+  { value: "Asia/Bangkok", label: "Bangkok" },
+  { value: "Asia/Shanghai", label: "Shanghai" },
+  { value: "Asia/Tokyo", label: "Tokyo" },
+  { value: "Australia/Sydney", label: "Sydney" },
+  { value: "Pacific/Auckland", label: "Auckland" },
+] as const;
+
+const timezoneAliases: Record<string, string> = {
+  ET: "America/New_York",
+  EST: "America/New_York",
+  EDT: "America/New_York",
+  "US/Eastern": "America/New_York",
+};
+
 export const defaults: BrandSettings = {
   siteName: "cego",
   tagline: "Community Event Group Orchestrator",
@@ -28,7 +56,7 @@ export const defaults: BrandSettings = {
   heroBody:
     "cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.",
   footerText: "AGPLv3. Self-hosted.",
-  timezone: "America/New_York",
+  timezone: timezoneOptions[0].value,
 };
 
 let cachedSettings: BrandSettings | null = null;
@@ -62,6 +90,22 @@ export async function getNavbarBrand(): Promise<{ siteName: string; logoUrl: str
   return { siteName: settings.siteName, logoUrl: settings.logoUrl };
 }
 
+export function normalizeTimezone(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return defaults.timezone;
+  }
+
+  const normalized = timezoneAliases[trimmed] ?? trimmed;
+
+  if (timezoneOptions.some((option) => option.value === normalized)) {
+    return normalized;
+  }
+
+  return defaults.timezone;
+}
+
 function rowToSettings(row: SiteSettings): BrandSettings {
   return {
     siteName: row.siteName || defaults.siteName,
@@ -75,7 +119,7 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     heroTitle: row.heroTitle || defaults.heroTitle,
     heroBody: row.heroBody || defaults.heroBody,
     footerText: row.footerText || defaults.footerText,
-    timezone: row.timezone || defaults.timezone,
+    timezone: normalizeTimezone(row.timezone),
   };
 }
 
