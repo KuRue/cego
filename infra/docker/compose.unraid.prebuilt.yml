@@ -1,0 +1,142 @@
+name: cego
+
+services:
+  cego-web:
+    image: ${CEGO_WEB_IMAGE:-ghcr.io/kurue/cego-web:latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      APP_BASE_URL: ${APP_BASE_URL:-https://cego.example.com}
+      SOURCE_CODE_URL: ${SOURCE_CODE_URL:-https://github.com/KuRue/cego}
+      DATABASE_URL: postgres://${CEGO_POSTGRES_USER:-cego}:${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}@cego-postgres:5432/${CEGO_POSTGRES_DB:-cego}
+      REDIS_URL: redis://cego-redis:6379
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      CEGO_TASK_SECRET: ${CEGO_TASK_SECRET:?set CEGO_TASK_SECRET}
+      CEGO_ADMIN_TELEGRAM_IDS: ${CEGO_ADMIN_TELEGRAM_IDS:?set CEGO_ADMIN_TELEGRAM_IDS}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:?set TELEGRAM_BOT_USERNAME}
+      TELEGRAM_GROUP_ID: ${TELEGRAM_GROUP_ID:?set TELEGRAM_GROUP_ID}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-https://cego.example.com/mini-app}
+      CEGO_DEV_TELEGRAM_MOCK: "false"
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - ${CEGO_APPDATA_DIR:-/mnt/user/appdata/cego}/uploads:/data/uploads
+    expose:
+      - "3000"
+    depends_on:
+      cego-postgres:
+        condition: service_healthy
+      cego-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cego_edge
+      - cego_data
+
+  cego-deadline-worker:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command: >-
+      while true; do
+        curl -fsS -X POST
+        -H "Authorization: Bearer $${CEGO_TASK_SECRET}"
+        http://cego-web:3000/api/tasks/process-rsvp-deadlines
+        || true;
+        sleep $${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60};
+      done
+    environment:
+      CEGO_TASK_SECRET: ${CEGO_TASK_SECRET:?set CEGO_TASK_SECRET}
+      CEGO_DEADLINE_WORKER_INTERVAL_SECONDS: ${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60}
+    depends_on:
+      cego-web:
+        condition: service_healthy
+    networks:
+      - cego_edge
+
+  cego-migrate:
+    image: ${CEGO_MIGRATOR_IMAGE:-ghcr.io/kurue/cego-migrate:latest}
+    profiles:
+      - tools
+    environment:
+      DATABASE_URL: postgres://${CEGO_POSTGRES_USER:-cego}:${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}@cego-postgres:5432/${CEGO_POSTGRES_DB:-cego}
+    depends_on:
+      cego-postgres:
+        condition: service_healthy
+    networks:
+      - cego_data
+
+  cego-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CEGO_POSTGRES_DB:-cego}
+      POSTGRES_USER: ${CEGO_POSTGRES_USER:-cego}
+      POSTGRES_PASSWORD: ${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}
+    volumes:
+      - ${CEGO_APPDATA_DIR:-/mnt/user/appdata/cego}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cego_data
+
+  cego-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ${CEGO_APPDATA_DIR:-/mnt/user/appdata/cego}/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cego_data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN}
+    depends_on:
+      cego-web:
+        condition: service_healthy
+    networks:
+      - cego_edge
+
+  cego-postgres-backup:
+    image: postgres:16-alpine
+    profiles:
+      - tools
+    environment:
+      PGPASSWORD: ${CEGO_POSTGRES_PASSWORD:?set CEGO_POSTGRES_PASSWORD}
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        mkdir -p /backups &&
+        pg_dump -h cego-postgres -U ${CEGO_POSTGRES_USER:-cego} -d ${CEGO_POSTGRES_DB:-cego}
+        > /backups/cego-$$(date -u +%Y%m%dT%H%M%SZ).sql
+    depends_on:
+      cego-postgres:
+        condition: service_healthy
+    volumes:
+      - ${CEGO_APPDATA_DIR:-/mnt/user/appdata/cego}/backups:/backups
+    networks:
+      - cego_data
+
+networks:
+  cego_edge:
+    name: cego_edge
+  cego_data:
+    internal: true

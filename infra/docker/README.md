@@ -57,6 +57,19 @@ Create a manual cego Postgres backup:
 npm run docker:prod:backup
 ```
 
+## Prebuilt Images
+
+The fastest self-hosted deploy path is to let GitHub Actions build the web and migration images, then have the server pull them from GHCR. This avoids running the Next.js production build on Unraid or a small VPS.
+
+Images published by the workflow:
+
+- `ghcr.io/kurue/cego-web`
+- `ghcr.io/kurue/cego-migrate`
+
+The workflow publishes branch, tag, SHA, and default-branch `latest` tags. For a deployment branch, set `CEGO_WEB_IMAGE` and `CEGO_MIGRATOR_IMAGE` to that branch tag, such as `ghcr.io/kurue/cego-web:codex-rebrand-cego`. After merging to the default branch, `latest` is the simple production tag.
+
+If GHCR keeps the packages private, either make the packages public in GitHub or run `docker login ghcr.io` on the server with a token that has `read:packages`.
+
 ## Cloudflare Tunnel Routes
 
 The production stack uses a remotely-managed Cloudflare Tunnel token. Configure these public hostnames in the Cloudflare dashboard for the tunnel:
@@ -95,3 +108,19 @@ docker compose --env-file /mnt/user/appdata/cego/.env \
 ```
 
 No host ports are published by default. The included `cloudflared` container joins the `cego_edge` Docker network and routes traffic directly to `http://cego-web:3000`.
+
+For faster Unraid deploys using prebuilt GHCR images, use the standalone prebuilt Compose file and omit `--build`:
+
+```sh
+docker compose --env-file /mnt/user/appdata/cego/.env \
+  -f /mnt/user/appdata/cego/source/infra/docker/compose.unraid.prebuilt.yml \
+  pull cego-web cego-migrate
+
+docker compose --env-file /mnt/user/appdata/cego/.env \
+  -f /mnt/user/appdata/cego/source/infra/docker/compose.unraid.prebuilt.yml \
+  --profile tools run --rm cego-migrate
+
+docker compose --env-file /mnt/user/appdata/cego/.env \
+  -f /mnt/user/appdata/cego/source/infra/docker/compose.unraid.prebuilt.yml \
+  up -d
+```

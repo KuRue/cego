@@ -40,6 +40,8 @@ cego app:
 - `SESSION_SECRET`
 - `CEGO_TASK_SECRET`
 - `CEGO_DEADLINE_WORKER_INTERVAL_SECONDS`
+- `CEGO_WEB_IMAGE`
+- `CEGO_MIGRATOR_IMAGE`
 - `CEGO_ADMIN_TELEGRAM_IDS`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_BOT_USERNAME`
@@ -71,6 +73,10 @@ Minimum backup behavior:
 - Restore instructions tested before major event launch.
 
 The current Compose scaffold includes a manual cego Postgres backup tool profile. Scheduled encrypted backups and restore drills are still launch-readiness work.
+
+## Build Strategy
+
+For production-like deploys, prefer prebuilt GHCR images over server-side builds. GitHub Actions should build `ghcr.io/kurue/cego-web` and `ghcr.io/kurue/cego-migrate`, then the deployment host should use the standalone prebuilt Compose file and pull those images. Local Docker builds remain supported for development and recovery, with BuildKit cache mounts for npm and Next.js build cache.
 
 ## Deployment Acceptance
 

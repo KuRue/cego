@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:24-alpine AS deps
 WORKDIR /app
 
@@ -6,16 +8,16 @@ COPY apps/cego-web/package*.json ./apps/cego-web/
 COPY packages/db/package*.json ./packages/db/
 COPY packages/telegram/package*.json ./packages/telegram/
 
-RUN npm --prefix packages/db ci
-RUN npm --prefix packages/telegram ci
-RUN npm --prefix apps/cego-web ci
+RUN --mount=type=cache,target=/root/.npm npm --prefix packages/db ci
+RUN --mount=type=cache,target=/root/.npm npm --prefix packages/telegram ci
+RUN --mount=type=cache,target=/root/.npm npm --prefix apps/cego-web ci
 
 FROM deps AS builder
 WORKDIR /app
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm --prefix apps/cego-web run build
+RUN --mount=type=cache,target=/app/apps/cego-web/.next/cache npm --prefix apps/cego-web run build
 
 FROM deps AS migrator
 WORKDIR /app
