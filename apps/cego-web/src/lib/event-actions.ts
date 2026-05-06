@@ -25,6 +25,8 @@ import { requireAdminMember, requireCurrentMember } from "@/lib/session";
 import { parseSurveySchema } from "@/lib/surveys";
 import { getEffectiveRsvpStatus } from "@/lib/events";
 import { sendNotification } from "@/lib/notifications";
+import { getSiteSettings } from "@/lib/settings";
+import { parseDateInTimezone } from "@/lib/tz";
 
 const capacityBearingStatuses = ["confirmed"] as const;
 const waitlistPaymentWindowMs = 12 * 60 * 60 * 1000;
@@ -86,7 +88,7 @@ export async function createEventAction(formData: FormData) {
   await requireAdminMember();
   const db = getDb();
 
-  await db.insert(events).values(parseEventForm(formData));
+  await db.insert(events).values(await parseEventForm(formData));
 
   revalidatePath("/admin/events");
   revalidatePath("/dashboard");
@@ -104,7 +106,7 @@ export async function updateEventAction(formData: FormData) {
   const db = getDb();
   await db
     .update(events)
-    .set({ ...parseEventForm(formData), updatedAt: new Date() })
+    .set({ ...(await parseEventForm(formData)), updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
   promoteWaitlist(eventId).catch(() => {});
@@ -1103,24 +1105,25 @@ export async function deleteEventExpenseAction(formData: FormData) {
   redirect(returnTo);
 }
 
-function parseEventForm(formData: FormData) {
+async function parseEventForm(formData: FormData) {
   const title = readText(formData, "title");
   const slug = slugify(readText(formData, "slug") || title);
+  const tz = (await getSiteSettings()).timezone;
 
   return {
     type: readText(formData, "type") || "meet",
     title,
     slug,
     description: readOptionalText(formData, "description"),
-    startsAt: readDate(formData, "startsAt"),
-    endsAt: readOptionalDate(formData, "endsAt"),
+    startsAt: readDateTz(formData, "startsAt", tz),
+    endsAt: readOptionalDateTz(formData, "endsAt", tz),
     locationText: readOptionalText(formData, "locationText"),
     addressText: readOptionalText(formData, "addressText"),
     priceCents: readOptionalPriceCents(formData, "price"),
     currency: readCurrency(formData, "currency"),
     paymentRequired: readCheckbox(formData, "paymentRequired"),
     paymentMethods: readOptionalText(formData, "paymentMethods"),
-    paymentDueDate: readOptionalDate(formData, "paymentDueDate"),
+    paymentDueDate: readOptionalDateTz(formData, "paymentDueDate", tz),
     rulesText: readOptionalText(formData, "rulesText"),
     termsText: readOptionalText(formData, "termsText"),
     refundPolicyText: readOptionalText(formData, "refundPolicyText"),
@@ -1128,8 +1131,8 @@ function parseEventForm(formData: FormData) {
     imageUrl: readOptionalText(formData, "imageUrl"),
     promoImageUrl: readOptionalText(formData, "promoImageUrl"),
     capacity: readCapacity(formData),
-    rsvpOpensAt: readOptionalDate(formData, "rsvpOpensAt"),
-    rsvpClosesAt: readOptionalDate(formData, "rsvpClosesAt"),
+    rsvpOpensAt: readOptionalDateTz(formData, "rsvpOpensAt", tz),
+    rsvpClosesAt: readOptionalDateTz(formData, "rsvpClosesAt", tz),
     costCents: readOptionalPriceCents(formData, "cost"),
     paymentNotifyMemberId: readOptionalText(formData, "paymentNotifyMemberId") || null,
     qrCheckInEnabled: readCheckbox(formData, "qrCheckInEnabled"),
@@ -1185,6 +1188,26 @@ function readOptionalDate(formData: FormData, key: string): Date | null {
   }
 
   return date;
+}
+
+function readDateTz(formData: FormData, key: string, tz: string): Date {
+  const value = readText(formData, key);
+
+  if (!value) {
+    throw new Error(`${key} is required.`);
+  }
+
+  return parseDateInTimezone(value, tz);
+}
+
+function readOptionalDateTz(formData: FormData, key: string, tz: string): Date | null {
+  const value = readText(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  return parseDateInTimezone(value, tz);
 }
 
 function readCapacity(formData: FormData): number {

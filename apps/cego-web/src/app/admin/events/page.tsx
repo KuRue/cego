@@ -13,6 +13,7 @@ import { asc } from "@cego/db";
 import Navbar from "@/components/navbar";
 import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { utcToDateTimeLocal } from "@/lib/tz";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
 import { Suspense } from "react";
@@ -72,7 +73,7 @@ export default async function AdminEventsPage() {
             </div>
           ) : (
             eventOverviews.map((overview) => (
-              <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} />
+              <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} timezone={settings.timezone} />
             ))
           )}
         </div>
@@ -84,7 +85,7 @@ export default async function AdminEventsPage() {
             </summary>
             <div className="mt-5 grid gap-5">
               {deletedEvents.map((overview) => (
-                <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} />
+                <EventRow key={overview.event.id} overview={overview} eventTypes={settings.eventTypes} allMembers={allMembers} timezone={settings.timezone} />
               ))}
             </div>
           </details>
@@ -114,7 +115,7 @@ function CreateEventButton({ defaultType }: { defaultType: string }) {
   );
 }
 
-function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWithRsvps; eventTypes: string[]; allMembers: { id: string; telegramDisplayName: string }[] }) {
+function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: AdminEventWithRsvps; eventTypes: string[]; allMembers: { id: string; telegramDisplayName: string }[]; timezone: string }) {
   const { event, confirmedCount, waitlistedCount, rsvps } = overview;
 
   return (
@@ -166,7 +167,7 @@ function EventRow({ overview, eventTypes, allMembers }: { overview: AdminEventWi
         <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
           Edit event
         </summary>
-        <EventForm action={updateEventAction} submitLabel="Save event" event={event} eventTypes={eventTypes} allMembers={allMembers} />
+        <EventForm action={updateEventAction} submitLabel="Save event" event={event} eventTypes={eventTypes} allMembers={allMembers} timezone={timezone} />
       </details>
 
       {rsvps.length > 0 ? (
@@ -292,12 +293,14 @@ function EventForm({
   event,
   eventTypes,
   allMembers,
+  timezone,
 }: {
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
   event?: AdminEventWithRsvps["event"];
   eventTypes?: string[];
   allMembers?: { id: string; telegramDisplayName: string }[];
+  timezone: string;
 }) {
   return (
     <form action={action} className="mt-4 grid gap-4 overflow-hidden">
@@ -335,18 +338,18 @@ function EventForm({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Starts">
-          <input name="startsAt" required type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.startsAt) : ""} className="form-input" />
+          <input name="startsAt" required type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.startsAt, timezone) : ""} className="form-input" />
         </Field>
         <Field label="Ends">
-          <input name="endsAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.endsAt) : ""} className="form-input" />
+          <input name="endsAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.endsAt, timezone) : ""} className="form-input" />
         </Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="RSVP opens">
-          <input name="rsvpOpensAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpOpensAt) : ""} className="form-input" />
+          <input name="rsvpOpensAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpOpensAt, timezone) : ""} className="form-input" />
         </Field>
         <Field label="RSVP deadline">
-          <input name="rsvpClosesAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpClosesAt) : ""} className="form-input" />
+          <input name="rsvpClosesAt" type="datetime-local" defaultValue={event ? toDateTimeLocalValue(event.rsvpClosesAt, timezone) : ""} className="form-input" />
         </Field>
       </div>
       <Field label="Location">
@@ -432,7 +435,7 @@ function EventForm({
           <input
             name="paymentDueDate"
             type="datetime-local"
-            defaultValue={event?.paymentDueDate ? toDateTimeLocalValue(event.paymentDueDate) : ""}
+            defaultValue={event?.paymentDueDate ? toDateTimeLocalValue(event.paymentDueDate, timezone) : ""}
             className="form-input"
           />
         </Field>
@@ -483,10 +486,9 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
-function toDateTimeLocalValue(date: Date | null): string {
+function toDateTimeLocalValue(date: Date | null, tz: string): string {
   if (!date) return "";
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
+  return utcToDateTimeLocal(date, tz);
 }
 
 function formatPrice(priceCents: number, currency: string): string {

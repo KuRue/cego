@@ -279,12 +279,6 @@ function formatDateRange(startsAt: Date, endsAt: Date | null): string {
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
-function toDateTimeLocalValue(date: Date | null): string {
-  if (!date) return "";
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
-}
-
 function formatPrice(priceCents: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
