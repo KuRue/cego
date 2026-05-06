@@ -28,10 +28,13 @@ CMD ["npm", "--prefix", "packages/db", "run", "db:migrate"]
 FROM node:24-alpine AS runner
 WORKDIR /app
 
+ARG CEGO_BUILD_SHA=unknown
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
+ENV CEGO_BUILD_SHA=${CEGO_BUILD_SHA}
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs \

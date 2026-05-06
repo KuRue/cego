@@ -1,4 +1,4 @@
-import { count, getDb, members } from "@cego/db";
+import { count, desc, events, getDb, members, rsvps, siteSettings, sql } from "@cego/db";
 import {
   getTelegramBotInfo,
   getTelegramChatAdministrators,
@@ -8,7 +8,8 @@ import {
 import { StatusBadge } from "@/components/badge";
 import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
-import { getNavbarBrand } from "@/lib/settings";
+import { formatDateWithTime } from "@/lib/format-date";
+import { getNavbarBrand, normalizeTimezone } from "@/lib/settings";
 import { getPublicUrl } from "@/lib/public-url";
 import { requireAdminMember } from "@/lib/session";
 
@@ -30,10 +31,18 @@ interface DiagnosticItem {
 export default async function AdminDiagnosticsPage() {
   const currentMember = await requireAdminMember();
   const brand = await getNavbarBrand();
-  const [database, publicHealth, telegramBot, telegramGroup, telegramAdmins] =
+  const [
+    database,
+    publicHealth,
+    timezoneDiagnostics,
+    telegramBot,
+    telegramGroup,
+    telegramAdmins,
+  ] =
     await Promise.all([
       checkDatabase(),
       checkPublicHealth(),
+      checkTimezoneDiagnostics(),
       checkTelegramBot(),
       checkTelegramGroup(currentMember.telegramId),
       checkTelegramAdministrators(currentMember.telegramId),
@@ -81,6 +90,7 @@ export default async function AdminDiagnosticsPage() {
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           <DiagnosticPanel title="Runtime" items={[database, publicHealth]} />
+          <DiagnosticPanel title="Timezone" items={timezoneDiagnostics} />
           <DiagnosticPanel title="Telegram" items={[telegramBot, telegramGroup, telegramAdmins]} />
           <DiagnosticPanel title="Configuration" items={configuration} />
           <DiagnosticPanel title="Current Session" items={currentMemberDiagnostics} />
@@ -268,6 +278,9 @@ async function checkTelegramGroup(telegramId: string): Promise<DiagnosticItem> {
 
 function getConfigurationDiagnostics(): DiagnosticItem[] {
   return [
+    envDiagnostic("CEGO_BUILD_SHA", process.env.CEGO_BUILD_SHA, {
+      showValue: true,
+    }),
     envDiagnostic("APP_BASE_URL", process.env.APP_BASE_URL, {
       showValue: true,
       validate: (value) => value.startsWith("https://"),
@@ -285,6 +298,97 @@ function getConfigurationDiagnostics(): DiagnosticItem[] {
     }),
     envDiagnostic("SESSION_SECRET", process.env.SESSION_SECRET),
   ];
+}
+
+async function checkTimezoneDiagnostics(): Promise<DiagnosticItem[]> {
+  try {
+    const db = getDb();
+    const [rawSettingsRows, latestEventRows, latestRsvpRows] =
+      await Promise.all([
+        db.select({ timezone: siteSettings.timezone }).from(siteSettings).limit(1),
+        db
+          .select({
+            title: events.title,
+            paymentDueDate: events.paymentDueDate,
+            updatedAt: events.updatedAt,
+          })
+          .from(events)
+          .where(sql`${events.paymentDueDate} IS NOT NULL`)
+          .orderBy(desc(events.updatedAt))
+          .limit(1),
+        db
+          .select({
+            id: rsvps.id,
+            status: rsvps.status,
+            paymentStatus: rsvps.paymentStatus,
+            paymentDeadlineAt: rsvps.paymentDeadlineAt,
+            updatedAt: rsvps.updatedAt,
+          })
+          .from(rsvps)
+          .where(sql`${rsvps.paymentDeadlineAt} IS NOT NULL`)
+          .orderBy(desc(rsvps.updatedAt))
+          .limit(1),
+      ]);
+
+    const rawTimezone = rawSettingsRows[0]?.timezone ?? null;
+    const configuredTimezone = normalizeTimezone(rawTimezone);
+    const sanityDate = new Date("2026-05-06T09:30:00.000Z");
+    const sanityValue = formatDateWithTime(sanityDate, configuredTimezone);
+    const latestEvent = latestEventRows[0];
+    const latestRsvp = latestRsvpRows[0];
+
+    return [
+      {
+        label: "Configured timezone",
+        status: "pass",
+        value: configuredTimezone,
+        detail: `Raw database value: ${rawTimezone ?? "(default)"}`,
+      },
+      {
+        label: "UTC to site timezone sanity check",
+        status:
+          configuredTimezone === "America/New_York" && sanityValue.includes("5:30")
+            ? "pass"
+            : "warn",
+        value: sanityValue,
+        detail:
+          "For Eastern Time, 2026-05-06T09:30:00.000Z must display as 5:30 AM.",
+      },
+      latestEvent?.paymentDueDate
+        ? {
+            label: "Latest event payment deadline",
+            status: "pass",
+            value: formatDateWithTime(latestEvent.paymentDueDate, configuredTimezone),
+            detail: `${latestEvent.title}: ${latestEvent.paymentDueDate.toISOString()}`,
+          }
+        : {
+            label: "Latest event payment deadline",
+            status: "warn",
+            value: "none found",
+          },
+      latestRsvp?.paymentDeadlineAt
+        ? {
+            label: "Latest RSVP payment deadline",
+            status: "pass",
+            value: formatDateWithTime(latestRsvp.paymentDeadlineAt, configuredTimezone),
+            detail: `${latestRsvp.status}/${latestRsvp.paymentStatus}: ${latestRsvp.paymentDeadlineAt.toISOString()}`,
+          }
+        : {
+            label: "Latest RSVP payment deadline",
+            status: "warn",
+            value: "none found",
+          },
+    ];
+  } catch (error) {
+    return [
+      {
+        label: "Timezone diagnostics",
+        status: "fail",
+        value: "failed",
+        detail: getErrorMessage(error),
+      },
+    ];
+  }
 }
 
 function envDiagnostic(
