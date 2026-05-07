@@ -16,9 +16,10 @@ interface NavbarProps {
     siteName: string;
     logoUrl: string | null;
   } | null;
+  showQrCheckIn?: boolean;
 }
 
-export default function Navbar({ member, brand }: NavbarProps) {
+export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -122,15 +123,17 @@ export default function Navbar({ member, brand }: NavbarProps) {
             >
               Admin Dashboard
             </AppLink>
-            <AppLink
-              href="/admin/settings"
-              onClick={() => setMenuOpen(false)}
-              className="block px-4 py-2.5 text-sm transition"
-              style={{ color: "var(--color-foreground)" }}
-              role="menuitem"
-            >
-              Settings
-            </AppLink>
+            {showQrCheckIn ? (
+              <AppLink
+                href="/admin/check-in"
+                onClick={() => setMenuOpen(false)}
+                className="block px-4 py-2.5 text-sm transition"
+                style={{ color: "var(--color-foreground)" }}
+                role="menuitem"
+              >
+                QR Check-in
+              </AppLink>
+            ) : null}
           </>
         ) : null}
       </div>

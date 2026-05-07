@@ -3,6 +3,7 @@ import { getAdminEvents } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import Navbar from "@/components/navbar";
 import { getSiteSettings } from "@/lib/settings";
+import { hasQrCheckInEvents } from "@/lib/qr-check";
 import { titleCase } from "@/components/badge";
 import { formatDateShort as fmtDateShort } from "@/lib/format-date";
 
@@ -41,6 +42,7 @@ export default async function AdminPage() {
   }
 
   const eventOverviews = await getAdminEvents();
+  const showQr = await hasQrCheckInEvents().catch(() => false);
 
   const openEvents = eventOverviews.filter(
     (e) => e.event.status === "show" || e.event.status === "closed",
@@ -55,6 +57,7 @@ export default async function AdminPage() {
           isAdmin: member.isAdmin,
         }}
         brand={brand}
+        showQrCheckIn={showQr}
       />
       <main className="mx-auto max-w-6xl px-5 pb-16 pt-8">
         <h1 className="text-3xl font-semibold">Admin</h1>

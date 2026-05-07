@@ -11,6 +11,7 @@ import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
+import { hasQrCheckInEvents } from "@/lib/qr-check";
 import { formatDateRange as fmtDateRange, formatDateRangeShort as fmtDateRangeShort } from "@/lib/format-date";
 import { formatPrice } from "@/lib/format-price";
 
@@ -89,6 +90,7 @@ export default async function DashboardPage() {
     getDashboardEvents(member.id).catch(() => []),
     getDashboardSurveys(member.id).catch(() => []),
   ]);
+  const showQr = member.isAdmin ? await hasQrCheckInEvents().catch(() => false) : false;
 
   return (
     <>
@@ -99,6 +101,7 @@ export default async function DashboardPage() {
           isAdmin: member.isAdmin,
         }}
         brand={brand}
+        showQrCheckIn={showQr}
       />
       <main className="page-shell mx-auto max-w-6xl px-5 pb-16 pt-8">
         <section>
