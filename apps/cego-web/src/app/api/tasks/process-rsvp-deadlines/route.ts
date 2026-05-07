@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "crypto";
+import { createSocket } from "dgram";
 import { NextResponse } from "next/server";
 import { expirePastDeadlineRsvps } from "@/lib/event-actions";
 
@@ -22,6 +23,37 @@ function safeEquals(left: string, right: string): boolean {
   return timingSafeEqual(leftHash, rightHash);
 }
 
+function getNtpOffsetMs(server: string, timeoutMs = 3000): Promise<number | null> {
+  return new Promise((resolve) => {
+    let socket: ReturnType<typeof createSocket> | null = null;
+    const timer = setTimeout(() => { socket?.close(); resolve(null); }, timeoutMs);
+    try {
+      socket = createSocket("udp4");
+      const ntpData = Buffer.alloc(48, 0);
+      ntpData[0] = 0x1b;
+
+      const sendTime = Date.now();
+
+      socket.on("message", (msg: Buffer) => {
+        clearTimeout(timer);
+        socket!.close();
+        const secsSince1900 = msg.readUInt32BE(40);
+        const ntpEpochMs = (secsSince1900 - 2208988800) * 1000;
+        const roundTrip = Date.now() - sendTime;
+        const offset = ntpEpochMs - (sendTime + Math.round(roundTrip / 2));
+        resolve(offset);
+      });
+
+      socket.on("error", () => { clearTimeout(timer); socket?.close(); resolve(null); });
+      socket.send(ntpData, 123, server);
+    } catch {
+      clearTimeout(timer);
+      socket?.close();
+      resolve(null);
+    }
+  });
+}
+
 export async function POST(request: Request) {
   const taskSecret = process.env.CEGO_TASK_SECRET;
 
@@ -36,11 +68,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
   }
 
+  const ntpOffset = await getNtpOffsetMs("time.google.com");
+
+  if (ntpOffset !== null && Math.abs(ntpOffset) > 30_000) {
+    console.warn(`[cron] clock drift detected: ${ntpOffset}ms offset from NTP`);
+  }
+
   const result = await expirePastDeadlineRsvps();
 
   return NextResponse.json({
     ok: true,
     processedAt: new Date().toISOString(),
+    ...(ntpOffset !== null ? { clockOffsetMs: ntpOffset } : {}),
     ...result,
   });
 }

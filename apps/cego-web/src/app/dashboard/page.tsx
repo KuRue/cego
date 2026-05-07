@@ -2,7 +2,7 @@ import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import AvatarStack from "@/components/avatar-stack";
-import { cancelRsvpAction, dropPlusOneAction, expirePastDeadlineRsvps } from "@/lib/event-actions";
+import { cancelRsvpAction, dropPlusOneAction } from "@/lib/event-actions";
 import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import StopPropagation from "@/components/stop-propagation";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
@@ -83,8 +83,6 @@ export default async function DashboardPage() {
       </>
     );
   }
-
-  await expirePastDeadlineRsvps().catch(() => {});
 
   const [eventStates, surveyStates] = await Promise.all([
     getDashboardEvents(member.id).catch(() => []),
