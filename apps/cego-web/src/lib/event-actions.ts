@@ -93,7 +93,7 @@ export async function createEventAction(formData: FormData) {
 
   await db.insert(events).values(await parseEventForm(formData));
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
@@ -113,7 +113,7 @@ export async function createDraftEventAction(formData: FormData) {
     status: "draft",
   });
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
@@ -170,7 +170,7 @@ export async function updateEventAction(formData: FormData) {
 
   promoteWaitlist(eventId).catch(() => {});
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
@@ -904,7 +904,7 @@ export async function deleteEventAction(formData: FormData) {
     .set({ status: "deleted", updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
@@ -924,7 +924,7 @@ export async function undeleteEventAction(formData: FormData) {
     .set({ status: "draft", updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
@@ -1083,7 +1083,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
     }
   });
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
 
   if (notification) {
@@ -1181,7 +1181,7 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     }
   });
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
 
   if (notification) {
@@ -1225,7 +1225,7 @@ export async function deleteRsvpAction(formData: FormData) {
     }
   });
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   if (promoteEventId) {
     await promoteWaitlist(promoteEventId);
@@ -1253,7 +1253,7 @@ export async function checkInRsvpAction(formData: FormData) {
     })
     .where(eq(rsvps.id, rsvpId));
 
-  revalidatePath("/admin/events");
+  revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect(returnTo);
 }
