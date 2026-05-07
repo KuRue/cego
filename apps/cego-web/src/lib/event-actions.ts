@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { audit } from "@/lib/audit";
 import { redirect } from "next/navigation";
 import {
   and,
@@ -477,6 +478,19 @@ export async function rsvpForEventAction(formData: FormData) {
     }).catch(() => {});
   }
 
+  {
+    let detail = plusOneName ? `+1: ${plusOneName}${plusOneWaitlisted ? " (waitlisted)" : ""}` : undefined;
+    if (surveyId && detail) detail += `; survey: ${surveyId}`;
+    else if (surveyId) detail = `survey: ${surveyId}`;
+    audit({
+      eventId,
+      memberId: member.id,
+      actorId: member.id,
+      action: rsvpStatus === "confirmed" ? "rsvp_confirmed" : "rsvp_waitlisted",
+      detail,
+    }).catch(() => {});
+  }
+
   redirect(returnTo);
 }
 
@@ -725,6 +739,14 @@ export async function adminRsvpForEventAction(formData: FormData) {
   if (shouldRunWaitlist) {
     await promoteWaitlist(eventId);
   }
+
+  audit({
+    eventId,
+    memberId: member.id,
+    actorId: member.id,
+    action: "admin_rsvp_added",
+  }).catch(() => {});
+
   redirect(returnTo);
 }
 
@@ -802,6 +824,15 @@ export async function adminRsvpForMemberAction(formData: FormData) {
 
   revalidatePath(returnTo);
   revalidatePath("/admin");
+
+  audit({
+    eventId,
+    memberId: targetMemberId,
+    actorId: admin.id,
+    action: "admin_rsvp_added",
+    detail: "Added by admin",
+  }).catch(() => {});
+
   redirect(returnTo);
 }
 
@@ -870,6 +901,13 @@ export async function cancelRsvpAction(formData: FormData) {
   revalidatePath("/admin");
 
   if (hadPaid) {
+    audit({
+      eventId,
+      memberId: member.id,
+      actorId: member.id,
+      action: "refund_requested",
+    }).catch(() => {});
+
     sendNotification({
       memberId: member.id,
       eventId,
@@ -904,6 +942,13 @@ export async function cancelRsvpAction(formData: FormData) {
       }
     }
   } else {
+    audit({
+      eventId,
+      memberId: member.id,
+      actorId: member.id,
+      action: "rsvp_cancelled",
+    }).catch(() => {});
+
     sendNotification({
       memberId: member.id,
       eventId,
@@ -1114,7 +1159,13 @@ export async function updateRsvpStatusAction(formData: FormData) {
   revalidatePath("/dashboard");
 
   if (notification) {
+    const { eventId: nEventId, memberId: nMemberId } = notification;
     sendNotification(notification).catch(() => {});
+    audit({
+      eventId: nEventId,
+      memberId: nMemberId,
+      action: `rsvp_${status}`,
+    }).catch(() => {});
   }
 
   if (promoteEventId) {
@@ -1143,6 +1194,8 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 
   const setConfirmed = paymentStatus === "paid" || paymentStatus === "waived";
   let notification: { memberId: string; eventId: string; template: "payment_confirmed" | "payment_waived" } | null = null;
+  let auditEventId: string | null = null;
+  let auditMemberId: string | null = null;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
@@ -1157,6 +1210,9 @@ export async function updateRsvpPaymentAction(formData: FormData) {
       .limit(1);
     const row = rsvpRows[0];
     if (!row) return;
+
+    auditEventId = row.eventId;
+    auditMemberId = row.memberId;
 
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
 
@@ -1215,6 +1271,14 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     sendNotification(notification).catch(() => {});
   }
 
+  if (auditEventId && auditMemberId) {
+    audit({
+      eventId: auditEventId,
+      memberId: auditMemberId,
+      action: `payment_${paymentStatus}`,
+    }).catch(() => {});
+  }
+
   redirect(returnTo);
 }
 
@@ -1226,6 +1290,7 @@ export async function processRefundAction(formData: FormData) {
   if (!rsvpId) redirect(returnTo);
 
   const db = getDb();
+  let refundEventId: string | null = null;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
@@ -1235,6 +1300,8 @@ export async function processRefundAction(formData: FormData) {
       .limit(1);
     const row = rsvpRows[0];
     if (!row) return;
+
+    refundEventId = row.eventId;
 
     const tags = Array.isArray(row.tags) ? row.tags as string[] : [];
     if (!tags.includes("refund_requested")) return;
@@ -1258,6 +1325,15 @@ export async function processRefundAction(formData: FormData) {
 
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
+
+  if (refundEventId) {
+    audit({
+      eventId: refundEventId,
+      action: "refund_processed",
+      detail: rsvpId,
+    }).catch(() => {});
+  }
+
   redirect(returnTo);
 }
 
@@ -1315,6 +1391,12 @@ export async function checkInRsvpAction(formData: FormData) {
 
   const db = getDb();
 
+  const [checkInRow] = await db
+    .select({ eventId: rsvps.eventId, memberId: rsvps.memberId })
+    .from(rsvps)
+    .where(eq(rsvps.id, rsvpId))
+    .limit(1);
+
   await db
     .update(rsvps)
     .set({
@@ -1325,6 +1407,15 @@ export async function checkInRsvpAction(formData: FormData) {
 
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
+
+  if (checkInRow) {
+    audit({
+      eventId: checkInRow.eventId,
+      memberId: checkInRow.memberId,
+      action: checkedIn === "1" ? "check_in" : "check_in_undo",
+    }).catch(() => {});
+  }
+
   redirect(returnTo);
 }
 

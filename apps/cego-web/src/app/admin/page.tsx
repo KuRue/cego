@@ -102,6 +102,7 @@ export default async function AdminPage() {
           <NavButton href="/admin/members">Members</NavButton>
           <NavButton href="/admin/check-in">Check-in Scanner</NavButton>
           <NavButton href="/admin/settings">Settings</NavButton>
+          <NavButton href="/admin/logs">Activity Log</NavButton>
           <NavButton href="/admin/diagnostics">Diagnostics</NavButton>
         </nav>
       </main>

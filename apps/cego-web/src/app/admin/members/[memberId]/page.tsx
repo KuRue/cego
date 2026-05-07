@@ -18,6 +18,8 @@ import { Badge, getTagTone, StatusBadge, titleCase } from "@/components/badge";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
+import { auditLog, events, desc, eq } from "@cego/db";
+import { getDb } from "@cego/db";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +65,22 @@ export default async function AdminMemberDetailPage({
   if (!detail) {
     notFound();
   }
+
+  const db = getDb();
+  const auditRows = await db
+    .select({
+      id: auditLog.id,
+      eventId: auditLog.eventId,
+      action: auditLog.action,
+      detail: auditLog.detail,
+      createdAt: auditLog.createdAt,
+      eventTitle: events.title,
+    })
+    .from(auditLog)
+    .leftJoin(events, eq(auditLog.eventId, events.id))
+    .where(eq(auditLog.memberId, memberId))
+    .orderBy(desc(auditLog.createdAt))
+    .limit(30);
 
   const assignedTagIds = new Set(detail.tags.map((tag) => tag.id));
   const assignableTags = detail.availableTags.filter(
@@ -439,6 +457,34 @@ export default async function AdminMemberDetailPage({
                 </div>
               )}
             </Panel>
+
+            <Panel title="Audit Log">
+              {auditRows.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>No audit entries yet.</p>
+              ) : (
+                <div className="space-y-1">
+                  {auditRows.map((row) => (
+                    <div
+                      key={row.id}
+                      className="glass rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
+                    >
+                      <span className="shrink-0 mt-0.5 text-xs" style={{ color: "var(--color-muted)" }}>
+                        {fmtDateWithTime(row.createdAt, settings.timezone)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <span>{auditActionLabel(row.action)}</span>
+                        {row.eventTitle ? (
+                          <span style={{ color: "var(--color-muted)" }}> — {row.eventTitle}</span>
+                        ) : null}
+                        {row.detail ? (
+                          <span style={{ color: "var(--color-muted)" }}> ({row.detail})</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
           </div>
         </section>
       </main>
@@ -541,6 +587,37 @@ function formatSurveyResponse(answersJson: unknown, schemaJson: unknown) {
     label,
     answer: formatSurveyAnswer(value),
   }));
+}
+
+const auditActionLabels: Record<string, string> = {
+  rsvp_confirmed: "RSVP confirmed",
+  rsvp_waitlisted: "RSVP waitlisted",
+  rsvp_cancelled: "RSVP cancelled",
+  rsvp_expired: "RSVP expired",
+  rsvp_promoted: "Promoted from waitlist",
+  payment_marked_pending: "Payment marked pending",
+  payment_paid: "Payment confirmed",
+  payment_unpaid: "Payment set unpaid",
+  payment_pending: "Payment set pending",
+  payment_waived: "Payment waived",
+  refund_requested: "Refund requested",
+  refund_processed: "Refund processed",
+  check_in: "Checked in",
+  check_in_undo: "Check-in undone",
+  admin_rsvp_added: "RSVP added by admin",
+  event_created: "Event created",
+  event_updated: "Event updated",
+  event_deleted: "Event deleted",
+  event_undeleted: "Event restored",
+  member_deactivated: "Member deactivated",
+  member_reactivated: "Member reactivated",
+  survey_response: "Survey response submitted",
+  drop_plus_one: "Plus-one dropped",
+  note_added: "Note added",
+};
+
+function auditActionLabel(action: string): string {
+  return auditActionLabels[action] ?? action;
 }
 
 function readAnswerRecord(value: unknown): Record<string, unknown> {

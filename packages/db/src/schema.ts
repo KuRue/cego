@@ -289,6 +289,23 @@ export const eventExpenses = pgTable("event_expenses", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const auditLog = pgTable("audit_log", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+  eventId: text("event_id").references(() => events.id),
+  memberId: text("member_id").references(() => members.id),
+  actorId: text("actor_id").references(() => members.id),
+  action: text("action").notNull(),
+  detail: text("detail"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("idx_audit_log_event").on(table.eventId),
+  index("idx_audit_log_member").on(table.memberId),
+  index("idx_audit_log_created").on(table.createdAt),
+]);
+
+export type AuditLogEntry = typeof auditLog.$inferSelect;
+export type NewAuditLogEntry = typeof auditLog.$inferInsert;
+
 export type Member = typeof members.$inferSelect;
 export type NewMember = typeof members.$inferInsert;
 export type Event = typeof events.$inferSelect;
