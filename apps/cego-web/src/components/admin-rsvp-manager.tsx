@@ -13,6 +13,7 @@ import {
 } from "@/lib/event-actions";
 import { StatusBadge } from "@/components/badge";
 import Avatar from "@/components/avatar";
+import ConfirmButton from "@/components/confirm-button";
 import { useConfirm } from "@/components/confirm-provider";
 
 type RsvpRow = {
@@ -363,13 +364,14 @@ function DetailPanel({
             <form action={processRefundAction}>
               <input type="hidden" name="rsvpId" value={entry.id} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <button
+              <ConfirmButton
                 type="submit"
+                message={`Process refund and cancel RSVP for ${entry.displayName}?`}
                 className="h-8 rounded-lg px-3 text-xs font-semibold transition"
                 style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
               >
                 Process Refund
-              </button>
+              </ConfirmButton>
             </form>
           )}
           </>
