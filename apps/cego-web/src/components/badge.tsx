@@ -28,6 +28,9 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
     warn: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
     fail: { bg: "var(--color-danger-bg)", text: "var(--color-danger)" },
     submitted: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
+    pay_paid: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
+    pay_pending: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
+    pay_waived: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
   };
 
   const tone = map[status] ?? { bg: "var(--color-surface-hover)", text: "var(--color-muted)" };
@@ -81,6 +84,16 @@ export function rsvpStatusLabel(status: string): string {
     case "waitlisted": return "On waitlist";
     case "cancelled": return "RSVP Cancelled";
     case "expired": return "RSVP Expired";
+    default: return status;
+  }
+}
+
+export function paymentStatusLabel(status: string): string {
+  switch (status) {
+    case "paid": return "Payment Confirmed";
+    case "pending": return "Payment Pending";
+    case "waived": return "Payment Waived";
+    case "unpaid": return "Payment Due";
     default: return status;
   }
 }

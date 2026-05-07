@@ -1,7 +1,7 @@
 import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
-import { StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
+import { StatusBadge, eventStatusLabel, rsvpStatusLabel, paymentStatusLabel } from "@/components/badge";
 import AvatarStack from "@/components/avatar-stack";
 import { submitSurveyResponseAction } from "@/lib/survey-actions";
 import SurveyResponseEditor from "@/components/survey-response-editor";
@@ -160,7 +160,14 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : (
+            {rsvp ? (
+              <>
+                <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} />
+                {event.paymentRequired && rsvp.paymentStatus !== "unpaid" ? (
+                  <StatusBadge status={`pay_${rsvp.paymentStatus}`} label={paymentStatusLabel(rsvp.paymentStatus)} />
+                ) : null}
+              </>
+            ) : (
               <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, timezone)} />
             )}
           </div>
