@@ -304,12 +304,14 @@ function DetailPanel({
             className="h-8 rounded-lg px-2 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
             onChange={async (e) => {
-              const newValue = e.currentTarget.value;
+              const select = e.currentTarget;
+              const newValue = select.value;
+              const form = select.closest("form")!;
               if (!await confirm(`Change status to ${newValue}?`)) {
-                e.currentTarget.value = entry.status;
+                select.value = entry.status;
                 return;
               }
-              const fd = new FormData(e.currentTarget.closest("form")!);
+              const fd = new FormData(form);
               fd.set("status", newValue);
               startTransition(async () => { await updateRsvpStatusAction(fd); });
             }}
@@ -343,12 +345,14 @@ function DetailPanel({
                   : "var(--color-warning)",
               }}
               onChange={async (e) => {
-                const newValue = e.currentTarget.value;
+                const select = e.currentTarget;
+                const newValue = select.value;
+                const form = select.closest("form")!;
                 if (!await confirm(`Change payment to ${newValue}?`)) {
-                  e.currentTarget.value = entry.paymentStatus;
+                  select.value = entry.paymentStatus;
                   return;
                 }
-                const fd = new FormData(e.currentTarget.closest("form")!);
+                const fd = new FormData(form);
                 fd.set("paymentStatus", newValue);
                 startTransition(async () => { await updateRsvpPaymentAction(fd); });
               }}
