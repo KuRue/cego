@@ -1814,6 +1814,14 @@ export async function markRsvpPendingAction(formData: FormData) {
   }
 
   revalidatePath(returnTo);
+
+  audit({
+    eventId: row.eventId,
+    memberId: member.id,
+    actorId: member.id,
+    action: "payment_marked_pending",
+  }).catch(() => {});
+
   redirect(returnTo);
 }
 
