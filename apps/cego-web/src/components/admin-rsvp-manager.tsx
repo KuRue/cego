@@ -302,11 +302,13 @@ function DetailPanel({
             className="h-8 rounded-lg px-2 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
             onChange={async (e) => {
-              if (!await confirm(`Change status to ${e.currentTarget.value}?`)) {
+              const newValue = e.currentTarget.value;
+              if (!await confirm(`Change status to ${newValue}?`)) {
                 e.currentTarget.value = entry.status;
                 return;
               }
-              const fd = new FormData(e.currentTarget.form!);
+              const fd = new FormData(e.currentTarget.closest("form")!);
+              fd.set("status", newValue);
               startTransition(async () => { await updateRsvpStatusAction(fd); });
             }}
             disabled={pending}
@@ -338,11 +340,13 @@ function DetailPanel({
                   : "var(--color-warning)",
               }}
               onChange={async (e) => {
-                if (!await confirm(`Change payment to ${e.currentTarget.value}?`)) {
+                const newValue = e.currentTarget.value;
+                if (!await confirm(`Change payment to ${newValue}?`)) {
                   e.currentTarget.value = entry.paymentStatus;
                   return;
                 }
-                const fd = new FormData(e.currentTarget.form!);
+                const fd = new FormData(e.currentTarget.closest("form")!);
+                fd.set("paymentStatus", newValue);
                 startTransition(async () => { await updateRsvpPaymentAction(fd); });
               }}
               disabled={pending}
