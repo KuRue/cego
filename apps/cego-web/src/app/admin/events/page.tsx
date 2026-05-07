@@ -17,7 +17,6 @@ import { utcToDateTimeLocal } from "@/lib/tz";
 import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
-import { Suspense } from "react";
 import ConfirmButton from "@/components/confirm-button";
 import PaymentMethodsEditor from "@/components/payment-methods-editor";
 

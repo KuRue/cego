@@ -647,17 +647,6 @@ function PolicyBlock({ title, body }: { title: string; body: string }) {
   );
 }
 
-function TextBlock({ title, body }: { title: string; body: string }) {
-  return (
-    <section>
-      <h3 className="font-semibold">{title}</h3>
-      <p className="mt-2 whitespace-pre-wrap text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-        {body}
-      </p>
-    </section>
-  );
-}
-
 function formatPrice(priceCents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

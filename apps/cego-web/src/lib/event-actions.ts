@@ -1623,8 +1623,6 @@ export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResul
       ),
     );
 
-  console.log("[expirePastDeadlineRsvps] found rows:", expiredRows.length, expiredRows.length > 0 ? expiredRows.map(r => ({ id: r.id, deadline: r.paymentDeadlineAt })) : "");
-
   const now = new Date();
 
   if (expiredRows.length === 0) {

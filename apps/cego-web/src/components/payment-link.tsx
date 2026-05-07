@@ -19,7 +19,7 @@ export default function PaymentLink({
       onClick={(e) => {
         if (
           !confirm(
-            `When sending payment, write "Vacation reimbursement ${displayName}" in the notes to speed up confirmation.`
+            `When sending payment, write "Payment for ${displayName}" in the notes to speed up confirmation.`
           )
         ) {
           e.preventDefault();

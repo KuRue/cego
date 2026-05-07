@@ -67,6 +67,9 @@ export default async function AdminEventDetailPage({
   const expenseTotal = detail.expenses.reduce((sum, e) => sum + e.amountCents, 0);
   const manualCosts = detail.event.costCents ?? 0;
   const totalCosts = expenseTotal + manualCosts;
+  const currency = detail.event.currency ?? "USD";
+  const fp = (cents: number) => formatPrice(cents, currency);
+
   const netBalance = totalPaid - totalCosts;
 
   return (
@@ -128,12 +131,12 @@ export default async function AdminEventDetailPage({
 
       {detail.event.priceCents !== null || totalCosts > 0 ? (
         <div className="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">
-          <StatBox label="Total Costs" value={formatPrice(totalCosts)} />
-          <StatBox label="Total Owed" value={formatPrice(totalOwed)} />
-          <StatBox label="Total Paid" value={formatPrice(totalPaid)} />
+          <StatBox label="Total Costs" value={fp(totalCosts)} />
+          <StatBox label="Total Owed" value={fp(totalOwed)} />
+          <StatBox label="Total Paid" value={fp(totalPaid)} />
           <StatBox
             label="Net Balance"
-            value={formatPrice(Math.abs(netBalance))}
+            value={fp(Math.abs(netBalance))}
             suffix={netBalance >= 0 ? " surplus" : " short"}
             highlight={netBalance < 0 ? "bad" : netBalance > 0 ? "good" : undefined}
           />
@@ -154,7 +157,7 @@ export default async function AdminEventDetailPage({
                 <p className="text-xs" style={{ color: "var(--color-muted)" }}>{titleCase(expense.category)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="text-sm font-semibold">{formatPrice(expense.amountCents)}</span>
+                <span className="text-sm font-semibold">{fp(expense.amountCents)}</span>
                 <form action={deleteEventExpenseAction}>
                   <input type="hidden" name="expenseId" value={expense.id} />
                   <input type="hidden" name="returnTo" value={returnTo} />
@@ -172,7 +175,7 @@ export default async function AdminEventDetailPage({
           ))}
           <div className="flex items-center justify-between p-2">
             <span className="text-sm font-semibold">Total expenses</span>
-            <span className="text-sm font-bold">{formatPrice(expenseTotal)}</span>
+            <span className="text-sm font-bold">{fp(expenseTotal)}</span>
           </div>
         </div>
       ) : (
@@ -269,9 +272,9 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
   );
 }
 
-function formatPrice(priceCents: number): string {
+function formatPrice(priceCents: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
   }).format(priceCents / 100);
 }

@@ -103,6 +103,7 @@ export async function sendNotification({
     "payment_confirmed",
     "payment_waived",
     "payment_reminder",
+    "checked_in",
   ].includes(template);
 
   if (isRsvpNotification && !prefs.rsvpUpdates) return;
