@@ -53,11 +53,11 @@ export default async function AdminLogsPage({
 
   const db = getDb();
 
+  const { and } = await import("@cego/db");
   const conditions = [];
   if (eventId) conditions.push(eq(auditLog.eventId, eventId));
   if (memberId) conditions.push(eq(auditLog.memberId, memberId));
 
-  const { and } = await import("@cego/db");
   const rows = await db
     .select({
       id: auditLog.id,
@@ -69,11 +69,11 @@ export default async function AdminLogsPage({
       createdAt: auditLog.createdAt,
       eventTitle: events.title,
       memberName: members.telegramDisplayName,
-      actorName: members.telegramDisplayName,
     })
     .from(auditLog)
     .leftJoin(events, eq(auditLog.eventId, events.id))
     .leftJoin(members, eq(auditLog.memberId, members.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(auditLog.createdAt))
     .limit(200);
 
