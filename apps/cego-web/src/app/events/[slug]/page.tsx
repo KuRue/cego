@@ -660,8 +660,8 @@ function PolicyBlock({ title, body }: { title: string; body: string }) {
   return (
     <div className="glass rounded-xl px-3 py-2">
       <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--color-muted)" }}>{title}</p>
-      <div className="mt-1">
-        <RichText className="text-xs leading-5">{body}</RichText>
+      <div className="mt-0.5">
+        <RichText className="compact">{body}</RichText>
       </div>
     </div>
   );
