@@ -80,7 +80,7 @@ export function rsvpStatusLabel(status: string): string {
     case "confirmed": return "RSVP Confirmed";
     case "waitlisted": return "On waitlist";
     case "cancelled": return "RSVP Cancelled";
-    case "expired": return "Spot forfeited";
+    case "expired": return "RSVP Expired";
     default: return status;
   }
 }

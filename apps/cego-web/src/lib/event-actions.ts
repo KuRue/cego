@@ -133,12 +133,16 @@ export async function updateEventAction(formData: FormData) {
   try {
     const parsedEvent = await parseEventForm(formData);
 
+    let previousStatus: string | null = null;
+
     await db.transaction(async (tx) => {
       const [previousEvent] = await tx
-        .select({ paymentDueDate: events.paymentDueDate })
+        .select({ paymentDueDate: events.paymentDueDate, status: events.status })
         .from(events)
         .where(eq(events.id, eventId))
         .limit(1);
+
+      previousStatus = previousEvent?.status ?? null;
 
       await tx
         .update(events)
@@ -161,6 +165,36 @@ export async function updateEventAction(formData: FormData) {
               previousDeadlineCondition,
             ),
           );
+      }
+
+      if (parsedEvent.status === "closed" && previousStatus !== "closed") {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
+        const unpaidRows = await tx
+          .update(rsvps)
+          .set({ status: "expired", updatedAt: now })
+          .where(
+            and(
+              eq(rsvps.eventId, eventId),
+              eq(rsvps.status, "confirmed"),
+              eq(rsvps.paymentStatus, "unpaid"),
+            ),
+          )
+          .returning({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId });
+
+        const parentIds = unpaidRows.filter((r) => !r.parentRsvpId).map((r) => r.id);
+        if (parentIds.length > 0) {
+          await tx
+            .update(rsvps)
+            .set({ status: "expired", updatedAt: now })
+            .where(
+              and(
+                inArray(rsvps.parentRsvpId, parentIds),
+                ne(rsvps.status, "cancelled"),
+                ne(rsvps.status, "expired"),
+              ),
+            );
+        }
       }
     });
   } catch (error) {
