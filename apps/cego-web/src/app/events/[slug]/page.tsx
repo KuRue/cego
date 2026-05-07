@@ -123,7 +123,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
     confirmedCount,
   });
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && rsvp?.paymentStatus !== "refund_requested";
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && !(rsvp?.tags as string[] | undefined)?.includes("refund_requested");
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
@@ -588,9 +588,9 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 {rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request Cancellation" : "Cancel RSVP"}
               </CancelRsvpButton>
             </form>
-          ) : rsvp?.paymentStatus === "refund_requested" ? (
+          ) : rsvp && (rsvp.tags as string[] | undefined)?.includes("refund_requested") ? (
             <div className="mt-6 rounded-xl p-4 text-center text-sm font-semibold" style={{ background: "var(--color-highlight)", color: "var(--color-on-accent)" }}>
-              Cancellation requested - waiting for refund
+              Cancellation requested
             </div>
           ) : null}
         </aside>

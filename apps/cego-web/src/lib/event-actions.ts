@@ -834,16 +834,22 @@ export async function cancelRsvpAction(formData: FormData) {
     const now = new Date();
 
     if (hadPaid) {
+      const newTags = Array.isArray(parentRsvp.tags)
+        ? [...(parentRsvp.tags as string[]).filter((t) => t !== "refund_requested"), "refund_requested"]
+        : ["refund_requested"];
       await tx
         .update(rsvps)
-        .set({ paymentStatus: "refund_requested", updatedAt: now })
+        .set({ tags: newTags, updatedAt: now })
         .where(eq(rsvps.id, parentRsvp.id));
 
       const plusOne = memberRsvps.find((r) => r.parentRsvpId === parentRsvp.id && r.status !== "cancelled" && r.status !== "expired");
       if (plusOne && (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived" || plusOne.paymentStatus === "pending")) {
+        const plusOneTags = Array.isArray(plusOne.tags)
+          ? [...(plusOne.tags as string[]).filter((t) => t !== "refund_requested"), "refund_requested"]
+          : ["refund_requested"];
         await tx
           .update(rsvps)
-          .set({ paymentStatus: "refund_requested", updatedAt: now })
+          .set({ tags: plusOneTags, updatedAt: now })
           .where(eq(rsvps.id, plusOne.id));
       }
     } else {
@@ -1126,7 +1132,6 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     "pending",
     "paid",
     "waived",
-    "refund_requested",
   ] as const);
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
@@ -1224,25 +1229,29 @@ export async function processRefundAction(formData: FormData) {
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
-      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, paymentStatus: rsvps.paymentStatus })
+      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, tags: rsvps.tags })
       .from(rsvps)
       .where(eq(rsvps.id, rsvpId))
       .limit(1);
     const row = rsvpRows[0];
-    if (!row || row.paymentStatus !== "refund_requested") return;
+    if (!row) return;
+
+    const tags = Array.isArray(row.tags) ? row.tags as string[] : [];
+    if (!tags.includes("refund_requested")) return;
 
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
 
     const now = new Date();
+    const cleanTags = tags.filter((t) => t !== "refund_requested");
     await tx
       .update(rsvps)
-      .set({ status: "cancelled", paymentStatus: "unpaid", updatedAt: now })
+      .set({ status: "cancelled", tags: cleanTags, updatedAt: now })
       .where(eq(rsvps.id, rsvpId));
 
     if (!row.parentRsvpId) {
       await tx
         .update(rsvps)
-        .set({ status: "cancelled", paymentStatus: "unpaid", updatedAt: now })
+        .set({ status: "cancelled", updatedAt: now })
         .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")));
     }
   });
