@@ -35,10 +35,10 @@ function inline(text: string): string {
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
-export default function RichText({ children }: { children: string }) {
+export default function RichText({ children, className }: { children: string; className?: string }) {
   return (
     <div
-      className="rich-text text-sm leading-7"
+      className={`rich-text text-sm leading-7${className ? ` ${className}` : ""}`}
       style={{ color: "var(--color-muted)" }}
       dangerouslySetInnerHTML={{ __html: richTextToHtml(children) }}
     />

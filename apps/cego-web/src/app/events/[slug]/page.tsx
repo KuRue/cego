@@ -619,7 +619,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
       >
         Event Policies
       </summary>
-      <div className="mt-3 grid gap-3">
+      <div className="mt-3 grid gap-1.5">
             {event.rulesText ? <PolicyBlock title="Rules" body={event.rulesText} /> : null}
             {event.termsText ? <PolicyBlock title="Terms" body={event.termsText} /> : null}
             {event.refundPolicyText ? <PolicyBlock title="Cancellation & Refund Policy" body={event.refundPolicyText} /> : null}
@@ -658,10 +658,10 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function PolicyBlock({ title, body }: { title: string; body: string }) {
   return (
-    <div className="glass rounded-xl p-3">
-      <p className="text-sm font-semibold">{title}</p>
+    <div className="glass rounded-xl px-3 py-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: "var(--color-muted)" }}>{title}</p>
       <div className="mt-1">
-        <RichText>{body}</RichText>
+        <RichText className="text-xs leading-5">{body}</RichText>
       </div>
     </div>
   );
