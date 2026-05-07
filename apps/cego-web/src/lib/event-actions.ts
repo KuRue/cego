@@ -51,8 +51,7 @@ function calcPaymentDeadline(event: {
     event.paymentDueDate != null && event.paymentDueDate.getTime() <= now.getTime();
 
   if (source === "waitlist_promotion") {
-    const windowMs = inFinalRsvpWindow ? latePaymentWindowMs : waitlistPaymentWindowMs;
-    const minDeadline = new Date(now.getTime() + windowMs);
+    const minDeadline = new Date(now.getTime() + waitlistPaymentWindowMs);
     if (!initialDeadlinePassed && event.paymentDueDate) {
       return capDeadlineAtRsvpDeadline(event.paymentDueDate.getTime() > minDeadline.getTime() ? event.paymentDueDate : minDeadline, event);
     }
