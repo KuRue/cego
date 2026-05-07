@@ -423,7 +423,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 </div>
               ) : null}
 
-              {rsvp.paymentDeadlineAt ? (
+              {rsvp.paymentDeadlineAt && rsvp.paymentStatus === "unpaid" ? (
                 <p className="mt-2 text-center text-sm font-bold">
                   Payment due by {fmtDateWithTime(rsvp.paymentDeadlineAt, timezone)}.
                 </p>
@@ -492,7 +492,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 </form>
               ) : null}
 
-              {plusOne.paymentDeadlineAt ? (
+              {plusOne.paymentDeadlineAt && plusOne.paymentStatus === "unpaid" ? (
                 <p className="mt-2 text-center text-sm font-bold">
                   Payment due by {fmtDateWithTime(plusOne.paymentDeadlineAt, timezone)}.
                 </p>

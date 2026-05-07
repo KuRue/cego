@@ -155,6 +155,8 @@ function AlreadyRegistered({ data, slug, displayName, timezone }: { data: NonNul
   const showPayment = data.event.paymentRequired && data.event.paymentMethods && (!parentPaymentSettled || plusOneNeedsPayment);
   const paymentDeadline = plusOneNeedsPayment ? data.plusOne!.paymentDeadlineAt : data.rsvp!.paymentDeadlineAt;
 
+  const showDeadline = paymentDeadline && (plusOneNeedsPayment ? data.plusOne!.paymentStatus === "unpaid" : data.rsvp!.paymentStatus === "unpaid");
+
   return (
     <div className="glass-lg mt-8 rounded-2xl p-6">
       {data.rsvp?.status === "confirmed" && data.plusOne && data.plusOne.status === "waitlisted" ? (
@@ -178,7 +180,7 @@ function AlreadyRegistered({ data, slug, displayName, timezone }: { data: NonNul
 
       {data.rsvp!.status === "confirmed" && showPayment ? (
         <div className="mt-4 rounded-xl p-4" style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}>
-          <p className="text-center font-bold">Payment{paymentDeadline ? ` due ${fmtDateWithTime(paymentDeadline, timezone)}` : ""}</p>
+          <p className="text-center font-bold">Payment{showDeadline ? ` due ${fmtDateWithTime(paymentDeadline!, timezone)}` : ""}</p>
           <div className="mt-2 grid gap-2">
             {parsePaymentMethods(data.event.paymentMethods!).map((m, i) => {
               const price = plusOneNeedsPayment
