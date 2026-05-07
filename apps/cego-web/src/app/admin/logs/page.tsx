@@ -48,6 +48,10 @@ const adminActionTypes = new Set([
   "check_in_undo",
   "refund_processed",
   "admin_rsvp_added",
+  "event_updated",
+  "event_created",
+  "event_deleted",
+  "event_undeleted",
 ]);
 
 export default async function AdminLogsPage({

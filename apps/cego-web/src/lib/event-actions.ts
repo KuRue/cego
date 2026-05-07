@@ -129,6 +129,7 @@ export async function updateEventAction(formData: FormData) {
 
   const db = getDb();
   const now = new Date();
+  let auditDetail: string | null = null;
 
   try {
     const parsedEvent = await parseEventForm(formData);
@@ -137,12 +138,37 @@ export async function updateEventAction(formData: FormData) {
 
     await db.transaction(async (tx) => {
       const [previousEvent] = await tx
-        .select({ paymentDueDate: events.paymentDueDate, status: events.status })
+        .select({
+          paymentDueDate: events.paymentDueDate,
+          status: events.status,
+          title: events.title,
+          capacity: events.capacity,
+          startsAt: events.startsAt,
+          endsAt: events.endsAt,
+          locationText: events.locationText,
+          priceCents: events.priceCents,
+          rsvpOpensAt: events.rsvpOpensAt,
+          rsvpClosesAt: events.rsvpClosesAt,
+        })
         .from(events)
         .where(eq(events.id, eventId))
         .limit(1);
 
       previousStatus = previousEvent?.status ?? null;
+
+      if (previousEvent) {
+        const changes: string[] = [];
+        if (previousEvent.capacity !== parsedEvent.capacity) changes.push(`capacity: ${previousEvent.capacity} → ${parsedEvent.capacity}`);
+        if (!sameDate(previousEvent.startsAt, parsedEvent.startsAt)) changes.push(`start: ${fmtChangeDate(previousEvent.startsAt, parsedEvent.startsAt)}`);
+        if (!sameDate(previousEvent.endsAt, parsedEvent.endsAt)) changes.push(`end: ${fmtChangeDate(previousEvent.endsAt, parsedEvent.endsAt)}`);
+        if (!sameDate(previousEvent.rsvpOpensAt, parsedEvent.rsvpOpensAt)) changes.push(`RSVP opens: ${fmtChangeDate(previousEvent.rsvpOpensAt, parsedEvent.rsvpOpensAt)}`);
+        if (!sameDate(previousEvent.rsvpClosesAt, parsedEvent.rsvpClosesAt)) changes.push(`RSVP closes: ${fmtChangeDate(previousEvent.rsvpClosesAt, parsedEvent.rsvpClosesAt)}`);
+        if (previousEvent.priceCents !== parsedEvent.priceCents) changes.push(`price: ${previousEvent.priceCents ?? 0} → ${parsedEvent.priceCents ?? 0}`);
+        if (previousEvent.locationText !== parsedEvent.locationText) changes.push("location changed");
+        if (previousEvent.title !== parsedEvent.title) changes.push(`title: ${previousEvent.title} → ${parsedEvent.title}`);
+        if (previousStatus !== parsedEvent.status) changes.push(`status: ${previousStatus} → ${parsedEvent.status}`);
+        if (changes.length > 0) auditDetail = changes.join("; ");
+      }
 
       await tx
         .update(events)
@@ -205,6 +231,14 @@ export async function updateEventAction(formData: FormData) {
 
   promoteWaitlist(eventId).catch(() => {});
 
+  if (auditDetail) {
+    audit({
+      eventId,
+      action: "event_updated",
+      detail: auditDetail,
+    }).catch(() => {});
+  }
+
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
@@ -212,6 +246,11 @@ export async function updateEventAction(formData: FormData) {
 
 function sameDate(left: Date | null, right: Date | null): boolean {
   return left?.getTime() === right?.getTime();
+}
+
+function fmtChangeDate(old: Date | null, cur: Date | null): string {
+  const fmt = (d: Date | null) => d ? d.toISOString().slice(0, 16).replace("T", " ") : "none";
+  return `${fmt(old)} → ${fmt(cur)}`;
 }
 
 export async function rsvpForEventAction(formData: FormData) {

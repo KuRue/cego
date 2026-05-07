@@ -273,7 +273,7 @@ function EventForm({
         <Field label="Status">
         <select name="status" defaultValue={event?.status ?? "draft"} className="form-select">
           <option value="draft">Draft</option>
-          <option value="show">Show</option>
+          <option value="show">Published</option>
           <option value="closed">Closed</option>
           <option value="archived">Archived</option>
         </select>
