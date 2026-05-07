@@ -736,6 +736,8 @@ export async function cancelRsvpAction(formData: FormData) {
 
   const db = getDb();
 
+  let hadPaid = false;
+
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
 
@@ -746,6 +748,8 @@ export async function cancelRsvpAction(formData: FormData) {
 
     const parentRsvp = memberRsvps.find((r) => !r.parentRsvpId);
     if (!parentRsvp || parentRsvp.status === "cancelled" || parentRsvp.status === "expired" || parentRsvp.checkedInAt) return;
+
+    hadPaid = parentRsvp.paymentStatus === "paid" || parentRsvp.paymentStatus === "waived" || parentRsvp.paymentStatus === "pending";
 
     const now = new Date();
 
@@ -769,6 +773,36 @@ export async function cancelRsvpAction(formData: FormData) {
     eventId,
     template: "rsvp_cancelled",
   }).catch(() => {});
+
+  if (hadPaid) {
+    const [eventRow] = await db
+      .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+
+    if (eventRow?.paymentNotifyMemberId) {
+      const [notifyMember] = await db
+        .select({ telegramId: members.telegramId })
+        .from(members)
+        .where(eq(members.id, eventRow.paymentNotifyMemberId))
+        .limit(1);
+
+      if (notifyMember?.telegramId) {
+        const handle = member.telegramUsername ? `@${member.telegramUsername}` : member.telegramDisplayName;
+        const { sendTelegramMessage } = await import("@cego/telegram");
+        const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
+        if (BOT_TOKEN) {
+          sendTelegramMessage({
+            botToken: BOT_TOKEN,
+            chatId: notifyMember.telegramId,
+            text: `↩️ *${member.telegramDisplayName}* (${handle}) requested a refund for *${eventRow.title}*.`,
+            parseMode: "Markdown",
+          }).catch(() => {});
+        }
+      }
+    }
+  }
 
   promoteWaitlist(eventId).catch(() => {});
 
@@ -1504,10 +1538,11 @@ export async function markRsvpPendingAction(formData: FormData) {
       const { sendTelegramMessage } = await import("@cego/telegram");
       const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
       if (BOT_TOKEN) {
+        const handle = member.telegramUsername ? `@${member.telegramUsername}` : member.telegramDisplayName;
         sendTelegramMessage({
           botToken: BOT_TOKEN,
           chatId: notifyMember.telegramId,
-          text: `💰 *${member.telegramDisplayName}* marked their payment as pending for *${eventRow.title}*.`,
+          text: `💰 *${member.telegramDisplayName}* (${handle}) marked their payment as pending for *${eventRow.title}*.`,
           parseMode: "Markdown",
         }).catch(() => {});
       }

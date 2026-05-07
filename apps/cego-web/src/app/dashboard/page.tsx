@@ -361,6 +361,7 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
                     <input type="hidden" name="eventId" value={event.id} />
                     <CancelRsvpButton
                       type="submit"
+                      message={rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request a cancellation and refund? The organizer will be notified." : "Are you sure you want to cancel your RSVP?"}
                       className="inline-flex h-10 items-center justify-center rounded-xl px-6 text-sm font-semibold transition"
                       style={{
                         background: "var(--color-surface-hover)",
@@ -368,7 +369,7 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
                         color: "var(--color-foreground)",
                       }}
                     >
-                      Cancel RSVP
+                      {rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request Cancellation" : "Cancel RSVP"}
                     </CancelRsvpButton>
                   </form>
                 </StopPropagation>

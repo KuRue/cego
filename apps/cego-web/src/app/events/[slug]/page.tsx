@@ -578,6 +578,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
               <input type="hidden" name="returnTo" value={returnTo} />
               <CancelRsvpButton
                 type="submit"
+                message={rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request a cancellation and refund? The organizer will be notified." : "Are you sure you want to cancel your RSVP?"}
                 className="h-11 w-full rounded-xl px-5 text-sm font-semibold transition"
                 style={{
                   background: "var(--color-surface-hover)",
@@ -585,7 +586,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                   color: "var(--color-foreground)",
                 }}
               >
-                Cancel RSVP
+                {rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request Cancellation" : "Cancel RSVP"}
               </CancelRsvpButton>
             </form>
           ) : null}
