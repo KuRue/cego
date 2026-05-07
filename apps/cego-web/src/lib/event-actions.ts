@@ -206,7 +206,7 @@ export async function updateEventAction(formData: FormData) {
               eq(rsvps.paymentStatus, "unpaid"),
             ),
           )
-          .returning({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId });
+          .returning({ id: rsvps.id, parentRsvpId: rsvps.parentRsvpId, memberId: rsvps.memberId });
 
         const parentIds = unpaidRows.filter((r) => !r.parentRsvpId).map((r) => r.id);
         if (parentIds.length > 0) {
@@ -220,6 +220,12 @@ export async function updateEventAction(formData: FormData) {
                 ne(rsvps.status, "expired"),
               ),
             );
+        }
+
+        for (const row of unpaidRows.filter((r) => !r.parentRsvpId)) {
+          await tx
+            .delete(surveyResponses)
+            .where(and(eq(surveyResponses.memberId, row.memberId), eq(surveyResponses.eventId, eventId)));
         }
       }
     });
@@ -966,6 +972,10 @@ export async function cancelRsvpAction(formData: FormData) {
         .update(rsvps)
         .set({ status: "cancelled", updatedAt: now })
         .where(eq(rsvps.parentRsvpId, parentRsvp.id));
+
+      await tx
+        .delete(surveyResponses)
+        .where(and(eq(surveyResponses.memberId, member.id), eq(surveyResponses.eventId, eventId)));
     }
   });
 
@@ -1397,6 +1407,10 @@ export async function processRefundAction(formData: FormData) {
         .update(rsvps)
         .set({ status: "cancelled", updatedAt: now })
         .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")));
+
+      await tx
+        .delete(surveyResponses)
+        .where(and(eq(surveyResponses.memberId, row.memberId), eq(surveyResponses.eventId, row.eventId)));
     }
   });
 
@@ -2005,11 +2019,20 @@ export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResul
       : [];
 
     const seen = new Set<string>();
-    return [...updatedExpiredRows, ...updatedChildRows].filter((r) => {
+    const allExpired = [...updatedExpiredRows, ...updatedChildRows].filter((r) => {
       if (seen.has(r.id)) return false;
       seen.add(r.id);
       return true;
     });
+
+    const parentRows = allExpired.filter((r) => !r.parentRsvpId);
+    for (const row of parentRows) {
+      await tx
+        .delete(surveyResponses)
+        .where(and(eq(surveyResponses.memberId, row.memberId), eq(surveyResponses.eventId, row.eventId)));
+    }
+
+    return allExpired;
   });
 
   if (allRows.length === 0) {
