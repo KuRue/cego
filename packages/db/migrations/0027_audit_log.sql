@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
   detail text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_audit_log_event ON audit_log(event_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_audit_log_member ON audit_log(member_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at DESC);
