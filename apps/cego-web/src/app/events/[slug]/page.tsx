@@ -180,15 +180,15 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
       </section>
 
       {rsvp && rsvp.status === "confirmed" && canSeeAddress && event.qrCheckInEnabled && !rsvp.checkedInAt ? (
-        <div className="qr-ants mt-6 rounded-2xl" style={{ background: "#ffffff", padding: "3px" }}>
-          <div className="flex flex-col items-center rounded-2xl py-8" style={{ background: "#ffffff" }}>
+        <div className="qr-ants mt-6 rounded-2xl p-[3px]">
+          <div className="flex flex-col items-center rounded-[13px] py-8" style={{ background: "#ffffff" }}>
             <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "#888" }}>
               Check-in QR
             </p>
             <p className="mt-1 text-xs" style={{ color: "#aaa" }}>
               Present this at the door
             </p>
-            <div className="mt-4 inline-block rounded-2xl p-3 qr-ants">
+            <div className="mt-4">
               <QrCodeDisplay data={rsvp.id} size={280} />
             </div>
           </div>
