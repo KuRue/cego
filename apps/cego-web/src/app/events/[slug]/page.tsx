@@ -160,8 +160,9 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, timezone)} />
-            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
+            {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : (
+              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, timezone)} />
+            )}
           </div>
           {rsvpMembers.length > 0 ? (
             <div className="mt-3">
