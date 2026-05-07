@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef } from "react";
+import { type ComponentPropsWithoutRef, useRef } from "react";
 import { useConfirm } from "@/components/confirm-provider";
 
 export default function ConfirmButton({
@@ -8,17 +8,18 @@ export default function ConfirmButton({
   ...props
 }: ComponentPropsWithoutRef<"button"> & { message?: string }) {
   const confirm = useConfirm();
+  const ref = useRef<HTMLButtonElement>(null);
 
   return (
     <button
       {...props}
+      ref={ref}
       onClick={async (e) => {
+        e.preventDefault();
         const ok = await confirm(message);
-        if (!ok) {
-          e.preventDefault();
-          return;
+        if (ok) {
+          ref.current?.form?.requestSubmit(ref.current);
         }
-        props.onClick?.(e);
       }}
     />
   );
