@@ -6,6 +6,7 @@ import {
   createMemberNoteAction,
   removeMemberTagAction,
   updateMemberEmailAction,
+  toggleMemberStatusAction,
 } from "@/lib/member-admin-actions";
 import {
   getAdminMemberDetail,
@@ -111,16 +112,34 @@ export default async function AdminMemberDetailPage({
                 - Telegram ID {detail.member.telegramId}
               </p>
             </div>
-            <AppLink
-              href="/admin/members"
-              className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold"
-              style={{
-                border: "1px solid var(--color-surface-border)",
-                color: "var(--color-foreground)",
-              }}
-            >
-              Back to members
-            </AppLink>
+            <div className="flex items-center gap-2">
+              {!detail.member.isAdmin && (
+                <form action={toggleMemberStatusAction}>
+                  <input type="hidden" name="memberId" value={detail.member.id} />
+                  <input type="hidden" name="targetStatus" value={detail.member.groupStatus === "member" ? "not_member" : "member"} />
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition"
+                    style={{
+                      background: detail.member.groupStatus === "member" ? "var(--color-danger-bg)" : "var(--color-accent)",
+                      color: detail.member.groupStatus === "member" ? "var(--color-danger)" : "var(--color-on-accent)",
+                    }}
+                  >
+                    {detail.member.groupStatus === "member" ? "Deactivate" : "Reactivate"}
+                  </button>
+                </form>
+              )}
+              <AppLink
+                href="/admin/members"
+                className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+                style={{
+                  border: "1px solid var(--color-surface-border)",
+                  color: "var(--color-foreground)",
+                }}
+              >
+                Back to members
+              </AppLink>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-4">

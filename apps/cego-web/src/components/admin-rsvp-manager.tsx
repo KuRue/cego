@@ -12,6 +12,7 @@ import {
 } from "@/lib/event-actions";
 import { StatusBadge } from "@/components/badge";
 import Avatar from "@/components/avatar";
+import { useConfirm } from "@/components/confirm-provider";
 
 type RsvpRow = {
   rsvp: {
@@ -78,6 +79,7 @@ interface Props {
 }
 
 export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, survey }: Props) {
+  const confirm = useConfirm();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -299,8 +301,8 @@ function DetailPanel({
             defaultValue={entry.status}
             className="h-8 rounded-lg px-2 text-xs outline-none"
             style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
-            onChange={(e) => {
-              if (!confirm(`Change status to ${e.currentTarget.value}?`)) {
+            onChange={async (e) => {
+              if (!await confirm(`Change status to ${e.currentTarget.value}?`)) {
                 e.currentTarget.value = entry.status;
                 return;
               }
@@ -335,8 +337,8 @@ function DetailPanel({
                   : entry.paymentStatus === "waived" ? "var(--color-muted)"
                   : "var(--color-warning)",
               }}
-              onChange={(e) => {
-                if (!confirm(`Change payment to ${e.currentTarget.value}?`)) {
+              onChange={async (e) => {
+                if (!await confirm(`Change payment to ${e.currentTarget.value}?`)) {
                   e.currentTarget.value = entry.paymentStatus;
                   return;
                 }
@@ -360,8 +362,8 @@ function DetailPanel({
           <button
             type="submit"
             className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-            onClick={(e) => {
-              if (!confirm(entry.checkedInAt ? "Undo check-in?" : "Check in this person?")) {
+            onClick={async (e) => {
+              if (!await confirm(entry.checkedInAt ? "Undo check-in?" : "Check in this person?")) {
                 e.preventDefault();
               }
             }}
@@ -388,8 +390,8 @@ function DetailPanel({
               {tag}
               <button
                 type="button"
-                onClick={() => {
-                  if (!confirm(`Remove tag "${tag}"?`)) return;
+                onClick={async () => {
+                  if (!await confirm(`Remove tag "${tag}"?`)) return;
                   handleRemoveTag(tag);
                 }}
                 className="ml-0.5 opacity-60 hover:opacity-100"
@@ -482,8 +484,8 @@ function DetailPanel({
             disabled={pending}
             className="h-9 rounded-lg px-4 text-sm font-semibold transition"
             style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", opacity: pending ? 0.5 : 1 }}
-            onClick={(e) => {
-              if (!confirm("Delete this cancelled RSVP?")) e.preventDefault();
+            onClick={async (e) => {
+              if (!await confirm("Delete this cancelled RSVP?")) e.preventDefault();
             }}
           >
             Remove RSVP

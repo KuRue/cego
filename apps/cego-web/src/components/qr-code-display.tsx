@@ -24,5 +24,5 @@ export default function QrCodeDisplay({
     });
   }, [data, size, accent]);
 
-  return <canvas ref={canvasRef} />;
+  return <canvas ref={canvasRef} role="img" aria-label="Check-in QR code" />;
 }

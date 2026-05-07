@@ -148,6 +148,16 @@ function SurveyCard({
           <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
             Responses ({responses.length})
           </summary>
+          <div className="mt-3">
+            <a
+              href={`/api/admin/export/survey-responses?surveyId=${survey.id}`}
+              download
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition"
+              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", color: "var(--color-foreground)" }}
+            >
+              Export CSV
+            </a>
+          </div>
           <div className="mt-4 grid gap-3">
             {responses.map(({ response, member: m }) => {
               const answers = readAnswerRecord(response.answersJson);

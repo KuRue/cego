@@ -179,3 +179,27 @@ function readTagColor(formData: FormData): (typeof tagColors)[number] {
 function normalizeTagName(value: string): string {
   return value.replace(/\s+/g, " ").slice(0, 48);
 }
+
+export async function toggleMemberStatusAction(formData: FormData) {
+  const admin = await requireAdminMember();
+  const memberId = readText(formData, "memberId");
+  const targetStatus = readText(formData, "targetStatus");
+
+  if (!memberId || !targetStatus || !["member", "not_member"].includes(targetStatus)) {
+    redirect("/admin/members");
+  }
+
+  if (memberId === admin.id) {
+    redirect("/admin/members");
+  }
+
+  const db = getDb();
+  await db
+    .update(members)
+    .set({ groupStatus: targetStatus as "member" | "not_member" })
+    .where(eq(members.id, memberId));
+
+  revalidatePath(`/admin/members/${memberId}`);
+  revalidatePath("/admin/members");
+  redirect(`/admin/members/${memberId}`);
+}

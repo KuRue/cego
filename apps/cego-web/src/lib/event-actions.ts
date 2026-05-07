@@ -728,6 +728,83 @@ export async function adminRsvpForEventAction(formData: FormData) {
   redirect(returnTo);
 }
 
+export async function adminRsvpForMemberAction(formData: FormData) {
+  const admin = await requireAdminMember();
+  const eventId = readText(formData, "eventId");
+  const targetMemberId = readText(formData, "memberId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin";
+
+  if (!eventId || !targetMemberId) redirect(returnTo);
+
+  const db = getDb();
+
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
+    const existing = await tx
+      .select()
+      .from(rsvps)
+      .where(and(eq(rsvps.eventId, eventId), eq(rsvps.memberId, targetMemberId)));
+    const hasActive = existing.some(
+      (r) => !["cancelled", "expired"].includes(r.status) && !r.parentRsvpId,
+    );
+    if (hasActive) return;
+
+    const now = new Date();
+    const cancelled = existing.find((r) => r.status === "cancelled" && !r.parentRsvpId);
+    const expired = existing.find((r) => r.status === "expired" && !r.parentRsvpId);
+
+    const paymentDeadline: Date | null = null;
+
+    if (cancelled) {
+      await tx
+        .update(rsvps)
+        .set({
+          status: "confirmed",
+          ticketType: null,
+          checkedInAt: null,
+          plusOneName: null,
+          parentRsvpId: null,
+          notes: `Added by ${admin.telegramDisplayName}`,
+          tags: sql`ARRAY[]::text[]`,
+          paymentStatus: "waived",
+          paymentDeadlineAt: paymentDeadline,
+          updatedAt: now,
+        })
+        .where(eq(rsvps.id, cancelled.id));
+    } else if (expired) {
+      await tx
+        .update(rsvps)
+        .set({
+          status: "confirmed",
+          ticketType: null,
+          checkedInAt: null,
+          plusOneName: null,
+          parentRsvpId: null,
+          notes: `Added by ${admin.telegramDisplayName}`,
+          tags: sql`ARRAY[]::text[]`,
+          paymentStatus: "waived",
+          paymentDeadlineAt: paymentDeadline,
+          updatedAt: now,
+        })
+        .where(eq(rsvps.id, expired.id));
+    } else {
+      await tx.insert(rsvps).values({
+        memberId: targetMemberId,
+        eventId,
+        status: "confirmed",
+        paymentStatus: "waived",
+        paymentDeadlineAt: paymentDeadline,
+        notes: `Added by ${admin.telegramDisplayName}`,
+      });
+    }
+  });
+
+  revalidatePath(returnTo);
+  revalidatePath("/admin");
+  redirect(returnTo);
+}
+
 export async function cancelRsvpAction(formData: FormData) {
   const member = await requireCurrentMember();
   const eventId = readText(formData, "eventId");
@@ -825,6 +902,26 @@ export async function deleteEventAction(formData: FormData) {
   await db
     .update(events)
     .set({ status: "deleted", updatedAt: new Date() })
+    .where(eq(events.id, eventId));
+
+  revalidatePath("/admin/events");
+  revalidatePath("/dashboard");
+  redirect("/admin/events");
+}
+
+export async function undeleteEventAction(formData: FormData) {
+  await requireAdminMember();
+  const eventId = readText(formData, "eventId");
+
+  if (!eventId) {
+    redirect("/admin/events");
+  }
+
+  const db = getDb();
+
+  await db
+    .update(events)
+    .set({ status: "draft", updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
   revalidatePath("/admin/events");

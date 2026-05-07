@@ -2,6 +2,7 @@ import {
   deleteEventAction,
   addEventExpenseAction,
   deleteEventExpenseAction,
+  adminRsvpForMemberAction,
 } from "@/lib/event-actions";
 import { formatPrice } from "@/lib/format-price";
 import AppLink from "@/components/app-link";
@@ -14,6 +15,7 @@ import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import ConfirmButton from "@/components/confirm-button";
 import AdminRsvpManager from "@/components/admin-rsvp-manager";
 import { notFound } from "next/navigation";
+import { getDb, members, asc, eq } from "@cego/db";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,16 @@ export default async function AdminEventDetailPage({
   const detail = await getAdminEventDetail(id);
 
   if (!detail) notFound();
+
+  const db = getDb();
+  const allMembers = await db
+    .select({ id: members.id, telegramDisplayName: members.telegramDisplayName, telegramUsername: members.telegramUsername })
+    .from(members)
+    .where(eq(members.groupStatus, "member"))
+    .orderBy(asc(members.telegramDisplayName));
+
+  const rsvpedMemberIds = new Set(detail.rsvps.map((r) => r.member.id));
+  const availableMembers = allMembers.filter((m) => !rsvpedMemberIds.has(m.id));
 
   const returnTo = `/admin/events/${detail.event.id}`;
 
@@ -143,6 +155,16 @@ export default async function AdminEventDetailPage({
           />
         </div>
       ) : null}
+      <div className="mt-3">
+        <a
+          href={`/api/admin/export/rsvps?eventId=${detail.event.id}`}
+          download
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition"
+          style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", color: "var(--color-foreground)" }}
+        >
+          Export CSV
+        </a>
+      </div>
     </section>
 
     <hr className="my-4 border-0" style={{ borderTop: "1px solid var(--color-surface-border)" }} />
@@ -254,6 +276,38 @@ export default async function AdminEventDetailPage({
       </div>
     ) : (
       <p className="mt-2 text-center text-sm" style={{ color: "var(--color-muted)" }}>No RSVPs yet</p>
+    )}
+
+    {availableMembers.length > 0 && (
+      <form action={adminRsvpForMemberAction} className="mt-4 flex items-end gap-2">
+        <input type="hidden" name="eventId" value={detail.event.id} />
+        <input type="hidden" name="returnTo" value={returnTo} />
+        <div className="flex-1">
+          <label className="grid gap-1 text-sm">
+            <span className="font-medium">Add RSVP for member</span>
+            <select
+              name="memberId"
+              required
+              className="form-select h-10 rounded-xl px-3 text-sm outline-none"
+              style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)", color: "var(--color-foreground)" }}
+            >
+              <option value="">Select member...</option>
+              {availableMembers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.telegramDisplayName}{m.telegramUsername ? ` (@${m.telegramUsername})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <button
+          type="submit"
+          className="h-10 shrink-0 rounded-xl px-4 text-sm font-semibold transition"
+          style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+        >
+          Add RSVP
+        </button>
+      </form>
     )}
         </div>
       </main>

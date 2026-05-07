@@ -4,6 +4,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import Script from "next/script";
 import { getSiteSettings, type BrandSettings, defaults } from "@/lib/settings";
 import MiniAppSessionRefresher from "@/components/mini-app-session-refresher";
+import { ConfirmProvider } from "@/components/confirm-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -142,7 +143,7 @@ export default async function RootLayout({
             </>
           )}
         </div>
-        {children}
+        <ConfirmProvider>{children}</ConfirmProvider>
       </body>
     </html>
   );

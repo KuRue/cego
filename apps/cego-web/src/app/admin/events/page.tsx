@@ -1,6 +1,7 @@
 import {
   createDraftEventAction,
   deleteEventAction,
+  undeleteEventAction,
   updateEventAction,
   updateRsvpPaymentAction,
   updateRsvpStatusAction,
@@ -161,7 +162,18 @@ function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: Ad
     <span className="text-sm" style={{ color: "var(--color-muted)" }}>
       {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
     </span>
-    {event.status === "archived" ? (
+    {event.status === "deleted" ? (
+    <form action={undeleteEventAction} className="ml-2">
+      <input type="hidden" name="eventId" value={event.id} />
+      <button
+        type="submit"
+        className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+      >
+        Undelete
+      </button>
+    </form>
+    ) : event.status === "archived" ? (
     <form action={deleteEventAction} className="ml-2">
       <input type="hidden" name="eventId" value={event.id} />
       <ConfirmButton
