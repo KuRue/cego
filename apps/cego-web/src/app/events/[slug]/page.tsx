@@ -275,7 +275,9 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                   ? "RSVPs are not open yet."
                   : effective === "closed" || effective === "past"
                     ? "RSVPs are closed."
-                    : "Your RSVP is recorded."}
+                    : refundRequested
+                      ? "Your cancellation request is pending."
+                      : "Your RSVP is recorded."}
               </p>
             ) : null}
           </div>

@@ -149,8 +149,9 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
     capacity: event.capacity,
     confirmedCount,
   });
+  const refundRequested = rsvp && (rsvp.tags as string[] | undefined)?.includes("refund_requested");
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && !(rsvp?.tags as string[] | undefined)?.includes("refund_requested");
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && !refundRequested;
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
@@ -381,7 +382,9 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
                     ? "RSVPs not open yet."
                     : effective === "closed" || effective === "past"
                       ? "RSVPs closed."
-                      : "Your RSVP is recorded."}
+                      : refundRequested
+                        ? "Your cancellation request is pending."
+                        : "Your RSVP is recorded."}
                 </p>
               ) : null}
             </div>
