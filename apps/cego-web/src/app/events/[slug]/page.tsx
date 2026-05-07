@@ -381,7 +381,6 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 <p className="mt-3 text-lg font-semibold">
                   {formatPrice(
                     plusOne && plusOne.status === "confirmed"
-                      && (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived")
                       ? event.priceCents * 2
                       : event.priceCents,
                     event.currency,
