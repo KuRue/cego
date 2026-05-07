@@ -3,8 +3,6 @@ import {
   deleteEventAction,
   undeleteEventAction,
   updateEventAction,
-  updateRsvpPaymentAction,
-  updateRsvpStatusAction,
 } from "@/lib/event-actions";
 import AppLink from "@/components/app-link";
 import { getAdminEvents, getAdminDeletedEvents, type AdminEventWithRsvps } from "@/lib/events";
@@ -209,102 +207,36 @@ function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: Ad
                   );
                   return (
                     <div key={rsvp.id} className="glass rounded-xl p-4">
-                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                        <div>
-                          <p className="font-medium">{m.telegramDisplayName}</p>
-                          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-                            {m.telegramUsername ? `@${m.telegramUsername}` : m.email || m.groupStatus}
-                          </p>
-                          <StatusBadge status={rsvp.status} />
-                        </div>
-                        <form action={updateRsvpStatusAction} className="flex gap-2">
-                          <input type="hidden" name="rsvpId" value={rsvp.id} />
-                          <select
-                            name="status"
-                            defaultValue={rsvp.status}
-                            className="h-10 rounded-xl px-3 text-sm outline-none"
-                            style={{
-                              background: "var(--color-surface-hover)",
-                              border: "1px solid var(--color-surface-border)",
-                            }}
-                          >
-                            <option value="confirmed">confirmed</option>
-                            <option value="waitlisted">waitlisted</option>
-                            <option value="cancelled">cancelled</option>
-                            <option value="expired">expired</option>
-                          </select>
-                          <button
-                            type="submit"
-                            className="h-10 rounded-xl px-4 text-sm font-semibold transition"
-                            style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                          >
-                            Update
-                          </button>
-                        </form>
-                        {event.paymentRequired ? (
-                          <form action={updateRsvpPaymentAction} className="flex gap-2">
-                            <input type="hidden" name="rsvpId" value={rsvp.id} />
-                            <select
-                              name="paymentStatus"
-                              defaultValue={rsvp.paymentStatus ?? "unpaid"}
-                              className="h-10 rounded-xl px-3 text-sm outline-none"
-                              style={{
-                                background: "var(--color-surface-hover)",
-                                border: "1px solid var(--color-surface-border)",
-                              }}
-                            >
-                              <option value="unpaid">unpaid</option>
-                              <option value="paid">paid</option>
-                              <option value="waived">waived</option>
-                            </select>
-                            <button
-                              type="submit"
-                              className="h-10 rounded-xl px-4 text-sm font-semibold transition"
-                              style={{ background: "var(--color-highlight)", color: "#1a1d23" }}
-                            >
-                              Payment
-                            </button>
-                          </form>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{m.telegramDisplayName}</p>
+                        <StatusBadge status={rsvp.status} />
+                        {rsvp.paymentStatus && rsvp.paymentStatus !== "unpaid" ? (
+                          <Badge>{rsvp.paymentStatus}</Badge>
                         ) : null}
                       </div>
+                      <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                        {m.telegramUsername ? `@${m.telegramUsername}` : m.email || m.groupStatus}
+                      </p>
                       {plusOneRows.length > 0 ? (
-                        <div className="mt-3 rounded-xl p-3" style={{ background: "var(--color-surface-hover)" }}>
+                        <div className="mt-2 flex flex-wrap gap-2">
                           {plusOneRows.map((po) => (
-                            <div key={po.rsvp.id} className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm" style={{ color: "var(--color-muted)" }}>+1:</span>
-                              <span className="text-sm font-medium">{po.rsvp.plusOneName}</span>
+                            <span key={po.rsvp.id} className="flex items-center gap-1 text-sm" style={{ color: "var(--color-muted)" }}>
+                              +1: {po.rsvp.plusOneName}
                               <StatusBadge status={po.rsvp.status} />
-                              <form action={updateRsvpStatusAction} className="ml-auto flex gap-2">
-                                <input type="hidden" name="rsvpId" value={po.rsvp.id} />
-                                <select
-                                  name="status"
-                                  defaultValue={po.rsvp.status}
-                                  className="h-8 rounded-lg px-2 text-xs outline-none"
-                                  style={{
-                                    background: "var(--color-background)",
-                                    border: "1px solid var(--color-surface-border)",
-                                  }}
-                                  >
-                                    <option value="confirmed">confirmed</option>
-                                    <option value="waitlisted">waitlisted</option>
-                                  <option value="cancelled">cancelled</option>
-                                  <option value="expired">expired</option>
-                                </select>
-                                <button
-                                  type="submit"
-                                  className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-                                  style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-                                >
-                                  Update
-                                </button>
-                              </form>
-                            </div>
+                            </span>
                           ))}
                         </div>
                       ) : null}
                     </div>
                   );
                 })}
+              <AppLink
+                href={`/admin/events/${event.id}`}
+                className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                Manage RSVPs
+              </AppLink>
             </div>
           </details>
       ) : null}
