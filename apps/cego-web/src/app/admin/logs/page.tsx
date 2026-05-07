@@ -39,6 +39,17 @@ const actionLabels: Record<string, string> = {
   note_added: "Note added",
 };
 
+const adminActionTypes = new Set([
+  "payment_paid",
+  "payment_unpaid",
+  "payment_pending",
+  "payment_waived",
+  "check_in",
+  "check_in_undo",
+  "refund_processed",
+  "admin_rsvp_added",
+]);
+
 export default async function AdminLogsPage({
   searchParams,
 }: {
@@ -124,7 +135,7 @@ export default async function AdminLogsPage({
             <div className="mt-6 grid gap-2">
               {rows.map((row) => {
                 const actor = row.actorId ? actorMap.get(row.actorId) : undefined;
-                const isActor = row.actorId && row.actorId === row.memberId;
+                const isAdmin = adminActionTypes.has(row.action) || (!!row.actorId && row.actorId !== row.memberId);
                 return (
                   <AuditRow
                     key={row.id}
@@ -135,10 +146,10 @@ export default async function AdminLogsPage({
                     memberUsername={row.memberUsername}
                     eventTitle={row.eventTitle}
                     detail={row.detail}
-                    actorName={isActor ? undefined : actor?.name}
-                    actorPhoto={isActor ? undefined : actor?.photo}
-                    actorUsername={isActor ? undefined : actor?.username}
-                    isAdminAction={!!row.actorId && row.actorId !== row.memberId}
+                    actorName={isAdmin && actor ? actor.name : undefined}
+                    actorPhoto={isAdmin && actor ? actor.photo : undefined}
+                    actorUsername={isAdmin && actor ? actor.username : undefined}
+                    isAdminAction={isAdmin}
                     logId={String(row.id)}
                     eventId={row.eventId ? String(row.eventId) : undefined}
                     memberId={row.memberId ? String(row.memberId) : undefined}

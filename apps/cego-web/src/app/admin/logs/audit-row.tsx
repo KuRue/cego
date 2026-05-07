@@ -3,21 +3,6 @@
 import { useState } from "react";
 import Avatar from "@/components/avatar";
 
-const adminActions = new Set([
-  "admin_rsvp_added",
-  "refund_processed",
-  "check_in",
-  "check_in_undo",
-  "payment_paid",
-  "payment_waived",
-  "payment_unpaid",
-  "payment_pending",
-  "rsvp_confirmed",
-  "rsvp_waitlisted",
-  "rsvp_cancelled",
-  "rsvp_expired",
-]);
-
 export default function AuditRow({
   label,
   time,
