@@ -31,6 +31,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
     pay_paid: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
     pay_pending: { bg: "var(--color-warning-bg)", text: "var(--color-warning)" },
     pay_waived: { bg: "var(--color-success-bg)", text: "var(--color-success)" },
+    pay_unpaid: { bg: "var(--color-danger-bg)", text: "var(--color-danger)" },
   };
 
   const tone = map[status] ?? { bg: "var(--color-surface-hover)", text: "var(--color-muted)" };
