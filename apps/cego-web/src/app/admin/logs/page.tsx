@@ -4,6 +4,7 @@ import Navbar from "@/components/navbar";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 import AppLink from "@/components/app-link";
+import AuditRow from "./audit-row";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,8 @@ export default async function AdminLogsPage({
       createdAt: auditLog.createdAt,
       eventTitle: events.title,
       memberName: members.telegramDisplayName,
+      memberPhoto: members.telegramPhotoUrl,
+      memberUsername: members.telegramUsername,
     })
     .from(auditLog)
     .leftJoin(events, eq(auditLog.eventId, events.id))
@@ -78,14 +81,19 @@ export default async function AdminLogsPage({
     .limit(200);
 
   const actorIds = [...new Set(rows.map((r) => r.actorId).filter(Boolean))] as string[];
-  const actorMap = new Map<string, string>();
+  const actorMap = new Map<string, { name: string; photo: string | null; username: string | null }>();
   if (actorIds.length > 0) {
     const { inArray } = await import("@cego/db");
     const actorRows = await db
-      .select({ id: members.id, name: members.telegramDisplayName })
+      .select({
+        id: members.id,
+        name: members.telegramDisplayName,
+        photo: members.telegramPhotoUrl,
+        username: members.telegramUsername,
+      })
       .from(members)
       .where(inArray(members.id, actorIds));
-    for (const a of actorRows) actorMap.set(a.id, a.name);
+    for (const a of actorRows) actorMap.set(a.id, { name: a.name, photo: a.photo, username: a.username });
   }
 
   return (
@@ -113,34 +121,30 @@ export default async function AdminLogsPage({
           {rows.length === 0 ? (
             <p className="mt-8 text-center text-sm" style={{ color: "var(--color-muted)" }}>No activity yet.</p>
           ) : (
-            <div className="mt-6 space-y-1">
-              {rows.map((row) => (
-                <div
-                  key={row.id}
-                  className="glass rounded-xl px-4 py-3 flex items-start gap-3 text-sm"
-                >
-                  <span className="shrink-0 mt-0.5 text-xs" style={{ color: "var(--color-muted)" }}>
-                    {fmtDateWithTime(row.createdAt, settings.timezone)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span style={{ color: "var(--color-foreground)" }}>
-                      {actionLabels[row.action] ?? row.action}
-                    </span>
-                    {row.memberName ? (
-                      <span style={{ color: "var(--color-muted)" }}> — {row.memberName}</span>
-                    ) : null}
-                    {row.eventTitle ? (
-                      <span style={{ color: "var(--color-muted)" }}> — {row.eventTitle}</span>
-                    ) : null}
-                    {row.detail ? (
-                      <span style={{ color: "var(--color-muted)" }}> ({row.detail})</span>
-                    ) : null}
-                    {row.actorId && row.actorId !== row.memberId ? (
-                      <span style={{ color: "var(--color-muted)" }}> by {actorMap.get(row.actorId) ?? "admin"}</span>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-6 grid gap-2">
+              {rows.map((row) => {
+                const actor = row.actorId ? actorMap.get(row.actorId) : undefined;
+                const isActor = row.actorId && row.actorId === row.memberId;
+                return (
+                  <AuditRow
+                    key={row.id}
+                    label={actionLabels[row.action] ?? row.action}
+                    time={fmtDateWithTime(row.createdAt, settings.timezone)}
+                    memberName={row.memberName}
+                    memberPhoto={row.memberPhoto}
+                    memberUsername={row.memberUsername}
+                    eventTitle={row.eventTitle}
+                    detail={row.detail}
+                    actorName={isActor ? undefined : actor?.name}
+                    actorPhoto={isActor ? undefined : actor?.photo}
+                    actorUsername={isActor ? undefined : actor?.username}
+                    logId={String(row.id)}
+                    eventId={row.eventId ? String(row.eventId) : undefined}
+                    memberId={row.memberId ? String(row.memberId) : undefined}
+                    actorId={row.actorId ? String(row.actorId) : undefined}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
