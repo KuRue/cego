@@ -290,10 +290,10 @@ export const eventExpenses = pgTable("event_expenses", {
 });
 
 export const auditLog = pgTable("audit_log", {
-  id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
-  eventId: text("event_id").references(() => events.id),
-  memberId: text("member_id").references(() => members.id),
-  actorId: text("actor_id").references(() => members.id),
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id").references(() => events.id),
+  memberId: uuid("member_id").references(() => members.id),
+  actorId: uuid("actor_id").references(() => members.id),
   action: text("action").notNull(),
   detail: text("detail"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
