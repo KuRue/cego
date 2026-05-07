@@ -1,10 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { join, normalize, relative } from "node:path";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/data/uploads";
+const UPLOAD_DIR = normalize(process.env.UPLOAD_DIR || "/data/uploads");
 
 const CONTENT_TYPES: Record<string, string> = {
   png: "image/png",
@@ -31,7 +31,10 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const filePath = join(UPLOAD_DIR, filename);
+  const filePath = normalize(join(UPLOAD_DIR, filename));
+  if (!filePath.startsWith(UPLOAD_DIR + "/") && filePath !== UPLOAD_DIR) {
+    return new NextResponse("Not found", { status: 404 });
+  }
 
   try {
     const fileStat = await stat(filePath);

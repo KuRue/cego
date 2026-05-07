@@ -17,6 +17,7 @@ import ConfirmButton from "@/components/confirm-button";
 import { Badge, StatusBadge } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { formatDateShort as fmtDateShort } from "@/lib/format-date";
+import Field from "@/components/field";
 
 export const dynamic = "force-dynamic";
 
@@ -241,15 +242,6 @@ function SurveyForm({
         {submitLabel}
       </button>
     </form>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      {children}
-    </label>
   );
 }
 

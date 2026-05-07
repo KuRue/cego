@@ -18,6 +18,7 @@ import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 import { formatDateRange as fmtDateRange, formatDateLines as fmtDateLines, formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
+import { formatPrice } from "@/lib/format-price";
 
 export const dynamic = "force-dynamic";
 
@@ -645,11 +646,4 @@ function PolicyBlock({ title, body }: { title: string; body: string }) {
       </div>
     </div>
   );
-}
-
-function formatPrice(priceCents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }

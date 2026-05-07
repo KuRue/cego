@@ -10,6 +10,7 @@ import { formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } 
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 import PaymentLink from "@/components/payment-link";
 import RichText from "@/components/rich-text";
+import { formatPrice } from "@/lib/format-price";
 
 export const dynamic = "force-dynamic";
 
@@ -395,11 +396,4 @@ function TextBlock({ title, body }: { title: string; body: string }) {
       </div>
     </section>
   );
-}
-
-function formatPrice(priceCents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }

@@ -12,6 +12,7 @@ import { getDashboardSurveys, type DashboardSurvey } from "@/lib/surveys";
 import Navbar from "@/components/navbar";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { formatDateRange as fmtDateRange, formatDateRangeShort as fmtDateRangeShort } from "@/lib/format-date";
+import { formatPrice } from "@/lib/format-price";
 
 export const dynamic = "force-dynamic";
 
@@ -553,11 +554,4 @@ function readAnswer(answersJson: unknown, questionId: string): string {
   }
 
   return JSON.stringify(value);
-}
-
-function formatPrice(priceCents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }

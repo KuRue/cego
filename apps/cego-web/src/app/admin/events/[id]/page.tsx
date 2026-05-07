@@ -3,6 +3,7 @@ import {
   addEventExpenseAction,
   deleteEventExpenseAction,
 } from "@/lib/event-actions";
+import { formatPrice } from "@/lib/format-price";
 import AppLink from "@/components/app-link";
 import { getAdminEventDetail } from "@/lib/events";
 import { requireAdminMember } from "@/lib/session";
@@ -270,11 +271,4 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
       </p>
     </div>
   );
-}
-
-function formatPrice(priceCents: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }

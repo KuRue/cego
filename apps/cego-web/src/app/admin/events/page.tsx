@@ -15,10 +15,12 @@ import { Badge, StatusBadge, titleCase } from "@/components/badge";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { utcToDateTimeLocal } from "@/lib/tz";
 import { formatDateRange as fmtDateRange } from "@/lib/format-date";
+import { formatPrice } from "@/lib/format-price";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
 import ConfirmButton from "@/components/confirm-button";
 import PaymentMethodsEditor from "@/components/payment-methods-editor";
+import Field from "@/components/field";
 
 export const dynamic = "force-dynamic";
 
@@ -476,23 +478,7 @@ function EventForm({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      {children}
-    </label>
-  );
-}
-
 function toDateTimeLocalValue(date: Date | null, tz: string): string {
   if (!date) return "";
   return utcToDateTimeLocal(date, tz);
-}
-
-function formatPrice(priceCents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(priceCents / 100);
 }
