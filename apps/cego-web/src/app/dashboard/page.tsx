@@ -150,7 +150,7 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
     confirmedCount,
   });
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt;
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && rsvp?.paymentStatus !== "refund_requested";
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
@@ -369,6 +369,10 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
                     </CancelRsvpButton>
                   </form>
                 </StopPropagation>
+              ) : rsvp?.paymentStatus === "refund_requested" ? (
+                <span className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-xs font-semibold" style={{ background: "var(--color-highlight)", color: "var(--color-on-accent)" }}>
+                  Refund requested
+                </span>
               ) : null}
 
               {!canRsvp && !isCancelableRsvp ? (

@@ -833,28 +833,43 @@ export async function cancelRsvpAction(formData: FormData) {
 
     const now = new Date();
 
-    await tx
-      .update(rsvps)
-      .set({ status: "cancelled", updatedAt: now })
-      .where(eq(rsvps.id, parentRsvp.id));
+    if (hadPaid) {
+      await tx
+        .update(rsvps)
+        .set({ paymentStatus: "refund_requested", updatedAt: now })
+        .where(eq(rsvps.id, parentRsvp.id));
 
-    await tx
-      .update(rsvps)
-      .set({ status: "cancelled", updatedAt: now })
-      .where(eq(rsvps.parentRsvpId, parentRsvp.id));
+      const plusOne = memberRsvps.find((r) => r.parentRsvpId === parentRsvp.id && r.status !== "cancelled" && r.status !== "expired");
+      if (plusOne && (plusOne.paymentStatus === "paid" || plusOne.paymentStatus === "waived" || plusOne.paymentStatus === "pending")) {
+        await tx
+          .update(rsvps)
+          .set({ paymentStatus: "refund_requested", updatedAt: now })
+          .where(eq(rsvps.id, plusOne.id));
+      }
+    } else {
+      await tx
+        .update(rsvps)
+        .set({ status: "cancelled", updatedAt: now })
+        .where(eq(rsvps.id, parentRsvp.id));
+
+      await tx
+        .update(rsvps)
+        .set({ status: "cancelled", updatedAt: now })
+        .where(eq(rsvps.parentRsvpId, parentRsvp.id));
+    }
   });
 
   revalidatePath("/dashboard");
   revalidatePath(returnTo);
   revalidatePath("/admin");
 
-  sendNotification({
-    memberId: member.id,
-    eventId,
-    template: "rsvp_cancelled",
-  }).catch(() => {});
-
   if (hadPaid) {
+    sendNotification({
+      memberId: member.id,
+      eventId,
+      template: "rsvp_cancelled",
+    }).catch(() => {});
+
     const [eventRow] = await db
       .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title })
       .from(events)
@@ -882,9 +897,15 @@ export async function cancelRsvpAction(formData: FormData) {
         }
       }
     }
-  }
+  } else {
+    sendNotification({
+      memberId: member.id,
+      eventId,
+      template: "rsvp_cancelled",
+    }).catch(() => {});
 
-  promoteWaitlist(eventId).catch(() => {});
+    promoteWaitlist(eventId).catch(() => {});
+  }
 
   redirect(returnTo);
 }
@@ -1105,6 +1126,7 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     "pending",
     "paid",
     "waived",
+    "refund_requested",
   ] as const);
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
@@ -1188,6 +1210,45 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     sendNotification(notification).catch(() => {});
   }
 
+  redirect(returnTo);
+}
+
+export async function processRefundAction(formData: FormData) {
+  await requireAdminMember();
+  const rsvpId = readText(formData, "rsvpId");
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
+
+  if (!rsvpId) redirect(returnTo);
+
+  const db = getDb();
+
+  await db.transaction(async (tx) => {
+    const rsvpRows = await tx
+      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, paymentStatus: rsvps.paymentStatus })
+      .from(rsvps)
+      .where(eq(rsvps.id, rsvpId))
+      .limit(1);
+    const row = rsvpRows[0];
+    if (!row || row.paymentStatus !== "refund_requested") return;
+
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
+
+    const now = new Date();
+    await tx
+      .update(rsvps)
+      .set({ status: "cancelled", paymentStatus: "unpaid", updatedAt: now })
+      .where(eq(rsvps.id, rsvpId));
+
+    if (!row.parentRsvpId) {
+      await tx
+        .update(rsvps)
+        .set({ status: "cancelled", paymentStatus: "unpaid", updatedAt: now })
+        .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")));
+    }
+  });
+
+  revalidatePath("/admin/events", "layout");
+  revalidatePath("/dashboard");
   redirect(returnTo);
 }
 

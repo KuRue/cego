@@ -9,6 +9,7 @@ import {
   addRsvpTagAction,
   removeRsvpTagAction,
   deleteRsvpAction,
+  processRefundAction,
 } from "@/lib/event-actions";
 import { StatusBadge } from "@/components/badge";
 import Avatar from "@/components/avatar";
@@ -321,6 +322,7 @@ function DetailPanel({
         </form>
 
         {paymentRequired && (
+          <>
           <form action={updateRsvpPaymentAction}>
             <input type="hidden" name="rsvpId" value={entry.id} />
             <input type="hidden" name="returnTo" value={returnTo} />
@@ -332,11 +334,13 @@ function DetailPanel({
                 background: entry.paymentStatus === "paid" ? "var(--color-success-bg)"
                   : entry.paymentStatus === "pending" ? "var(--color-highlight)"
                   : entry.paymentStatus === "waived" ? "var(--color-surface-hover)"
+                  : entry.paymentStatus === "refund_requested" ? "var(--color-highlight)"
                   : "var(--color-warning-bg)",
                 border: "1px solid var(--color-surface-border)",
                 color: entry.paymentStatus === "paid" ? "var(--color-success)"
                   : entry.paymentStatus === "pending" ? "var(--color-on-accent)"
                   : entry.paymentStatus === "waived" ? "var(--color-muted)"
+                  : entry.paymentStatus === "refund_requested" ? "var(--color-on-accent)"
                   : "var(--color-warning)",
               }}
               onChange={async (e) => {
@@ -355,8 +359,23 @@ function DetailPanel({
               <option value="pending">Pending</option>
               <option value="paid">Paid</option>
               <option value="waived">Waived</option>
+              <option value="refund_requested">Refund Requested</option>
             </select>
           </form>
+          {entry.paymentStatus === "refund_requested" && entry.kind === "primary" && (
+            <form action={processRefundAction}>
+              <input type="hidden" name="rsvpId" value={entry.id} />
+              <input type="hidden" name="returnTo" value={returnTo} />
+              <button
+                type="submit"
+                className="h-8 rounded-lg px-3 text-xs font-semibold transition"
+                style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)" }}
+              >
+                Process Refund
+              </button>
+            </form>
+          )}
+          </>
         )}
 
         <form action={checkInRsvpAction}>
