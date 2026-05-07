@@ -138,6 +138,7 @@ export default async function AdminLogsPage({
                     actorName={isActor ? undefined : actor?.name}
                     actorPhoto={isActor ? undefined : actor?.photo}
                     actorUsername={isActor ? undefined : actor?.username}
+                    isAdminAction={!!row.actorId && row.actorId !== row.memberId}
                     logId={String(row.id)}
                     eventId={row.eventId ? String(row.eventId) : undefined}
                     memberId={row.memberId ? String(row.memberId) : undefined}

@@ -1002,7 +1002,7 @@ export async function undeleteEventAction(formData: FormData) {
 }
 
 export async function updateRsvpStatusAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const status = readEnum(formData, "status", [
     "confirmed",
@@ -1164,6 +1164,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
     audit({
       eventId: nEventId,
       memberId: nMemberId,
+      actorId: admin.id,
       action: `rsvp_${status}`,
     }).catch(() => {});
   }
@@ -1176,7 +1177,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
 }
 
 export async function updateRsvpPaymentAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const paymentStatus = readEnum(formData, "paymentStatus", [
     "unpaid",
@@ -1275,6 +1276,7 @@ export async function updateRsvpPaymentAction(formData: FormData) {
     audit({
       eventId: auditEventId,
       memberId: auditMemberId,
+      actorId: admin.id,
       action: `payment_${paymentStatus}`,
     }).catch(() => {});
   }
@@ -1283,7 +1285,7 @@ export async function updateRsvpPaymentAction(formData: FormData) {
 }
 
 export async function processRefundAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
@@ -1291,10 +1293,11 @@ export async function processRefundAction(formData: FormData) {
 
   const db = getDb();
   let refundEventId: string | null = null;
+  let refundMemberId: string | null = null;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
-      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, tags: rsvps.tags })
+      .select({ eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId, tags: rsvps.tags })
       .from(rsvps)
       .where(eq(rsvps.id, rsvpId))
       .limit(1);
@@ -1302,6 +1305,7 @@ export async function processRefundAction(formData: FormData) {
     if (!row) return;
 
     refundEventId = row.eventId;
+    refundMemberId = row.memberId;
 
     const tags = Array.isArray(row.tags) ? row.tags as string[] : [];
     if (!tags.includes("refund_requested")) return;
@@ -1329,6 +1333,8 @@ export async function processRefundAction(formData: FormData) {
   if (refundEventId) {
     audit({
       eventId: refundEventId,
+      memberId: refundMemberId ?? undefined,
+      actorId: admin.id,
       action: "refund_processed",
       detail: rsvpId,
     }).catch(() => {});
@@ -1380,7 +1386,7 @@ export async function deleteRsvpAction(formData: FormData) {
 }
 
 export async function checkInRsvpAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const checkedIn = readText(formData, "checkedIn");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
@@ -1412,6 +1418,7 @@ export async function checkInRsvpAction(formData: FormData) {
     audit({
       eventId: checkInRow.eventId,
       memberId: checkInRow.memberId,
+      actorId: admin.id,
       action: checkedIn === "1" ? "check_in" : "check_in_undo",
     }).catch(() => {});
   }

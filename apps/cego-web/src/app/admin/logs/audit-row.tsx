@@ -3,6 +3,21 @@
 import { useState } from "react";
 import Avatar from "@/components/avatar";
 
+const adminActions = new Set([
+  "admin_rsvp_added",
+  "refund_processed",
+  "check_in",
+  "check_in_undo",
+  "payment_paid",
+  "payment_waived",
+  "payment_unpaid",
+  "payment_pending",
+  "rsvp_confirmed",
+  "rsvp_waitlisted",
+  "rsvp_cancelled",
+  "rsvp_expired",
+]);
+
 export default function AuditRow({
   label,
   time,
@@ -14,6 +29,7 @@ export default function AuditRow({
   actorName,
   actorPhoto,
   actorUsername,
+  isAdminAction,
   logId,
   eventId,
   memberId,
@@ -29,6 +45,7 @@ export default function AuditRow({
   actorName?: string;
   actorPhoto?: string | null;
   actorUsername?: string | null;
+  isAdminAction: boolean;
   logId: string;
   eventId?: string;
   memberId?: string;
@@ -41,6 +58,7 @@ export default function AuditRow({
       type="button"
       onClick={() => setOpen((v) => !v)}
       className="glass w-full cursor-pointer rounded-xl px-4 py-3 text-left transition"
+      style={isAdminAction ? { borderLeft: "3px solid var(--color-accent)" } : undefined}
     >
       <div className="flex items-center gap-3">
         <Avatar
@@ -49,8 +67,16 @@ export default function AuditRow({
           size="sm"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="text-sm font-semibold">{label}</span>
+            {isAdminAction ? (
+              <span
+                className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+              >
+                Admin
+              </span>
+            ) : null}
             {memberName ? (
               <span className="text-sm truncate" style={{ color: "var(--color-muted)" }}>
                 {memberUsername ? `@${memberUsername}` : memberName}
