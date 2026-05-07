@@ -43,14 +43,14 @@ services:
     image: curlimages/curl:8.10.1
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c"]
-    command: >-
-      while true; do
-        curl -fsS -X POST
-        -H "Authorization: Bearer $${CEGO_TASK_SECRET}"
-        http://cego-web:3000/api/tasks/process-rsvp-deadlines
-        || true;
-        sleep $${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60};
-      done
+    command:
+      - |
+        while true; do
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $${CEGO_TASK_SECRET}" \
+            http://cego-web:3000/api/tasks/process-rsvp-deadlines || true
+          sleep $${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60}
+        done
     environment:
       CEGO_TASK_SECRET: ${CEGO_TASK_SECRET:?set CEGO_TASK_SECRET}
       CEGO_DEADLINE_WORKER_INTERVAL_SECONDS: ${CEGO_DEADLINE_WORKER_INTERVAL_SECONDS:-60}
