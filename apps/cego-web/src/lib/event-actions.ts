@@ -1501,11 +1501,20 @@ export async function markRsvpPendingAction(formData: FormData) {
 
   const db = getDb();
   const [row] = await db
-    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId })
+    .select({ memberId: rsvps.memberId, eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, paymentDeadlineAt: rsvps.paymentDeadlineAt })
     .from(rsvps)
     .where(eq(rsvps.id, rsvpId))
     .limit(1);
   if (!row || row.memberId !== member.id) redirect(returnTo);
+
+  const [eventRow] = await db
+    .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title, paymentDueDate: events.paymentDueDate })
+    .from(events)
+    .where(eq(events.id, row.eventId))
+    .limit(1);
+
+  const deadline = row.paymentDeadlineAt ?? eventRow?.paymentDueDate;
+  if (deadline && deadline.getTime() <= Date.now()) redirect(returnTo);
 
   await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
@@ -1523,12 +1532,6 @@ export async function markRsvpPendingAction(formData: FormData) {
         .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed")));
     }
   });
-
-  const [eventRow] = await db
-    .select({ paymentNotifyMemberId: events.paymentNotifyMemberId, title: events.title })
-    .from(events)
-    .where(eq(events.id, row.eventId))
-    .limit(1);
 
   if (eventRow?.paymentNotifyMemberId) {
     const [notifyMember] = await db
