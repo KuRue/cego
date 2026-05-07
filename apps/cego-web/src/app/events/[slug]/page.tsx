@@ -188,7 +188,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
             <p className="mt-1 text-xs" style={{ color: "#aaa" }}>
               Present this at the door
             </p>
-            <div className="mt-4">
+            <div className="mt-4 inline-block rounded-2xl p-3 qr-ants">
               <QrCodeDisplay data={rsvp.id} size={280} />
             </div>
           </div>
