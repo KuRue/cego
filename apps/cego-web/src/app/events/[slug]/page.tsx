@@ -122,8 +122,9 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
     capacity: event.capacity,
     confirmedCount,
   });
+  const refundRequested = rsvp && (rsvp.tags as string[] | undefined)?.includes("refund_requested");
   const isCancelableRsvp =
-    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && !(rsvp?.tags as string[] | undefined)?.includes("refund_requested");
+    (rsvp?.status === "confirmed" || rsvp?.status === "waitlisted") && !rsvp?.checkedInAt && !refundRequested;
   const canRsvp =
     (effective === "open" || effective === "full") &&
     (!rsvp || rsvp.status === "cancelled" || rsvp.status === "expired");
@@ -318,7 +319,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
             </div>
           ) : null}
 
-          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && plusOne && plusOne.status === "waitlisted" ? (
+          {rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && !refundRequested && plusOne && plusOne.status === "waitlisted" ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{
@@ -343,7 +344,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 </ConfirmButton>
               </form>
             </div>
-          ) : rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" ? (
+          ) : rsvp?.status === "confirmed" && event.paymentRequired && event.paymentMethods && rsvp.paymentStatus !== "paid" && rsvp.paymentStatus !== "waived" && !refundRequested ? (
             <div
               className="mt-5 rounded-xl p-4"
               style={{
@@ -588,7 +589,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 {rsvp && (rsvp.paymentStatus === "paid" || rsvp.paymentStatus === "waived" || rsvp.paymentStatus === "pending") ? "Request Cancellation" : "Cancel RSVP"}
               </CancelRsvpButton>
             </form>
-          ) : rsvp && (rsvp.tags as string[] | undefined)?.includes("refund_requested") ? (
+          ) : refundRequested ? (
             <div className="mt-6 rounded-xl p-4 text-center text-sm font-semibold" style={{ background: "var(--color-highlight)", color: "var(--color-on-accent)" }}>
               Cancellation requested
             </div>
