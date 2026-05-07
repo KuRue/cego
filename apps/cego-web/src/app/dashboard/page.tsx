@@ -123,9 +123,6 @@ export default async function DashboardPage() {
         {surveyStates.length > 0 ? (
           <section className="mt-12">
             <h2 className="text-2xl font-semibold">Surveys</h2>
-            <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-              Help organizers plan by answering these surveys.
-            </p>
             <div className="mt-6 grid gap-6">
               {surveyStates.map((surveyState) => (
                 <SurveyCard

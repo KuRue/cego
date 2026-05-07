@@ -8,7 +8,7 @@ import {
   getDb,
   inArray,
   members,
-  rsvps,
+  sql,
   surveyResponses,
   surveys,
   type Event,
@@ -51,27 +51,13 @@ export async function getDashboardSurveys(
   memberId: string,
 ): Promise<DashboardSurvey[]> {
   const db = getDb();
-  const [activeRsvps, surveyRows] = await Promise.all([
-    db
-      .select({ eventId: rsvps.eventId })
-      .from(rsvps)
-      .where(
-        and(
-          eq(rsvps.memberId, memberId),
-          inArray(rsvps.status, ["confirmed", "waitlisted"]),
-        ),
-      ),
-    db
-      .select()
-      .from(surveys)
-      .where(eq(surveys.status, "published"))
-      .orderBy(asc(surveys.createdAt)),
-  ]);
+  const surveyRows = await db
+    .select()
+    .from(surveys)
+    .where(and(eq(surveys.status, "published"), sql`${surveys.eventId} IS NULL`))
+    .orderBy(asc(surveys.createdAt));
 
-  const activeEventIds = new Set(activeRsvps.map(({ eventId }) => eventId));
-  const visibleSurveys = surveyRows.filter(
-    (survey) => !survey.eventId || activeEventIds.has(survey.eventId),
-  );
+  const visibleSurveys = surveyRows;
 
   if (visibleSurveys.length === 0) {
     return [];
