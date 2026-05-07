@@ -197,6 +197,13 @@
       "when": 1779720000000,
       "tag": "0027_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1779800000000,
+      "tag": "0028_event_details",
+      "breakpoints": true
     }
   ]
 }

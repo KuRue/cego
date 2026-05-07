@@ -1564,6 +1564,7 @@ async function parseEventForm(formData: FormData) {
     title,
     slug,
     description: readOptionalText(formData, "description"),
+    details: readOptionalText(formData, "details"),
     startsAt: readDateTz(formData, "startsAt", tz),
     endsAt: readOptionalDateTz(formData, "endsAt", tz),
     locationText: readOptionalText(formData, "locationText"),

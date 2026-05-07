@@ -73,6 +73,7 @@ export const events = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
+    details: text("details"),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     imageUrl: text("image_url"),

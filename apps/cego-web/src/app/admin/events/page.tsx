@@ -285,6 +285,9 @@ function EventForm({
       <Field label="Description">
         <textarea name="description" defaultValue={event?.description ?? ""} rows={4} className="form-textarea" />
       </Field>
+      <Field label="Details">
+        <textarea name="details" defaultValue={event?.details ?? ""} rows={6} className="form-textarea" placeholder="Venue details, activities, parking notes..." />
+      </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Slug">
           <input name="slug" required defaultValue={event?.slug} className="form-input" />

@@ -250,6 +250,11 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 }
               />
             </dl>
+            {event.details ? (
+              <div className="mt-5 border-t pt-5" style={{ borderColor: "var(--color-surface-border)" }}>
+                <RichText>{event.details}</RichText>
+              </div>
+            ) : null}
           </Panel>
         </div>
 
