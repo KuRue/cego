@@ -17,6 +17,7 @@ function richTextToHtml(text: string): string {
       htmlLines.push(`<li>${inline(trimmed.slice(2))}</li>`);
     } else if (trimmed === "") {
       if (inList) { htmlLines.push("</ul>"); inList = false; }
+      htmlLines.push("<br/>");
     } else {
       if (inList) { htmlLines.push("</ul>"); inList = false; }
       htmlLines.push(`<p>${inline(trimmed)}</p>`);
