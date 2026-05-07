@@ -163,7 +163,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
             {rsvp ? (
               <>
                 <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} />
-                {event.paymentRequired ? (
+                {event.paymentRequired && rsvp.status !== "cancelled" && rsvp.status !== "expired" ? (
                   <StatusBadge status={`pay_${rsvp.paymentStatus}`} label={paymentStatusLabel(rsvp.paymentStatus)} />
                 ) : null}
               </>
