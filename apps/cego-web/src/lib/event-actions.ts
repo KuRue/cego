@@ -51,16 +51,19 @@ function calcPaymentDeadline(event: {
     event.paymentDueDate != null && event.paymentDueDate.getTime() <= now.getTime();
 
   if (source === "waitlist_promotion") {
+    if (!initialDeadlinePassed && event.paymentDueDate) {
+      return capDeadlineAtRsvpDeadline(event.paymentDueDate, event);
+    }
     const windowMs = inFinalRsvpWindow ? latePaymentWindowMs : waitlistPaymentWindowMs;
     return capDeadlineAtRsvpDeadline(new Date(now.getTime() + windowMs), event);
   }
 
-  if (inFinalRsvpWindow || options.waitlistExhausted || initialDeadlinePassed) {
-    return capDeadlineAtRsvpDeadline(new Date(now.getTime() + latePaymentWindowMs), event);
+  if (event.paymentDueDate && !initialDeadlinePassed) {
+    return capDeadlineAtRsvpDeadline(event.paymentDueDate, event);
   }
 
-  if (event.paymentDueDate && event.paymentDueDate.getTime() > now.getTime()) {
-    return capDeadlineAtRsvpDeadline(event.paymentDueDate, event);
+  if (inFinalRsvpWindow || options.waitlistExhausted) {
+    return capDeadlineAtRsvpDeadline(new Date(now.getTime() + latePaymentWindowMs), event);
   }
 
   return capDeadlineAtRsvpDeadline(new Date(now.getTime() + 24 * 60 * 60 * 1000), event);
