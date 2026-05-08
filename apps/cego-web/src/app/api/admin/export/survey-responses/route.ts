@@ -2,15 +2,9 @@ import { eq, getDb, members, surveyResponses, surveys } from "@cego/db";
 import { NextResponse } from "next/server";
 import { requireAdminMember } from "@/lib/session";
 import { parseSurveySchema } from "@/lib/surveys";
+import { csvEscape } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
-
-function csvEscape(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
 
 export async function GET(request: Request) {
   await requireAdminMember();
