@@ -32,7 +32,7 @@ export default function MiniAppSession() {
   const [bgUrl, setBgUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/brand")
+    fetch("/api/brand")
       .then((r) => r.json())
       .then((d) => setBgUrl(d.backgroundUrl ?? null))
       .catch(() => {});

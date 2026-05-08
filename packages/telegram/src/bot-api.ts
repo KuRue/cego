@@ -194,7 +194,7 @@ interface TelegramMessage {
 }
 
 export function escapeTelegramHtml(value: string): string {
-  return value.replace(/[&<>]/g, (char) => {
+  return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
       case "&":
         return "&amp;";
@@ -202,6 +202,10 @@ export function escapeTelegramHtml(value: string): string {
         return "&lt;";
       case ">":
         return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#39;";
       default:
         return char;
     }

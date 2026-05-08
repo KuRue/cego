@@ -9,9 +9,15 @@ describe("Telegram HTML formatting", () => {
     );
   });
 
+  it("escapes quotes for safe attribute interpolation", () => {
+    expect(escapeTelegramHtml(`he said "hello" and 'bye'`)).toBe(
+      `he said &quot;hello&quot; and &#39;bye&#39;`,
+    );
+  });
+
   it("escapes text before wrapping it in bold tags", () => {
     expect(telegramHtmlBold(`Cego *Retreat* </strong><a href="https://evil.example">x</a>`)).toBe(
-      `<strong>Cego *Retreat* &lt;/strong&gt;&lt;a href="https://evil.example"&gt;x&lt;/a&gt;</strong>`,
+      `<strong>Cego *Retreat* &lt;/strong&gt;&lt;a href=&quot;https://evil.example&quot;&gt;x&lt;/a&gt;</strong>`,
     );
   });
 });

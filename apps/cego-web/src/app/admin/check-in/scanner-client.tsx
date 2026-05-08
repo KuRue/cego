@@ -102,13 +102,12 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
   useEffect(() => {
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(() => {});
       }
     };
   }, []);
 
   useEffect(() => {
-    if (scanning) stopScanning();
     setResult(null);
     setFlash(null);
     lastScanRef.current = "";
@@ -149,6 +148,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
               className="h-8 rounded-lg px-2 text-xs outline-none"
+              disabled
               style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}
             >
               {events.map((e) => (

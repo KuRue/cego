@@ -16,7 +16,7 @@ export async function upsertTelegramMember({
 }: UpsertTelegramMemberInput): Promise<Member> {
   const db = getDb();
   const telegramId = String(telegramUser.id);
-  const isBootstrapAdmin = isAdminTelegramId(telegramId);
+  const isBootstrapAdmin = telegramGroupAdmin == null && isAdminTelegramId(telegramId);
   const isAdmin = isBootstrapAdmin || telegramGroupAdmin === true;
   const shouldUpdateAdmin =
     isBootstrapAdmin || telegramGroupAdmin === true || telegramGroupAdmin === false;

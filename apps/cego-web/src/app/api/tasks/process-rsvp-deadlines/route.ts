@@ -39,27 +39,11 @@ export async function POST(request: Request) {
   }
 
   const db = getDb();
-  const result = await db.transaction(async (tx) => {
-    const [lock] = await tx.execute<{ locked: boolean }>(
-      sql`SELECT pg_try_advisory_xact_lock(hashtext(${"cego:deadline-cron"})) AS locked`,
-    );
+  const [lock] = await db.execute<{ locked: boolean }>(
+    sql`SELECT pg_try_advisory_lock(hashtext(${"cego:deadline-cron"})) AS locked`,
+  );
 
-    if (!lock?.locked) {
-      return null;
-    }
-
-    const [deadlineResult, notificationRetryResult] = await Promise.all([
-      expirePastDeadlineRsvps(),
-      retryFailedNotifications(),
-    ]);
-
-    return {
-      ...deadlineResult,
-      notificationRetries: notificationRetryResult,
-    };
-  });
-
-  if (!result) {
+  if (!lock?.locked) {
     return NextResponse.json({
       ok: true,
       skipped: true,
@@ -68,9 +52,19 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({
-    ok: true,
-    processedAt: new Date().toISOString(),
-    ...result,
-  });
+  try {
+    const [deadlineResult, notificationRetryResult] = await Promise.all([
+      expirePastDeadlineRsvps(),
+      retryFailedNotifications(),
+    ]);
+
+    return NextResponse.json({
+      ok: true,
+      processedAt: new Date().toISOString(),
+      ...deadlineResult,
+      notificationRetries: notificationRetryResult,
+    });
+  } finally {
+    await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${"cego:deadline-cron"}))`);
+  }
 }

@@ -22,7 +22,7 @@ export default function SignInPage() {
   const widgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/admin/brand")
+    fetch("/api/brand")
       .then((r) => r.json())
       .then((d) => setBrand(d))
       .catch(() => {});

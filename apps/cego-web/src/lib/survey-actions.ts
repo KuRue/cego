@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -219,7 +220,7 @@ function parseQuestions(value: string, previousSchema?: SurveySchema): SurveyQue
         ? previousQuestions[index]
         : null;
     const previous = previousBySignature ?? previousByIndex;
-    const id = previous?.id ?? `q${index + 1}_${slugify(draft.label).slice(0, 32)}`;
+    const id = previous?.id ?? `q${index + 1}_${slugify(draft.label).slice(0, 24)}_${randomSuffix()}`;
 
     usedPreviousIds.add(id);
 
@@ -278,4 +279,8 @@ function slugify(value: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function randomSuffix(): string {
+  return randomBytes(3).toString("hex");
 }
