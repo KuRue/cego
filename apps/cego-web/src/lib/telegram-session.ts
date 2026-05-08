@@ -194,7 +194,7 @@ async function resolveTelegramGroupAdminStatus(
         telegramId,
         reason: error.message,
       });
-      return null;
+      return false;
     }
 
     throw error;
