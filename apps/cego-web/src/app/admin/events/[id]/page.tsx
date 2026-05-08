@@ -14,6 +14,7 @@ import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import ConfirmButton from "@/components/confirm-button";
 import AdminRsvpManager from "@/components/admin-rsvp-manager";
+import CopyDeepLink from "../copy-deep-link";
 import { notFound } from "next/navigation";
 import { getDb, members, asc, eq } from "@cego/db";
 
@@ -327,25 +328,6 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
       <p className="mt-0.5 truncate text-base font-bold sm:text-lg" style={{ color }}>
         {value}{suffix && <span className="text-xs font-normal">{suffix}</span>}
       </p>
-    </div>
-  );
-}
-
-function CopyDeepLink({ slug, botUsername }: { slug: string; botUsername: string }) {
-  "use client";
-  const deepLink = `https://t.me/${botUsername}/miniapp?startapp=event-${slug}`;
-
-  return (
-    <div className="mt-2 flex items-center gap-2">
-      <span className="truncate text-xs" style={{ color: "var(--color-muted)" }}>{deepLink}</span>
-      <button
-        type="button"
-        onClick={() => { navigator.clipboard.writeText(deepLink); }}
-        className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold transition"
-        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
-      >
-        Copy
-      </button>
     </div>
   );
 }
