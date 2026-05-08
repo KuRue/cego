@@ -54,11 +54,11 @@ export async function POST(request: Request) {
     const response = NextResponse.json(session);
 
     if (session.member.id) {
-      setSessionCookie(response, {
+      const sessionPayload = setSessionCookie(response, {
         id: session.member.id,
         telegramId: session.member.telegramId,
       });
-      setCsrfCookie(response.headers, session.member.id);
+      setCsrfCookie(response.headers, sessionPayload);
     }
 
     return response;

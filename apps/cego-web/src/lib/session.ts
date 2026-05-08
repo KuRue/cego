@@ -7,7 +7,7 @@ import { eq, getDb, members, type Member } from "@cego/db";
 const SESSION_COOKIE_NAME = "cego_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
-interface SessionPayload {
+export interface SessionPayload {
   memberId: string;
   telegramId: string;
   expiresAt: number;
@@ -24,33 +24,39 @@ export function isAdminTelegramId(telegramId: string): boolean {
 export function setSessionCookie(
   response: NextResponse,
   member: Pick<Member, "id" | "telegramId">,
-) {
+): SessionPayload {
+  const payload = {
+    memberId: member.id,
+    telegramId: member.telegramId,
+    expiresAt: Date.now() + SESSION_TTL_SECONDS * 1000,
+  };
+
   response.cookies.set({
     name: SESSION_COOKIE_NAME,
-    value: createSessionToken({
-      memberId: member.id,
-      telegramId: member.telegramId,
-      expiresAt: Date.now() + SESSION_TTL_SECONDS * 1000,
-    }),
+    value: createSessionToken(payload),
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });
+
+  return payload;
+}
+
+export async function getSessionPayload(): Promise<SessionPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  return verifySessionToken(token);
 }
 
 export async function getSessionId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const payload = verifySessionToken(token);
+  const payload = await getSessionPayload();
   return payload?.memberId ?? null;
 }
 
 export async function getCurrentMember(): Promise<Member | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const payload = verifySessionToken(token);
+  const payload = await getSessionPayload();
 
   if (!payload) {
     return null;

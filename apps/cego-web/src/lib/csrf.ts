@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { getSessionId } from "@/lib/session";
+import { getSessionPayload, type SessionPayload } from "@/lib/session";
 
 const CSRF_HEADER = "x-cego-csrf";
 const CSRF_COOKIE = "cego_csrf";
@@ -10,17 +10,22 @@ function getSecret(): string {
   return secret;
 }
 
-export function generateCsrfToken(sessionId: string): string {
+type CsrfSession = Pick<SessionPayload, "memberId" | "expiresAt">;
+
+export function generateCsrfToken(session: CsrfSession): string {
   return createHmac("sha256", getSecret())
-    .update(`csrf:${sessionId}`)
+    .update(`csrf:${session.memberId}:${session.expiresAt}`)
     .digest("base64url");
 }
 
-export function isValidCsrfRequest(request: Request, sessionId: string): boolean {
+export function isValidCsrfRequest(
+  request: Request,
+  session: CsrfSession,
+): boolean {
   const headerToken = request.headers.get(CSRF_HEADER);
   if (!headerToken) return false;
 
-  const expected = generateCsrfToken(sessionId);
+  const expected = generateCsrfToken(session);
 
   const a = Buffer.from(headerToken);
   const b = Buffer.from(expected);
@@ -38,8 +43,8 @@ export function isValidCsrfRequest(request: Request, sessionId: string): boolean
 }
 
 export async function requireValidCsrf(request: Request): Promise<Response | null> {
-  const sessionId = await getSessionId();
-  if (!sessionId || !isValidCsrfRequest(request, sessionId)) {
+  const session = await getSessionPayload();
+  if (!session || !isValidCsrfRequest(request, session)) {
     return new Response(JSON.stringify({ error: "Forbidden." }), {
       status: 403,
       headers: { "content-type": "application/json" },
@@ -48,11 +53,12 @@ export async function requireValidCsrf(request: Request): Promise<Response | nul
   return null;
 }
 
-export function setCsrfCookie(response: Headers, sessionId: string): void {
-  const token = generateCsrfToken(sessionId);
+export function setCsrfCookie(response: Headers, session: CsrfSession): void {
+  const token = generateCsrfToken(session);
+  const maxAge = Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 1000));
   response.append(
     "set-cookie",
-    `${CSRF_COOKIE}=${token}; Path=/; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}; Max-Age=${60 * 60 * 24 * 30}`,
+    `${CSRF_COOKIE}=${token}; Path=/; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}; Max-Age=${maxAge}`,
   );
 }
 
