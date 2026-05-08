@@ -11,6 +11,11 @@ export default function MiniAppSessionRefresher() {
     const webApp = window.Telegram?.WebApp;
     if (!webApp?.initData) return;
 
+    window.dispatchEvent(new Event("cego:miniapp-ready"));
+    if (typeof (window as unknown as Record<string, unknown>).__cegoMiniAppReady === "function") {
+      ((window as unknown as Record<string, unknown>).__cegoMiniAppReady as () => void)();
+    }
+
     refreshed.current = true;
 
     let cancelled = false;

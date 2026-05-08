@@ -3,6 +3,33 @@
 import Link from "next/link";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
+type Listener = () => void;
+
+const listeners = new Set<Listener>();
+let cachedStatus: boolean | null = null;
+
+function getStatus(): boolean {
+  const current = typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
+  if (cachedStatus !== current) {
+    cachedStatus = current;
+    for (const l of listeners) l();
+  }
+  return current;
+}
+
+function subscribe(cb: Listener): () => void {
+  listeners.add(cb);
+  return () => { listeners.delete(cb); };
+}
+
+function getSnapshot(): boolean {
+  return getStatus();
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
 export default function AppLink({
   href,
   onClick,
@@ -10,9 +37,9 @@ export default function AppLink({
   ...props
 }: React.ComponentProps<typeof Link>) {
   const isMiniApp = useSyncExternalStore(
-    subscribeMiniAppStatus,
-    getMiniAppStatus,
-    getServerMiniAppStatus,
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
   );
   const navigated = useRef(false);
 
@@ -61,14 +88,7 @@ export default function AppLink({
   );
 }
 
-function subscribeMiniAppStatus() {
-  return () => {};
-}
-
-function getMiniAppStatus() {
-  return typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
-}
-
-function getServerMiniAppStatus() {
-  return false;
-}
+(window as unknown as Record<string, unknown>).__cegoMiniAppReady = () => {
+  cachedStatus = null;
+  getStatus();
+};

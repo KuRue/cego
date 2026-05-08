@@ -11,6 +11,10 @@ export default function TelegramMiniAppRedirect() {
         if (cancelled) return;
 
         if (window.Telegram?.WebApp?.initData) {
+          window.dispatchEvent(new Event("cego:miniapp-ready"));
+          if (typeof (window as unknown as Record<string, unknown>).__cegoMiniAppReady === "function") {
+            ((window as unknown as Record<string, unknown>).__cegoMiniAppReady as () => void)();
+          }
           window.location.replace("/mini-app");
           return;
         }

@@ -36,10 +36,15 @@ export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
   const useFullscreenMiniAppNav = isMiniApp && isFullscreen;
 
   useEffect(() => {
-    const wa = window.Telegram?.WebApp;
-    setIsMiniApp(!!wa?.initData);
-    setIsFullscreen(!!wa?.isFullscreen);
+    const sync = () => {
+      const wa = window.Telegram?.WebApp;
+      setIsMiniApp(!!wa?.initData);
+      setIsFullscreen(!!wa?.isFullscreen);
+    };
+    sync();
     setMounted(true);
+    window.addEventListener("cego:miniapp-ready", sync);
+    return () => window.removeEventListener("cego:miniapp-ready", sync);
   }, []);
 
   // React to the user (or our own code) toggling fullscreen at runtime.
