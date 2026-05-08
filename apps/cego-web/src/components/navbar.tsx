@@ -40,9 +40,9 @@ export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
       const wa = window.Telegram?.WebApp;
       setIsMiniApp(!!wa?.initData);
       setIsFullscreen(!!wa?.isFullscreen);
+      setMounted(true);
     };
     sync();
-    setMounted(true);
     window.addEventListener("cego:miniapp-ready", sync);
     return () => window.removeEventListener("cego:miniapp-ready", sync);
   }, []);
@@ -210,14 +210,4 @@ export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
   );
 }
 
-function NavItem({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <AppLink
-      href={href}
-      className="rounded-lg px-3 py-2 text-sm font-semibold transition"
-      style={{ color: "var(--color-foreground)" }}
-    >
-      {children}
-    </AppLink>
-  );
-}
+

@@ -26,6 +26,115 @@ interface SessionResponse {
 const MAX_SESSION_RETRIES = 3;
 const SESSION_RETRY_BASE_MS = 1500;
 
+type SessionPayload = {
+  initData?: string;
+  useDevMock?: boolean;
+  startParam?: string;
+};
+
+async function fetchSessionWithRetry(
+  payload: SessionPayload,
+  onStateChange: (state: SessionState) => void,
+  onRetryCount: (count: number) => void,
+  attempt = 0,
+): Promise<void> {
+  onStateChange({ status: "checking" });
+
+  let response: Response;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    response = await fetch("/api/telegram/session", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+  } catch (err) {
+    const isAbort = err instanceof DOMException && err.name === "AbortError";
+    if (attempt < MAX_SESSION_RETRIES - 1) {
+      const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+      onRetryCount(attempt + 1);
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchSessionWithRetry(payload, onStateChange, onRetryCount, attempt + 1);
+    }
+
+    onStateChange({
+      status: "error",
+      message: isAbort
+        ? "Session request timed out. Reopen the Mini App and try again."
+        : "Could not reach the session endpoint. Reopen the Mini App and try again.",
+    });
+    return;
+  }
+
+  let body: SessionResponse;
+
+  try {
+    body = (await response.json()) as SessionResponse;
+  } catch {
+    if (attempt < MAX_SESSION_RETRIES - 1) {
+      const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+      onRetryCount(attempt + 1);
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchSessionWithRetry(payload, onStateChange, onRetryCount, attempt + 1);
+    }
+
+    onStateChange({
+      status: "error",
+      message: `Server returned a non-JSON session response with status ${response.status}.`,
+    });
+    return;
+  }
+
+  if (!response.ok) {
+    const isRetryable = response.status >= 500 || response.status === 429;
+
+    if (isRetryable && attempt < MAX_SESSION_RETRIES - 1) {
+      const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
+      onRetryCount(attempt + 1);
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchSessionWithRetry(payload, onStateChange, onRetryCount, attempt + 1);
+    }
+
+    onStateChange({
+      status: "error",
+      message: body.error
+        ? `Telegram session failed: ${body.error}`
+        : `Telegram session failed with status ${response.status}.`,
+    });
+    return;
+  }
+
+  if (!body.member) {
+    onStateChange({
+      status: "error",
+      message: "Telegram session succeeded but no member profile was returned.",
+    });
+    return;
+  }
+
+  if (body.status === "blocked") {
+    onStateChange({ status: "blocked", member: body.member });
+    return;
+  }
+
+  onStateChange({
+    status: "accepted",
+    member: body.member,
+    mode: body.status === "dev_mock" ? "dev" : "telegram",
+  });
+
+  const startParam = payload.startParam;
+  if (startParam?.startsWith("event-")) {
+    window.location.replace(`/events/${startParam.slice(6)}`);
+  } else {
+    window.location.replace("/dashboard");
+  }
+}
+
 export default function MiniAppSession() {
   const [state, setState] = useState<SessionState>({ status: "idle" });
   const [retryCount, setRetryCount] = useState(0);
@@ -38,108 +147,8 @@ export default function MiniAppSession() {
       .catch(() => {});
   }, []);
 
-  const createSession = useCallback(async (payload: {
-    initData?: string;
-    useDevMock?: boolean;
-    startParam?: string;
-  }, attempt = 0) => {
-    setState({ status: "checking" });
-
-    let response: Response;
-
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      response = await fetch("/api/telegram/session", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-    } catch (err) {
-      const isAbort = err instanceof DOMException && err.name === "AbortError";
-      if (attempt < MAX_SESSION_RETRIES - 1) {
-        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
-        setRetryCount(attempt + 1);
-        await new Promise((r) => setTimeout(r, delay));
-        return createSession(payload, attempt + 1);
-      }
-
-      setState({
-        status: "error",
-        message: isAbort
-          ? "Session request timed out. Reopen the Mini App and try again."
-          : "Could not reach the session endpoint. Reopen the Mini App and try again.",
-      });
-      return;
-    }
-
-    let body: SessionResponse;
-
-    try {
-      body = (await response.json()) as SessionResponse;
-    } catch {
-      if (attempt < MAX_SESSION_RETRIES - 1) {
-        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
-        setRetryCount(attempt + 1);
-        await new Promise((r) => setTimeout(r, delay));
-        return createSession(payload, attempt + 1);
-      }
-
-      setState({
-        status: "error",
-        message: `Server returned a non-JSON session response with status ${response.status}.`,
-      });
-      return;
-    }
-
-    if (!response.ok) {
-      const isRetryable = response.status >= 500 || response.status === 429;
-
-      if (isRetryable && attempt < MAX_SESSION_RETRIES - 1) {
-        const delay = SESSION_RETRY_BASE_MS * (attempt + 1);
-        setRetryCount(attempt + 1);
-        await new Promise((r) => setTimeout(r, delay));
-        return createSession(payload, attempt + 1);
-      }
-
-      setState({
-        status: "error",
-        message: body.error
-          ? `Telegram session failed: ${body.error}`
-          : `Telegram session failed with status ${response.status}.`,
-      });
-      return;
-    }
-
-    if (!body.member) {
-      setState({
-        status: "error",
-        message: "Telegram session succeeded but no member profile was returned.",
-      });
-      return;
-    }
-
-    if (body.status === "blocked") {
-      setState({ status: "blocked", member: body.member });
-      return;
-    }
-
-    setState({
-      status: "accepted",
-      member: body.member,
-      mode: body.status === "dev_mock" ? "dev" : "telegram",
-    });
-
-    const startParam = payload.startParam;
-    if (startParam?.startsWith("event-")) {
-      window.location.replace(`/events/${startParam.slice(6)}`);
-    } else {
-      window.location.replace("/dashboard");
-    }
+  const createSession = useCallback(async (payload: SessionPayload) => {
+    return fetchSessionWithRetry(payload, setState, setRetryCount);
   }, []);
 
   useEffect(() => {
@@ -229,10 +238,10 @@ export default function MiniAppSession() {
             const initData = window.Telegram?.WebApp?.initData;
             const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param ?? parseStartParam(initData ?? "");
             if (initData) {
-              void createSession({ initData, startParam }, 0);
-            } else {
-              void createSession({ useDevMock: true }, 0);
-            }
+      void createSession({ initData, startParam });
+      } else {
+      void createSession({ useDevMock: true });
+      }
           }}
           className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
           style={{
@@ -242,21 +251,21 @@ export default function MiniAppSession() {
         >
           Retry
         </button>
-        <DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }, 0); }} />
-      </div>
-    ) : null}
+<DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }); }} />
+</div>
+) : null}
 
-    {state.status === "idle" ? (
-      <div className="mt-6 text-center">
-        <div
-          className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-          style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
-        />
-        <p className="mt-4 font-semibold">Waiting for Telegram...</p>
-        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
-          Open this page inside Telegram to sign in automatically.
-        </p>
-        <DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }, 0); }} />
+{state.status === "idle" ? (
+<div className="mt-6 text-center">
+<div
+className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+style={{ borderColor: "var(--color-accent)", borderTopColor: "transparent" }}
+/>
+<p className="mt-4 font-semibold">Waiting for Telegram...</p>
+<p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+Open this page inside Telegram to sign in automatically.
+</p>
+<DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }); }} />
       </div>
     ) : null}
       </div>

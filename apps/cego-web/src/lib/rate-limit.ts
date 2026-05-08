@@ -66,18 +66,14 @@ export function rateLimitResponse(result: Extract<RateLimitResult, { ok: false }
 }
 
 function readClientAddress(request: Request): string {
-  if (TRUSTED_HEADER) {
-    const value = request.headers.get(TRUSTED_HEADER)?.trim();
-    if (value) {
-      return TRUSTED_HEADER === "x-forwarded-for"
-        ? value.split(",")[0]?.trim() || "unknown"
-        : value;
-    }
-  }
+  if (!TRUSTED_HEADER) return "unknown";
 
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || request.headers.get("x-real-ip")?.trim()
-    || "unknown";
+  const value = request.headers.get(TRUSTED_HEADER)?.trim();
+  if (!value) return "unknown";
+
+  return TRUSTED_HEADER === "x-forwarded-for"
+    ? value.split(",")[0]?.trim() || "unknown"
+    : value;
 }
 
 function pruneExpiredBuckets(now: number): void {

@@ -12,7 +12,7 @@ interface SurveyQuestion {
 
 export default function SurveyResponseEditor({
   surveyId,
-  eventId,
+  eventId: _eventId,
   questions,
   existingAnswers,
   action,

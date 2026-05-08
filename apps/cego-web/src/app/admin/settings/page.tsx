@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { requireAdminMember } from "@/lib/session";
 import AppLink from "@/components/app-link";
-import { getSiteSettings, timezoneOptions, type BrandSettings } from "@/lib/settings";
+import { getSiteSettings, timezoneOptions } from "@/lib/settings";
 import { updateSiteSettingsAction } from "@/lib/settings-actions";
 import Navbar from "@/components/navbar";
 import { Badge } from "@/components/badge";
-import { getNavbarBrand } from "@/lib/settings";
+
 import LogoUpload from "./logo-upload";
 import BackgroundUpload from "./background-upload";
 import EventTypeEditor from "./event-type-editor";

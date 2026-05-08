@@ -17,7 +17,7 @@ import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpStat
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
-import { formatDateRange as fmtDateRange, formatDateLines as fmtDateLines, formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
+import { formatDateLines as fmtDateLines, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 import { formatPrice } from "@/lib/format-price";
 
 export const dynamic = "force-dynamic";

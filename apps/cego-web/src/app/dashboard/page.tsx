@@ -2,7 +2,7 @@ import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { Badge, StatusBadge, eventStatusLabel, rsvpStatusLabel } from "@/components/badge";
 import AvatarStack from "@/components/avatar-stack";
-import { cancelRsvpAction, dropPlusOneAction } from "@/lib/event-actions";
+import { cancelRsvpAction } from "@/lib/event-actions";
 import { getDashboardEvents, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import StopPropagation from "@/components/stop-propagation";
 import CancelRsvpButton from "@/components/cancel-rsvp-button";
@@ -503,7 +503,7 @@ function getCountdownLabel(event: {
   startsAt: Date;
   rsvpOpensAt: Date | null;
   rsvpClosesAt: Date | null;
-}, tz?: string): string {
+}, _tz?: string): string {
   const now = Date.now();
   const fmtDuration = (ms: number) => {
     if (ms <= 0) return "soon";

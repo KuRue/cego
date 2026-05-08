@@ -50,14 +50,14 @@ export async function requireValidCsrf(request: Request): Promise<Response | nul
 
 export function setCsrfCookie(response: Headers, sessionId: string): void {
   const token = generateCsrfToken(sessionId);
-  response.set(
+  response.append(
     "set-cookie",
-    `${CSRF_COOKIE}=${token}; Path=/; SameSite=Lax; Secure=${process.env.NODE_ENV === "production" ? "true" : "false"}; Max-Age=${60 * 60 * 24 * 30}`,
+    `${CSRF_COOKIE}=${token}; Path=/; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}; Max-Age=${60 * 60 * 24 * 30}`,
   );
 }
 
 export function clearCsrfCookie(response: Headers): void {
-  response.set(
+  response.append(
     "set-cookie",
     `${CSRF_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`,
   );

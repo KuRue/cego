@@ -138,7 +138,7 @@ export async function createDraftEventAction(formData: FormData) {
 }
 
 export async function updateEventAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const eventId = readText(formData, "eventId");
 
   if (!eventId) {
@@ -258,6 +258,7 @@ export async function updateEventAction(formData: FormData) {
   if (auditDetail) {
     audit({
       eventId,
+      actorId: admin.id,
       action: "event_updated",
       detail: auditDetail,
     }).catch(() => {});
@@ -580,7 +581,7 @@ export async function rsvpForEventAction(formData: FormData) {
     }).catch(() => {});
   }
 
-  {
+  if (rsvpStatus) {
     let detail = plusOneName ? `+1: ${plusOneName}${plusOneWaitlisted ? " (waitlisted)" : ""}` : undefined;
     if (surveyId && detail) detail += `; survey: ${surveyId}`;
     else if (surveyId) detail = `survey: ${surveyId}`;
@@ -1452,6 +1453,7 @@ export async function processRefundAction(formData: FormData) {
   const db = getDb();
   let refundEventId: string | null = null;
   let refundMemberId: string | null = null;
+  let refundProcessed = false;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
@@ -1462,9 +1464,6 @@ export async function processRefundAction(formData: FormData) {
     const row = rsvpRows[0];
     if (!row) return;
 
-    refundEventId = row.eventId;
-    refundMemberId = row.memberId;
-
     const tags = Array.isArray(row.tags) ? row.tags as string[] : [];
     if (!tags.includes("refund_requested")) return;
 
@@ -1472,10 +1471,17 @@ export async function processRefundAction(formData: FormData) {
 
     const now = new Date();
     const cleanTags = tags.filter((t) => t !== "refund_requested");
-    await tx
+    const [updated] = await tx
       .update(rsvps)
       .set({ status: "cancelled", tags: cleanTags, updatedAt: now })
-      .where(eq(rsvps.id, rsvpId));
+      .where(eq(rsvps.id, rsvpId))
+      .returning({ id: rsvps.id });
+
+    if (!updated) return;
+
+    refundEventId = row.eventId;
+    refundMemberId = row.memberId;
+    refundProcessed = true;
 
     if (!row.parentRsvpId) {
       await tx
@@ -1492,7 +1498,7 @@ export async function processRefundAction(formData: FormData) {
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
 
-  if (refundEventId) {
+  if (refundProcessed && refundEventId) {
     audit({
       eventId: refundEventId,
       memberId: refundMemberId ?? undefined,
@@ -1504,7 +1510,7 @@ export async function processRefundAction(formData: FormData) {
     promoteWaitlist(refundEventId).catch(() => {});
   }
 
-  if (refundMemberId && refundEventId) {
+  if (refundProcessed && refundMemberId && refundEventId) {
     sendNotification({
       memberId: refundMemberId,
       eventId: refundEventId,
@@ -1524,11 +1530,10 @@ export async function deleteRsvpAction(formData: FormData) {
     redirect(returnTo);
   }
 
-  const db = getDb();
-  let promoteEventId: string | null = null;
-  let auditMemberId: string | null = null;
+const db = getDb();
+let promoteEventId: string | null = null;
 
-  await db.transaction(async (tx) => {
+await db.transaction(async (tx) => {
     const rsvpRows = await tx
       .select({ eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId, status: rsvps.status })
       .from(rsvps)
@@ -1549,7 +1554,6 @@ export async function deleteRsvpAction(formData: FormData) {
       promoteEventId = row.eventId;
     }
 
-    auditMemberId = row.memberId;
     audit({
       eventId: row.eventId,
       memberId: row.memberId,

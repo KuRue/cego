@@ -24,13 +24,20 @@ type ScanResult = {
 };
 
 export default function CheckInScanner({ events }: { events: EventOption[] }) {
-  const [selectedEventId, setSelectedEventId] = useState(events[0]?.id ?? "");
-  const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [flash, setFlash] = useState<"green" | "red" | null>(null);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const lastScanRef = useRef<string>("");
-  const lastScanTimeRef = useRef<number>(0);
+const [selectedEventId, setSelectedEventId] = useState(events[0]?.id ?? "");
+const [scanning, setScanning] = useState(false);
+const [result, setResult] = useState<ScanResult | null>(null);
+const [flash, setFlash] = useState<"green" | "red" | null>(null);
+const scannerRef = useRef<Html5Qrcode | null>(null);
+const lastScanRef = useRef<string>("");
+const lastScanTimeRef = useRef<number>(0);
+
+const changeEvent = useCallback((id: string) => {
+setSelectedEventId(id);
+setResult(null);
+setFlash(null);
+lastScanRef.current = "";
+}, []);
 
   const showResult = useCallback((res: ScanResult) => {
     setResult(res);
@@ -107,23 +114,17 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
     };
   }, []);
 
-  useEffect(() => {
-    setResult(null);
-    setFlash(null);
-    lastScanRef.current = "";
-  }, [selectedEventId]);
-
   return (
     <div>
       {!scanning ? (
         <div className="mt-6 flex flex-col gap-4">
           <label className="grid gap-1 text-sm">
             <span className="font-medium">Event</span>
-            <select
-              value={selectedEventId}
-              onChange={(e) => setSelectedEventId(e.target.value)}
-              className="form-select"
-            >
+        <select
+          value={selectedEventId}
+          onChange={(e) => changeEvent(e.target.value)}
+          className="form-select"
+        >
               {events.map((e) => (
                 <option key={e.id} value={e.id}>{e.title}</option>
               ))}
@@ -146,7 +147,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
           <div className="flex items-center justify-between px-1 pb-2">
             <select
               value={selectedEventId}
-              onChange={(e) => setSelectedEventId(e.target.value)}
+              onChange={(e) => changeEvent(e.target.value)}
               className="h-8 rounded-lg px-2 text-xs outline-none"
               disabled
               style={{ background: "var(--color-surface-hover)", border: "1px solid var(--color-surface-border)" }}

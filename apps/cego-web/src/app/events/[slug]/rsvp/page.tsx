@@ -6,7 +6,7 @@ import { rsvpForEventAction, adminRsvpForEventAction } from "@/lib/event-actions
 import { getRsvpPageData, getEffectiveRsvpStatus } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
-import { formatDateOnly as fmtDateOnly, formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
+import { formatDateWithTime as fmtDateWithTime } from "@/lib/format-date";
 import { parsePaymentMethods, getPaymentMethodUrl, getPaymentMethodLabel } from "@/lib/payment-methods";
 import PaymentLink from "@/components/payment-link";
 import RichText from "@/components/rich-text";

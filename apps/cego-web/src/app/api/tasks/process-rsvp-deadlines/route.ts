@@ -7,6 +7,8 @@ import { retryFailedNotifications } from "@/lib/notifications";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const CRON_LOCK_ID = "cego:deadline-cron";
+
 function readBearerToken(request: Request): string {
   const authorization = request.headers.get("authorization");
 
@@ -24,6 +26,8 @@ function safeEquals(left: string, right: string): boolean {
   return timingSafeEqual(leftHash, rightHash);
 }
 
+
+
 export async function POST(request: Request) {
   const taskSecret = process.env.CEGO_TASK_SECRET;
 
@@ -39,11 +43,24 @@ export async function POST(request: Request) {
   }
 
   const db = getDb();
-  const [lock] = await db.execute<{ locked: boolean }>(
-    sql`SELECT pg_try_advisory_lock(hashtext(${"cego:deadline-cron"})) AS locked`,
-  );
+  const locked = await db.transaction(async (tx) => {
+    const [row] = await tx.execute<{ locked: boolean }>(
+      sql`SELECT pg_try_advisory_xact_lock(hashtext(${CRON_LOCK_ID})) AS locked`,
+    );
+    if (!row?.locked) return false;
 
-  if (!lock?.locked) {
+    const [deadlineResult, notificationRetryResult] = await Promise.all([
+      expirePastDeadlineRsvps(),
+      retryFailedNotifications(),
+    ]);
+
+    return {
+      ...deadlineResult,
+      notificationRetries: notificationRetryResult,
+    };
+  });
+
+  if (locked === false) {
     return NextResponse.json({
       ok: true,
       skipped: true,
@@ -52,19 +69,9 @@ export async function POST(request: Request) {
     });
   }
 
-  try {
-    const [deadlineResult, notificationRetryResult] = await Promise.all([
-      expirePastDeadlineRsvps(),
-      retryFailedNotifications(),
-    ]);
-
-    return NextResponse.json({
-      ok: true,
-      processedAt: new Date().toISOString(),
-      ...deadlineResult,
-      notificationRetries: notificationRetryResult,
-    });
-  } finally {
-    await db.execute(sql`SELECT pg_advisory_unlock(hashtext(${"cego:deadline-cron"}))`);
-  }
+  return NextResponse.json({
+    ok: true,
+    processedAt: new Date().toISOString(),
+    ...locked,
+  });
 }

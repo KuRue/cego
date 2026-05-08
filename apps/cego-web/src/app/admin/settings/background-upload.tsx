@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
-export default function BackgroundUpload({ currentUrl }: { currentUrl: string | null }) {
+export default function BackgroundUpload({ currentUrl: _currentUrl }: { currentUrl: string | null }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);

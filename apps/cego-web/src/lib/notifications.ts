@@ -5,7 +5,7 @@ import {
   notifications,
   rsvps,
 } from "@cego/db";
-import { and, asc, eq, sql } from "@cego/db";
+import { and, asc, eq, inArray, sql } from "@cego/db";
 import { sendTelegramMessage, telegramHtmlBold } from "@cego/telegram";
 import { formatDateWithTime } from "@/lib/format-date";
 import { getSiteSettings } from "@/lib/settings";
@@ -105,6 +105,22 @@ export async function sendNotification({
   if (!BOT_TOKEN) return;
 
   const db = getDb();
+
+  const [existing] = await db
+    .select({ id: notifications.id })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.memberId, memberId),
+        eq(notifications.eventId, eventId),
+        eq(notifications.templateKey, template),
+        inArray(notifications.status, ["queued", "sent"]),
+      ),
+    )
+    .limit(1);
+
+  if (existing) return;
+
   const payload = await buildNotificationPayload(db, { memberId, eventId, template });
   if (!payload) return;
 
@@ -115,7 +131,7 @@ export async function sendNotification({
       eventId,
       telegramChatId: payload.chatId,
       templateKey: template,
-      status: "failed",
+      status: "queued",
     })
     .returning({ id: notifications.id });
 
