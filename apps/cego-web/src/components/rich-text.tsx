@@ -1,4 +1,4 @@
-function richTextToHtml(text: string): string {
+export function richTextToHtml(text: string): string {
   const lines = text.split("\n");
   const htmlLines: string[] = [];
   let inList = false;
@@ -30,9 +30,28 @@ function richTextToHtml(text: string): string {
 }
 
 function inline(text: string): string {
-  return text
+  return escapeHtml(text)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case "\"":
+        return "&quot;";
+      case "'":
+        return "&#39;";
+      default:
+        return character;
+    }
+  });
 }
 
 export default function RichText({ children, className }: { children: string; className?: string }) {

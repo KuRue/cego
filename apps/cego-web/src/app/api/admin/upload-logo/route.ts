@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/data/uploads";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 export async function POST(request: Request) {
   const member = await getCurrentMember();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   if (!ALLOWED_TYPES.includes(file.type)) {
     return NextResponse.json(
-      { error: "File must be PNG, JPEG, WebP, or SVG." },
+      { error: "File must be PNG, JPEG, or WebP." },
       { status: 400 },
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const ext = file.type.split("/")[1] === "svg+xml" ? "svg" : file.type.split("/")[1];
+  const ext = file.type.split("/")[1];
   const timestamp = Date.now();
   const filename = `logo-${timestamp}.${ext}`;
 

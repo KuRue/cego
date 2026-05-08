@@ -26,6 +26,7 @@ export async function GET() {
           return new NextResponse(data, {
             headers: {
               "content-type": contentType,
+              "x-content-type-options": "nosniff",
               "cache-control": "public, max-age=3600",
             },
           });

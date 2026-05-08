@@ -63,7 +63,7 @@ export default async function AdminSettingsPage() {
           <section className="glass-lg rounded-2xl p-5">
             <h2 className="text-lg font-semibold">Logo</h2>
             <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
-              PNG, JPEG, WebP, or SVG under 2 MB.
+              PNG, JPEG, or WebP under 2 MB.
             </p>
             <div className="mt-4">
               {settings.logoUrl ? (
@@ -82,7 +82,7 @@ export default async function AdminSettingsPage() {
                   No logo uploaded. The default letter is used.
                 </p>
               )}
-              <LogoUpload currentLogoUrl={settings.logoUrl} />
+              <LogoUpload />
               <input type="hidden" name="logoUrl" defaultValue={settings.logoUrl ?? ""} />
             </div>
           </section>

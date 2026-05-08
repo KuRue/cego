@@ -1,5 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
-import { join, normalize, relative } from "node:path";
+import { join, normalize } from "node:path";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -11,7 +11,6 @@ const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   webp: "image/webp",
-  svg: "image/svg+xml",
 };
 
 export async function GET(
@@ -50,6 +49,7 @@ export async function GET(
   return new NextResponse(data, {
     headers: {
       "content-type": CONTENT_TYPES[ext],
+      "x-content-type-options": "nosniff",
       "cache-control": "public, max-age=86400",
     },
   });
