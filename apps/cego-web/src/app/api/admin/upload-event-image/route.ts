@@ -1,13 +1,11 @@
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { NextResponse } from "next/server";
+import { ImageUploadError, saveUploadedImage } from "@/lib/image-upload";
 import { getCurrentMember } from "@/lib/session";
 
 export const runtime = "nodejs";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/data/uploads";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 export async function POST(request: Request) {
   const member = await getCurrentMember();
@@ -23,41 +21,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json(
-      { error: "File must be PNG, JPEG, or WebP." },
-      { status: 400 },
-    );
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { error: "File must be under 5 MB." },
-      { status: 400 },
-    );
-  }
-
   try {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  } catch {
-    return NextResponse.json(
-      { error: "Could not create upload directory." },
-      { status: 500 },
-    );
-  }
+    const filename = await saveUploadedImage({
+      file,
+      uploadDir: UPLOAD_DIR,
+      filenamePrefix: "event",
+      maxFileSizeBytes: MAX_FILE_SIZE,
+    });
 
-  const ext = file.type.split("/")[1];
-  const filename = `event-${Date.now()}.${ext}`;
+    return NextResponse.json({ url: `/uploads/${filename}` });
+  } catch (error) {
+    if (error instanceof ImageUploadError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
-  try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(join(UPLOAD_DIR, filename), buffer);
-  } catch {
     return NextResponse.json(
       { error: "Could not save file." },
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ url: `/uploads/${filename}` });
 }

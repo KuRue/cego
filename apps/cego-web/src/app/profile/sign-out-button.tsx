@@ -8,7 +8,18 @@ export default function SignOutButton() {
   async function handleSignOut() {
     setLoading(true);
     try {
-      await fetch("/api/auth/sign-out", { method: "POST" });
+      const response = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: {
+          "x-cego-csrf": "1",
+        },
+      });
+
+      if (!response.ok) {
+        setLoading(false);
+        return;
+      }
+
       window.location.href = "/";
     } catch {
       setLoading(false);

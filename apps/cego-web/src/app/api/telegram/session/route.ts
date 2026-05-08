@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { TelegramInitDataError } from "@cego/telegram";
 import { createTelegramSession } from "@/lib/telegram-session";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { setSessionCookie } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -11,6 +12,16 @@ interface TelegramSessionRequest {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(request, {
+    key: "telegram-session",
+    limit: 30,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.ok) {
+    return rateLimitResponse(rateLimit);
+  }
+
   let body: TelegramSessionRequest;
 
   try {

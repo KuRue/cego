@@ -38,11 +38,14 @@ ENV CEGO_BUILD_SHA=${CEGO_BUILD_SHA}
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs \
-  && mkdir -p /data/uploads
+  && mkdir -p /data/uploads \
+  && chown -R nextjs:nodejs /data
 
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/public ./apps/cego-web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/cego-web/.next/static ./apps/cego-web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/infra/docker/runner-entrypoint.cjs ./infra/docker/runner-entrypoint.cjs
 
 EXPOSE 3000
-CMD ["node", "apps/cego-web/server.js"]
+USER nextjs
+CMD ["node", "infra/docker/runner-entrypoint.cjs"]
