@@ -51,7 +51,7 @@ export default async function AdminEventDetailPage({
   const returnTo = `/admin/events/${detail.event.id}`;
 
   const activeRsvps = detail.rsvps.filter(
-    (r) => r.rsvp.status !== "cancelled",
+    (r) => r.rsvp.status !== "cancelled" && r.rsvp.status !== "expired",
   );
   const paidCount = activeRsvps.filter(
     (r) => r.rsvp.paymentStatus === "paid" || r.rsvp.paymentStatus === "waived",
