@@ -1,27 +1,28 @@
-type HeaderSource = {
-  get(name: string): string | null;
-};
+export function getPublicUrl(path: string): URL {
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    throw new Error("Public URL path must be root-relative.");
+  }
 
-export function getPublicUrl(path: string, headers?: HeaderSource): URL {
-  const baseUrl = getPublicBaseUrl(headers);
+  const baseUrl = getPublicBaseUrl();
   return new URL(path, baseUrl);
 }
 
-function getPublicBaseUrl(headers?: HeaderSource): URL {
-  const appBaseUrl = process.env.APP_BASE_URL;
+function getPublicBaseUrl(): URL {
+  const appBaseUrl = process.env.APP_BASE_URL?.trim();
 
-  if (process.env.NODE_ENV === "production" && appBaseUrl) {
-    return new URL(appBaseUrl);
+  if (!appBaseUrl) {
+    throw new Error("APP_BASE_URL is required for public redirects.");
   }
 
-  const forwardedHost = headers?.get("x-forwarded-host");
-  const forwardedProto = headers?.get("x-forwarded-proto");
-  const host = forwardedHost ?? headers?.get("host");
+  const url = new URL(appBaseUrl);
+  const isLocalHttp =
+    process.env.NODE_ENV !== "production" &&
+    url.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 
-  if (host) {
-    const defaultProto = host.startsWith("localhost") ? "http" : "https";
-    return new URL(`${forwardedProto ?? defaultProto}://${host}`);
+  if (url.protocol !== "https:" && !isLocalHttp) {
+    throw new Error("APP_BASE_URL must use HTTPS outside local development.");
   }
 
-  return new URL(appBaseUrl ?? "https://cego.example.com");
+  return url;
 }

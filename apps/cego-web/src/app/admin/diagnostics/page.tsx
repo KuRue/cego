@@ -123,7 +123,18 @@ async function checkDatabase(): Promise<DiagnosticItem> {
 }
 
 async function checkPublicHealth(): Promise<DiagnosticItem> {
-  const healthUrl = getPublicUrl("/api/health");
+  let healthUrl: URL;
+
+  try {
+    healthUrl = getPublicUrl("/api/health");
+  } catch (error) {
+    return {
+      label: "Public app URL",
+      status: "fail",
+      value: "invalid APP_BASE_URL",
+      detail: getErrorMessage(error),
+    };
+  }
 
   try {
     const response = await fetchWithTimeout(healthUrl, 3000);
