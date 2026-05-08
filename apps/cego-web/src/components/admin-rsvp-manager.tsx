@@ -493,6 +493,30 @@ function DetailPanel({
         </div>
       )}
 
+      {(entry.status === "cancelled" || entry.status === "expired") && (
+        <form
+          action={(fd) => {
+            startTransition(async () => {
+              fd.set("rsvpId", entry.id);
+              fd.set("status", "confirmed");
+              fd.set("returnTo", returnTo);
+              await updateRsvpStatusAction(fd);
+            });
+          }}
+          className="pt-2"
+        >
+          <ConfirmButton
+            type="submit"
+            message={`Restore ${entry.displayName}'s RSVP to confirmed?`}
+            className="h-8 rounded-lg px-4 text-xs font-semibold transition"
+            style={{ background: "var(--color-success-bg)", color: "var(--color-success)" }}
+            disabled={pending}
+          >
+            Restore RSVP
+          </ConfirmButton>
+        </form>
+      )}
+
       {entry.status === "cancelled" && (
         <form
           action={(fd) => {
