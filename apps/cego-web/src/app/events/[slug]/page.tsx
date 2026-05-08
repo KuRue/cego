@@ -241,7 +241,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 label="Price"
                 value={
                   event.priceCents !== null
-                    ? plusOne && rsvp?.status !== "cancelled"
+                    ? plusOne && rsvp?.status === "confirmed" && plusOne.status === "confirmed"
                       ? `${formatPrice(event.priceCents, event.currency)} each (${formatPrice(event.priceCents * 2, event.currency)} total)`
                       : formatPrice(event.priceCents, event.currency)
                     : event.paymentRequired
@@ -566,7 +566,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
             </div>
           ) : null}
 
-          {rsvp && rsvp.status !== "cancelled" && !rsvp.checkedInAt && survey && survey.schema.questions.length > 0 ? (
+          {rsvp && rsvp.status !== "cancelled" && rsvp.status !== "expired" && !rsvp.checkedInAt && survey && survey.schema.questions.length > 0 ? (
             <div className="mt-5 rounded-xl p-4" style={{ border: "1px solid var(--color-surface-border)" }}>
               <p className="text-xs uppercase tracking-[0.14em] font-semibold" style={{ color: "var(--color-muted)" }}>
                 {survey.title}
