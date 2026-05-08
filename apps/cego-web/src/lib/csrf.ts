@@ -65,7 +65,7 @@ export function setCsrfCookie(response: Headers, session: CsrfSession): void {
 export function clearCsrfCookie(response: Headers): void {
   response.append(
     "set-cookie",
-    `${CSRF_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`,
+    `${CSRF_COOKIE}=; Path=/; SameSite=Lax${process.env.NODE_ENV === "production" ? "; Secure" : ""}; Max-Age=0`,
   );
 }
 
