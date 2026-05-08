@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ImageUploadError, saveUploadedImage } from "@/lib/image-upload";
 import { getCurrentMember } from "@/lib/session";
 import { requireValidCsrf } from "@/lib/csrf";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,13 @@ export async function POST(request: Request) {
   if (!member || !member.isAdmin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  const rateLimit = checkRateLimit(request, {
+    key: "upload-event-image",
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit);
 
   const csrfError = await requireValidCsrf(request);
   if (csrfError) return csrfError;
