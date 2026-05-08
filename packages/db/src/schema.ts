@@ -205,7 +205,7 @@ export const notifications = pgTable(
     sentAt: timestamp("sent_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("notifications_member_event_template_idx").on(
+    index("notifications_member_event_template_idx").on(
       table.memberId,
       table.eventId,
       table.templateKey,

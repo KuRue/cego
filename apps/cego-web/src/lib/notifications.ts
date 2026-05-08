@@ -117,7 +117,6 @@ export async function sendNotification({
       templateKey: template,
       status: "queued",
     })
-    .onConflictDoNothing()
     .returning({ id: notifications.id });
 
   if (!row) return;
