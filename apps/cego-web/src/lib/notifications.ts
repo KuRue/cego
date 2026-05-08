@@ -115,7 +115,7 @@ export async function sendNotification({
       eventId,
       telegramChatId: payload.chatId,
       templateKey: template,
-      status: "queued",
+      status: "failed",
     })
     .returning({ id: notifications.id });
 
@@ -138,6 +138,17 @@ export async function retryFailedNotifications(limit = 25): Promise<{
   }
 
   const db = getDb();
+
+  await db
+    .update(notifications)
+    .set({ status: "failed", errorMessage: "Delivery interrupted (stale queued row)" })
+    .where(
+      and(
+        eq(notifications.status, "queued"),
+        sql`${notifications.createdAt} < now() - interval '5 minutes'`,
+      ),
+    );
+
   const candidates = await db
     .select({
       id: notifications.id,
