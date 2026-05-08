@@ -21,6 +21,7 @@ import GalleryUpload from "./gallery-upload";
 import ConfirmButton from "@/components/confirm-button";
 import PaymentMethodsEditor from "@/components/payment-methods-editor";
 import Field from "@/components/field";
+import AutoTextarea from "@/components/auto-textarea";
 
 function parseGalleryImages(raw: string | null | undefined): string[] {
   if (!raw) return [];
@@ -294,10 +295,10 @@ function EventForm({
         <input name="title" required defaultValue={event?.title} className="form-input" />
       </Field>
       <Field label="Description">
-        <textarea name="description" defaultValue={event?.description ?? ""} rows={4} className="form-textarea" />
+        <AutoTextarea name="description" defaultValue={event?.description ?? ""} className="form-textarea" />
       </Field>
       <Field label="Details">
-        <textarea name="details" defaultValue={event?.details ?? ""} rows={6} className="form-textarea" placeholder="Venue details, activities, parking notes..." />
+        <AutoTextarea name="details" defaultValue={event?.details ?? ""} className="form-textarea" placeholder="Venue details, activities, parking notes..." />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Slug">
@@ -416,17 +417,17 @@ function EventForm({
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <Field label="Rules">
-          <textarea name="rulesText" defaultValue={event?.rulesText ?? ""} rows={4} className="form-textarea" />
+          <AutoTextarea name="rulesText" defaultValue={event?.rulesText ?? ""} className="form-textarea" />
         </Field>
         <Field label="Terms">
-          <textarea name="termsText" defaultValue={event?.termsText ?? ""} rows={4} className="form-textarea" />
+          <AutoTextarea name="termsText" defaultValue={event?.termsText ?? ""} className="form-textarea" />
         </Field>
       </div>
       <Field label="Cancellation/refund policy">
-        <textarea name="refundPolicyText" defaultValue={event?.refundPolicyText ?? ""} rows={3} className="form-textarea" />
+        <AutoTextarea name="refundPolicyText" defaultValue={event?.refundPolicyText ?? ""} className="form-textarea" />
       </Field>
       <Field label="Organizer notes">
-        <textarea name="organizerNotes" defaultValue={event?.organizerNotes ?? ""} rows={3} className="form-textarea" />
+        <AutoTextarea name="organizerNotes" defaultValue={event?.organizerNotes ?? ""} className="form-textarea" />
       </Field>
       <button
         type="submit"
