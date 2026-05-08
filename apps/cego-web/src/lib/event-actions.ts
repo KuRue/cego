@@ -1792,7 +1792,7 @@ export async function updateRsvpNotesAction(formData: FormData) {
   const notes = readOptionalText(formData, "notes") ?? null;
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
-  if (!rsvpId) redirect(returnTo);
+  if (!rsvpId) return;
 
   const db = getDb();
   await db
@@ -1801,7 +1801,6 @@ export async function updateRsvpNotesAction(formData: FormData) {
     .where(eq(rsvps.id, rsvpId));
 
   revalidatePath(returnTo);
-  redirect(returnTo);
 }
 
 export async function addRsvpTagAction(formData: FormData) {
@@ -1810,7 +1809,7 @@ export async function addRsvpTagAction(formData: FormData) {
   const tag = readText(formData, "tag")?.trim();
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
-  if (!rsvpId || !tag) redirect(returnTo);
+  if (!rsvpId || !tag) return;
 
   const db = getDb();
   await db
@@ -1822,7 +1821,6 @@ export async function addRsvpTagAction(formData: FormData) {
     .where(eq(rsvps.id, rsvpId));
 
   revalidatePath(returnTo);
-  redirect(returnTo);
 }
 
 export async function removeRsvpTagAction(formData: FormData) {
@@ -1831,7 +1829,7 @@ export async function removeRsvpTagAction(formData: FormData) {
   const tag = readText(formData, "tag");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
-  if (!rsvpId || !tag) redirect(returnTo);
+  if (!rsvpId || !tag) return;
 
   const db = getDb();
   await db
@@ -1843,7 +1841,6 @@ export async function removeRsvpTagAction(formData: FormData) {
     .where(eq(rsvps.id, rsvpId));
 
   revalidatePath(returnTo);
-  redirect(returnTo);
 }
 
 export async function markRsvpPendingAction(formData: FormData) {
