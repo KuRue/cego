@@ -40,6 +40,7 @@ export default function SignInPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     async function trySignIn() {
       const webApp = await waitForTelegramWebApp();
@@ -51,20 +52,23 @@ export default function SignInPage() {
         webApp.expand();
         setState({ status: "mini_app", message: "Verifying Telegram identity..." });
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+          const timeout = setTimeout(() => controller.abort(), 15000);
 
-      const res = await fetch("/api/telegram/session", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ initData: webApp.initData }),
-        signal: controller.signal,
-      });
+          const res = await fetch("/api/telegram/session", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ initData: webApp.initData }),
+            signal: controller.signal,
+          });
 
-      clearTimeout(timeout);
+          clearTimeout(timeout);
 
-      const body = await res.json();
+          if (cancelled) return;
+
+          const body = await res.json();
+
+          if (cancelled) return;
 
           if (!res.ok) {
             setState({ status: "browser", error: body.error });
@@ -74,9 +78,10 @@ export default function SignInPage() {
           setState({ status: "success", displayName: body.member?.telegramDisplayName ?? "" });
 
           await new Promise((r) => setTimeout(r, 800));
+          if (cancelled) return;
           window.location.href = "/dashboard";
         } catch {
-          setState({ status: "browser" });
+          if (!cancelled) setState({ status: "browser" });
         }
         return;
       }
@@ -88,6 +93,7 @@ export default function SignInPage() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, []);
 
