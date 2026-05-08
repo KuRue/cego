@@ -259,7 +259,7 @@ export default async function AdminEventDetailPage({
 
     <div className="flex items-center justify-between gap-4">
       <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--color-muted)" }}>
-        RSVPs ({activeRsvps.length})
+        RSVPs ({detail.rsvps.length})
       </h2>
       <AppLink
         href="/admin/events"
