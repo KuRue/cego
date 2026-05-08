@@ -44,5 +44,5 @@ export async function audit(params: {
     actorId: params.actorId ?? null,
     action: params.action,
     detail: params.detail ?? null,
-  }).catch(() => {});
+  }).catch((err) => { console.error("audit failed:", err); });
 }
