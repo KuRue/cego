@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function EventTypeEditor({ types: initial }: { types: string[] }) {
   const [types, setTypes] = useState<string[]>(initial);
   const [newType, setNewType] = useState("");
+  const hiddenRef = useRef<HTMLInputElement>(null);
 
   function addType() {
     const trimmed = newType.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
@@ -22,9 +23,8 @@ export default function EventTypeEditor({ types: initial }: { types: string[] })
   }
 
   function syncHidden(updated: string[]) {
-    const hiddenInput = document.querySelector<HTMLInputElement>('input[name="eventTypes"]');
-    if (hiddenInput) {
-      hiddenInput.setAttribute("value", JSON.stringify(updated));
+    if (hiddenRef.current) {
+      hiddenRef.current.setAttribute("value", JSON.stringify(updated));
     }
   }
 
@@ -67,7 +67,7 @@ export default function EventTypeEditor({ types: initial }: { types: string[] })
           Add
         </button>
       </div>
-      <input type="hidden" name="eventTypes" defaultValue={JSON.stringify(types)} />
+      <input ref={hiddenRef} type="hidden" name="eventTypes" defaultValue={JSON.stringify(types)} />
     </div>
   );
 }
