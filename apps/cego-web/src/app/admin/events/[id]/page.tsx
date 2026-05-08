@@ -31,6 +31,7 @@ export default async function AdminEventDetailPage({
   const member = await requireAdminMember();
   const brand = await getNavbarBrand();
   const settings = await getSiteSettings();
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME ?? "";
   const { id } = await params;
   const detail = await getAdminEventDetail(id);
 
@@ -109,6 +110,9 @@ export default async function AdminEventDetailPage({
                   &larr; Events
                 </AppLink>
                 <h1 className="mt-1 font-title text-xl sm:text-3xl">{detail.event.title}</h1>
+                {detail.event.slug ? (
+                  <CopyDeepLink slug={detail.event.slug} botUsername={botUsername} />
+                ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusBadge status={detail.event.status} />
@@ -323,6 +327,25 @@ function StatBox({ label, value, suffix, highlight }: { label: string; value: st
       <p className="mt-0.5 truncate text-base font-bold sm:text-lg" style={{ color }}>
         {value}{suffix && <span className="text-xs font-normal">{suffix}</span>}
       </p>
+    </div>
+  );
+}
+
+function CopyDeepLink({ slug, botUsername }: { slug: string; botUsername: string }) {
+  "use client";
+  const deepLink = `https://t.me/${botUsername}/miniapp?startapp=event-${slug}`;
+
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <span className="truncate text-xs" style={{ color: "var(--color-muted)" }}>{deepLink}</span>
+      <button
+        type="button"
+        onClick={() => { navigator.clipboard.writeText(deepLink); }}
+        className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold transition"
+        style={{ background: "var(--color-accent)", color: "var(--color-on-accent)" }}
+      >
+        Copy
+      </button>
     </div>
   );
 }

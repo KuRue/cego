@@ -33,6 +33,7 @@ export default function MiniAppSession() {
   const createSession = useCallback(async (payload: {
     initData?: string;
     useDevMock?: boolean;
+    startParam?: string;
   }, attempt = 0) => {
     setState({ status: "checking" });
 
@@ -125,7 +126,12 @@ export default function MiniAppSession() {
       mode: body.status === "dev_mock" ? "dev" : "telegram",
     });
 
-    window.location.replace("/dashboard");
+    const startParam = payload.startParam;
+    if (startParam?.startsWith("event-")) {
+      window.location.replace(`/events/${startParam.slice(6)}`);
+    } else {
+      window.location.replace("/dashboard");
+    }
   }, []);
 
   useEffect(() => {
@@ -142,9 +148,10 @@ export default function MiniAppSession() {
       webApp?.expand();
 
       const initData = webApp?.initData ?? "";
+      const startParam = webApp?.initDataUnsafe?.start_param ?? parseStartParam(initData);
 
       if (initData) {
-        void createSession({ initData });
+        void createSession({ initData, startParam });
       }
     };
 
@@ -203,8 +210,9 @@ export default function MiniAppSession() {
           onClick={() => {
             setRetryCount(0);
             const initData = window.Telegram?.WebApp?.initData;
+            const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param ?? parseStartParam(initData ?? "");
             if (initData) {
-              void createSession({ initData }, 0);
+              void createSession({ initData, startParam }, 0);
             } else {
               void createSession({ useDevMock: true }, 0);
             }
@@ -268,4 +276,13 @@ async function waitForTelegramWebApp() {
   }
 
   return window.Telegram?.WebApp;
+}
+
+function parseStartParam(initData: string): string | undefined {
+  try {
+    const params = new URLSearchParams(initData);
+    return params.get("start_param") ?? undefined;
+  } catch {
+    return undefined;
+  }
 }

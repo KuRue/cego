@@ -5,6 +5,9 @@ declare global {
     Telegram?: {
       WebApp?: {
         initData: string;
+        initDataUnsafe?: {
+          start_param?: string;
+        };
         ready: () => void;
         expand: () => void;
         /** True when the Mini App is in fullscreen mode (no bot-name bar at top). Bot API 8.0+. */
