@@ -36,6 +36,19 @@ export async function POST(request: Request) {
 
   try {
     const session = await createTelegramSession(body);
+
+    if (session.member.telegramId) {
+      const userRateLimit = checkRateLimit(request, {
+        key: "telegram-session-user",
+        limit: 30,
+        windowMs: 60_000,
+        identity: `tg:${session.member.telegramId}`,
+      });
+      if (!userRateLimit.ok) {
+        return rateLimitResponse(userRateLimit);
+      }
+    }
+
     const response = NextResponse.json(session);
 
     if (session.member.id) {

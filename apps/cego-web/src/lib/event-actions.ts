@@ -1274,7 +1274,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
       eventId: nEventId,
       memberId: nMemberId,
       actorId: admin.id,
-      action: `rsvp_${status}`,
+      action: `rsvp_${actualStatus}`,
     }).catch(() => {});
   }
 
@@ -1356,10 +1356,40 @@ export async function updateRsvpPaymentAction(formData: FormData) {
       .where(eq(rsvps.id, rsvpId));
 
     if (!row.parentRsvpId) {
-      await tx
-        .update(rsvps)
-        .set({ paymentStatus, updatedAt: now })
-        .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed")));
+      const plusOneRows = await tx
+        .select({ id: rsvps.id, status: rsvps.status })
+        .from(rsvps)
+        .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")))
+        .limit(1);
+      const plusOne = plusOneRows[0];
+
+      if (plusOne && (setConfirmed && plusOne.status !== "confirmed")) {
+        const eventRows2 = await tx
+          .select({ capacity: events.capacity })
+          .from(events)
+          .where(eq(events.id, row.eventId))
+          .limit(1);
+        const countRows2 = await tx
+          .select({ total: count() })
+          .from(rsvps)
+          .where(and(eq(rsvps.eventId, row.eventId), inArray(rsvps.status, capacityBearingStatuses)));
+        const slotsLeft2 = (eventRows2[0]?.capacity ?? 0) - Number(countRows2[0]?.total ?? 0);
+        const plusOneNextStatus: RsvpStatus | undefined = slotsLeft2 >= 1 ? "confirmed" : undefined;
+
+        await tx
+          .update(rsvps)
+          .set({
+            paymentStatus,
+            ...(plusOneNextStatus ? { status: plusOneNextStatus } : {}),
+            updatedAt: now,
+          })
+          .where(eq(rsvps.id, plusOne.id));
+      } else if (plusOne) {
+        await tx
+          .update(rsvps)
+          .set({ paymentStatus, updatedAt: now })
+          .where(eq(rsvps.id, plusOne.id));
+      }
     }
 
     const template =
@@ -1450,6 +1480,16 @@ export async function processRefundAction(formData: FormData) {
       actorId: admin.id,
       action: "refund_processed",
       detail: rsvpId,
+    }).catch(() => {});
+
+    promoteWaitlist(refundEventId).catch(() => {});
+  }
+
+  if (refundMemberId && refundEventId) {
+    sendNotification({
+      memberId: refundMemberId,
+      eventId: refundEventId,
+      template: "rsvp_cancelled",
     }).catch(() => {});
   }
 
@@ -1969,13 +2009,13 @@ export async function markRsvpPendingAction(formData: FormData) {
     await tx
       .update(rsvps)
       .set({ paymentStatus: "pending", updatedAt: now })
-      .where(eq(rsvps.id, rsvpId));
+      .where(and(eq(rsvps.id, rsvpId), eq(rsvps.paymentStatus, "unpaid")));
 
     if (!row.parentRsvpId) {
       await tx
         .update(rsvps)
         .set({ paymentStatus: "pending", updatedAt: now })
-        .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed")));
+        .where(and(eq(rsvps.parentRsvpId, rsvpId), eq(rsvps.status, "confirmed"), eq(rsvps.paymentStatus, "unpaid")));
     }
   });
 

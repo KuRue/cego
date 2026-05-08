@@ -4,7 +4,10 @@ type RateLimitOptions = {
   key: string;
   limit: number;
   windowMs: number;
+  identity?: string;
 };
+
+export type { RateLimitOptions };
 
 type Bucket = {
   count: number;
@@ -17,6 +20,8 @@ export type RateLimitResult =
 
 const buckets = new Map<string, Bucket>();
 
+const TRUSTED_HEADER = process.env.TRUSTED_PROXY_HEADER?.trim().toLowerCase() || null;
+
 export function checkRateLimit(
   request: Request,
   options: RateLimitOptions,
@@ -24,7 +29,8 @@ export function checkRateLimit(
   const now = Date.now();
   pruneExpiredBuckets(now);
 
-  const bucketKey = `${options.key}:${readClientAddress(request)}`;
+  const identity = options.identity || readClientAddress(request);
+  const bucketKey = `${options.key}:${identity}`;
   const bucket = buckets.get(bucketKey);
 
   if (!bucket || bucket.resetAt <= now) {
@@ -60,17 +66,18 @@ export function rateLimitResponse(result: Extract<RateLimitResult, { ok: false }
 }
 
 function readClientAddress(request: Request): string {
-  const cfConnectingIp = request.headers.get("cf-connecting-ip")?.trim();
-  if (cfConnectingIp) return cfConnectingIp;
+  if (TRUSTED_HEADER) {
+    const value = request.headers.get(TRUSTED_HEADER)?.trim();
+    if (value) {
+      return TRUSTED_HEADER === "x-forwarded-for"
+        ? value.split(",")[0]?.trim() || "unknown"
+        : value;
+    }
+  }
 
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
-
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const firstForwarded = forwardedFor?.split(",")[0]?.trim();
-  if (firstForwarded) return firstForwarded;
-
-  return "unknown";
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || request.headers.get("x-real-ip")?.trim()
+    || "unknown";
 }
 
 function pruneExpiredBuckets(now: number): void {
