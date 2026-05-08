@@ -19,6 +19,15 @@ export default function ImageCarousel({ images }: { images: string[] }) {
     return () => clearInterval(timer);
   }, [images.length, paused]);
 
+  useEffect(() => {
+    function onVisibilityChange() {
+      setPaused(document.hidden);
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, []);
+
   function showSlide(index: number) {
     setCurrent((index + images.length) % images.length);
   }
@@ -39,13 +48,18 @@ export default function ImageCarousel({ images }: { images: string[] }) {
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     pointerStartX.current = event.clientX;
+    setPaused(true);
   }
 
   function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
-    if (pointerStartX.current === null || images.length <= 1) return;
+    if (pointerStartX.current === null || images.length <= 1) {
+      setPaused(false);
+      return;
+    }
 
     const deltaX = event.clientX - pointerStartX.current;
     pointerStartX.current = null;
+    setPaused(false);
 
     if (Math.abs(deltaX) < 40) return;
 
@@ -66,6 +80,7 @@ export default function ImageCarousel({ images }: { images: string[] }) {
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {
         pointerStartX.current = null;
+        setPaused(false);
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
