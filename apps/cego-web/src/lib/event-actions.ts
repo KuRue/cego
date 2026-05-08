@@ -1011,15 +1011,17 @@ export async function cancelRsvpAction(formData: FormData) {
         .limit(1);
 
       if (notifyMember?.telegramId) {
-        const handle = member.telegramUsername ? `@${member.telegramUsername}` : member.telegramDisplayName;
-        const { sendTelegramMessage } = await import("@cego/telegram");
+        const { escapeTelegramHtml, sendTelegramMessage, telegramHtmlBold } = await import("@cego/telegram");
+        const handle = member.telegramUsername
+          ? `@${escapeTelegramHtml(member.telegramUsername)}`
+          : escapeTelegramHtml(member.telegramDisplayName);
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
         if (BOT_TOKEN) {
           sendTelegramMessage({
             botToken: BOT_TOKEN,
             chatId: notifyMember.telegramId,
-            text: `↩️ *${member.telegramDisplayName}* (${handle}) requested a refund for *${eventRow.title}*.`,
-            parseMode: "Markdown",
+            text: `↩️ ${telegramHtmlBold(member.telegramDisplayName)} (${handle}) requested a refund for ${telegramHtmlBold(eventRow.title)}.`,
+            parseMode: "HTML",
           }).catch(() => {});
         }
       }
@@ -1892,15 +1894,17 @@ export async function markRsvpPendingAction(formData: FormData) {
       .limit(1);
 
     if (notifyMember?.telegramId) {
-      const { sendTelegramMessage } = await import("@cego/telegram");
+      const { escapeTelegramHtml, sendTelegramMessage, telegramHtmlBold } = await import("@cego/telegram");
       const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
       if (BOT_TOKEN) {
-        const handle = member.telegramUsername ? `@${member.telegramUsername}` : member.telegramDisplayName;
+        const handle = member.telegramUsername
+          ? `@${escapeTelegramHtml(member.telegramUsername)}`
+          : escapeTelegramHtml(member.telegramDisplayName);
         sendTelegramMessage({
           botToken: BOT_TOKEN,
           chatId: notifyMember.telegramId,
-          text: `💰 *${member.telegramDisplayName}* (${handle}) marked their payment as pending for *${eventRow.title}*.`,
-          parseMode: "Markdown",
+          text: `💰 ${telegramHtmlBold(member.telegramDisplayName)} (${handle}) marked their payment as pending for ${telegramHtmlBold(eventRow.title)}.`,
+          parseMode: "HTML",
         }).catch(() => {});
       }
     }

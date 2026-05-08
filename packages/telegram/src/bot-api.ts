@@ -193,6 +193,25 @@ interface TelegramMessage {
   message_id: number;
 }
 
+export function escapeTelegramHtml(value: string): string {
+  return value.replace(/[&<>]/g, (char) => {
+    switch (char) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      default:
+        return char;
+    }
+  });
+}
+
+export function telegramHtmlBold(value: string): string {
+  return `<strong>${escapeTelegramHtml(value)}</strong>`;
+}
+
 export async function sendTelegramMessage({
   botToken,
   chatId,

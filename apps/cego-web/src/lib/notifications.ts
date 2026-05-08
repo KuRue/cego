@@ -6,7 +6,7 @@ import {
   rsvps,
 } from "@cego/db";
 import { and, eq, sql } from "@cego/db";
-import { sendTelegramMessage } from "@cego/telegram";
+import { sendTelegramMessage, telegramHtmlBold } from "@cego/telegram";
 import { formatDateWithTime } from "@/lib/format-date";
 import { getSiteSettings } from "@/lib/settings";
 
@@ -32,7 +32,7 @@ function buildMessage(
 ): string {
   switch (template) {
     case "rsvp_confirmed": {
-      let msg = `✅ You're confirmed for *${event.title}*!`;
+      let msg = `✅ You're confirmed for ${telegramHtmlBold(event.title)}!`;
       if (event.paymentDueDate) {
         const due = formatDateWithTime(event.paymentDueDate, tz);
         msg += `\n\n💳 Payment is due by ${due}.`;
@@ -40,7 +40,7 @@ function buildMessage(
       return msg;
     }
     case "rsvp_confirmed_plusone_waitlisted": {
-      let msg = `✅ You're confirmed for *${event.title}*, but your +1 is on the waitlist.`;
+      let msg = `✅ You're confirmed for ${telegramHtmlBold(event.title)}, but your +1 is on the waitlist.`;
       if (event.paymentDueDate) {
         const due = formatDateWithTime(event.paymentDueDate, tz);
         msg += `\n\n💳 Payment is due by ${due}.`;
@@ -48,25 +48,25 @@ function buildMessage(
       return msg;
     }
     case "rsvp_waitlisted":
-      return `⏳ You've been waitlisted for *${event.title}*. You'll be notified if a spot opens up.`;
+      return `⏳ You've been waitlisted for ${telegramHtmlBold(event.title)}. You'll be notified if a spot opens up.`;
     case "rsvp_promoted":
-      return `🎉 A spot opened up - you're now *confirmed* for *${event.title}*!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDateWithTime(event.paymentDueDate, tz)}.` : ""}`;
+      return `🎉 A spot opened up - you're now <strong>confirmed</strong> for ${telegramHtmlBold(event.title)}!${event.paymentDueDate ? `\n\n💳 Payment is due by ${formatDateWithTime(event.paymentDueDate, tz)}.` : ""}`;
     case "rsvp_cancelled":
-      return `❌ Your RSVP for *${event.title}* has been cancelled.`;
+      return `❌ Your RSVP for ${telegramHtmlBold(event.title)} has been cancelled.`;
     case "rsvp_expired":
-      return `⏰ Your RSVP for *${event.title}* has expired because payment was not received in time.`;
+      return `⏰ Your RSVP for ${telegramHtmlBold(event.title)} has expired because payment was not received in time.`;
     case "payment_confirmed":
-      return `✅ Payment confirmed for *${event.title}*. You're all set!`;
+      return `✅ Payment confirmed for ${telegramHtmlBold(event.title)}. You're all set!`;
     case "payment_waived":
-      return `✅ Payment has been waived for *${event.title}*. You're all set!`;
+      return `✅ Payment has been waived for ${telegramHtmlBold(event.title)}. You're all set!`;
     case "payment_reminder": {
       const due = event.paymentDueDate ? formatDateWithTime(event.paymentDueDate, tz) : "soon";
-      return `⏰ Reminder: Payment for *${event.title}* is due by ${due}.`;
+      return `⏰ Reminder: Payment for ${telegramHtmlBold(event.title)} is due by ${due}.`;
     }
     case "new_event":
-      return `🎉 New event: *${event.title}*. Check it out and RSVP!`;
+      return `🎉 New event: ${telegramHtmlBold(event.title)}. Check it out and RSVP!`;
     case "checked_in":
-      return `✅ You've been checked in for *${event.title}*. Welcome!`;
+      return `✅ You've been checked in for ${telegramHtmlBold(event.title)}. Welcome!`;
   }
 }
 
@@ -153,7 +153,7 @@ export async function sendNotification({
       botToken: BOT_TOKEN,
       chatId,
       text,
-      parseMode: "Markdown",
+      parseMode: "HTML",
     });
 
     await db
