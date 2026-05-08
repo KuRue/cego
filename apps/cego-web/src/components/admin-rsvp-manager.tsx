@@ -81,7 +81,6 @@ interface Props {
 }
 
 export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, survey }: Props) {
-  const confirm = useConfirm();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -238,6 +237,7 @@ function DetailPanel({
   survey: Props["survey"];
   surveyResp: { answersJson: unknown } | undefined;
 }) {
+  const confirm = useConfirm();
   const returnTo = `/admin/events/${eventId}`;
   const [tagInput, setTagInput] = useState("");
   const [notesVal, setNotesVal] = useState(entry.notes ?? "");

@@ -9,9 +9,10 @@ export default function EventTypeEditor({ types: initial }: { types: string[] })
   function addType() {
     const trimmed = newType.trim().toLowerCase().replace(/[^a-z0-9_]+/g, "_");
     if (!trimmed || types.includes(trimmed)) return;
-    setTypes([...types, trimmed]);
+    const next = [...types, trimmed];
+    setTypes(next);
     setNewType("");
-    syncHidden(types);
+    syncHidden(next);
   }
 
   function removeType(index: number) {

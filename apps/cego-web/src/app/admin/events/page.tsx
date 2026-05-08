@@ -271,6 +271,11 @@ function EventForm({
   allMembers?: { id: string; telegramDisplayName: string }[];
   timezone: string;
 }) {
+  const formId = event?.id ?? "new";
+  const coverImageFieldId = `event-${formId}-imageUrl`;
+  const promoImageFieldId = `event-${formId}-promoImageUrl`;
+  const galleryFieldId = `event-${formId}-galleryImages`;
+
   return (
     <form action={action} className="mt-4 grid gap-4 overflow-hidden">
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
@@ -345,8 +350,8 @@ function EventForm({
               <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current cover</span>
             </div>
           ) : null}
-          <EventImageUpload currentUrl={event?.imageUrl ?? null} />
-          <input type="hidden" name="imageUrl" defaultValue={event?.imageUrl ?? ""} />
+          <EventImageUpload fieldId={coverImageFieldId} />
+          <input id={coverImageFieldId} type="hidden" name="imageUrl" defaultValue={event?.imageUrl ?? ""} />
         </div>
       </Field>
       <Field label="Promo image">
@@ -364,12 +369,12 @@ function EventForm({
               <span className="text-xs" style={{ color: "var(--color-muted)" }}>Current promo</span>
             </div>
           ) : null}
-          <EventImageUpload currentUrl={event?.promoImageUrl ?? null} fieldName="promoImageUrl" />
-          <input type="hidden" name="promoImageUrl" defaultValue={event?.promoImageUrl ?? ""} />
+          <EventImageUpload fieldName="promoImageUrl" fieldId={promoImageFieldId} />
+          <input id={promoImageFieldId} type="hidden" name="promoImageUrl" defaultValue={event?.promoImageUrl ?? ""} />
         </div>
       </Field>
       <Field label="Gallery images">
-        <GalleryUpload initial={parseGalleryImages(event?.galleryImages)} />
+        <GalleryUpload initial={parseGalleryImages(event?.galleryImages)} fieldId={galleryFieldId} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
         <Field label="Price">

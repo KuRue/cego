@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { ImageProps } from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 interface ParallaxImageProps extends Omit<ImageProps, "alt"> {
   alt?: string;
@@ -11,70 +11,23 @@ export default function ParallaxImage({ alt = "", ...imageProps }: ParallaxImage
   const containerRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isSupported, setIsSupported] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    // Check if prefers-reduced-motion is set
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
-    mediaQuery.addEventListener("change", handleMediaChange);
-    return () => mediaQuery.removeEventListener("change", handleMediaChange);
-  }, []);
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
 
   useEffect(() => {
     if (prefersReducedMotion) {
       return; // Don't enable parallax if user prefers reduced motion
     }
 
-    let hasPermission = false;
-
-    // Try Telegram native DeviceOrientation API first
-    const tryTelegramPermission = async () => {
-      try {
-        const wa = window.Telegram?.WebApp;
-        if (!wa?.isSimulating && typeof wa?.requestDeviceOrientation === "function") {
-          // Telegram Mini App native permission request
-          wa.requestDeviceOrientation?.();
-          hasPermission = true;
-          setIsSupported(true);
-          setupDeviceOrientationListener();
-        }
-      } catch {
-        // Silently fail, will try browser API
-      }
-    };
-
-    // Try browser DeviceOrientationEvent API
-    const tryBrowserPermission = async () => {
-      try {
-        if (
-          typeof DeviceOrientationEvent !== "undefined" &&
-          typeof (DeviceOrientationEvent as any).requestPermission === "function"
-        ) {
-          // iOS 13+ requires permission
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
-          if (permission === "granted") {
-            hasPermission = true;
-            setIsSupported(true);
-            setupDeviceOrientationListener();
-          }
-        } else if (typeof DeviceOrientationEvent !== "undefined") {
-          // Android or older browsers don't require permission
-          hasPermission = true;
-          setIsSupported(true);
-          setupDeviceOrientationListener();
-        }
-      } catch {
-        // Silently fail
-      }
-    };
+    let disposed = false;
+    let cleanupDeviceOrientation: (() => void) | null = null;
 
     const setupDeviceOrientationListener = () => {
+      if (disposed || cleanupDeviceOrientation) return;
+
       const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
         // beta: rotation around x-axis (-180 to 180), front/back tilt
         // gamma: rotation around y-axis (-90 to 90), left/right tilt
@@ -92,16 +45,47 @@ export default function ParallaxImage({ alt = "", ...imageProps }: ParallaxImage
       };
 
       window.addEventListener("deviceorientation", handleDeviceOrientation);
-      return () => window.removeEventListener("deviceorientation", handleDeviceOrientation);
+      cleanupDeviceOrientation = () => window.removeEventListener("deviceorientation", handleDeviceOrientation);
+      setIsSupported(true);
     };
 
-    // Try Telegram first, fall back to browser
-    tryTelegramPermission();
+    const enableDeviceOrientation = async () => {
+      try {
+        const wa = window.Telegram?.WebApp;
+        if (!wa?.isSimulating && typeof wa?.requestDeviceOrientation === "function") {
+          wa.requestDeviceOrientation();
+          setupDeviceOrientationListener();
+          return;
+        }
+      } catch {
+        // Silently fail, will try browser API.
+      }
 
-    // If Telegram didn't work, try browser
-    if (!hasPermission) {
-      tryBrowserPermission();
-    }
+      try {
+        if (typeof DeviceOrientationEvent === "undefined") return;
+
+        const orientationEvent = DeviceOrientationEvent as unknown as {
+          requestPermission?: () => Promise<PermissionState>;
+        };
+
+        if (typeof orientationEvent.requestPermission === "function") {
+          // iOS 13+ requires permission.
+          const permission = await orientationEvent.requestPermission();
+          if (permission !== "granted") return;
+        }
+
+        setupDeviceOrientationListener();
+      } catch {
+        // Silently fail.
+      }
+    };
+
+    void enableDeviceOrientation();
+
+    return () => {
+      disposed = true;
+      cleanupDeviceOrientation?.();
+    };
   }, [prefersReducedMotion]);
 
   if (prefersReducedMotion || !isSupported) {
@@ -133,4 +117,21 @@ export default function ParallaxImage({ alt = "", ...imageProps }: ParallaxImage
       </div>
     </div>
   );
+}
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mediaQuery.addEventListener("change", onStoreChange);
+
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
+}
+
+function getReducedMotionSnapshot() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
 }

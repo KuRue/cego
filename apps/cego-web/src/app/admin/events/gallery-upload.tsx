@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 
-export default function GalleryUpload({ initial }: { initial: string[] }) {
+export default function GalleryUpload({ initial, fieldId }: { initial: string[]; fieldId: string }) {
   const [images, setImages] = useState<string[]>(initial);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -49,8 +49,8 @@ export default function GalleryUpload({ initial }: { initial: string[] }) {
   }
 
   function syncHidden(urls: string[]) {
-    const hidden = document.querySelector<HTMLInputElement>('input[name="galleryImages"]');
-    if (hidden) {
+    const hidden = document.getElementById(fieldId) as HTMLInputElement | null;
+    if (hidden?.name === "galleryImages") {
       hidden.setAttribute("value", urls.length > 0 ? JSON.stringify(urls) : "");
     }
   }
@@ -104,7 +104,7 @@ export default function GalleryUpload({ initial }: { initial: string[] }) {
           <p className="text-sm" style={{ color: "var(--color-danger)" }}>{error}</p>
         ) : null}
       </div>
-      <input type="hidden" name="galleryImages" defaultValue={images.length > 0 ? JSON.stringify(images) : ""} />
+      <input id={fieldId} type="hidden" name="galleryImages" defaultValue={images.length > 0 ? JSON.stringify(images) : ""} />
     </div>
   );
 }

@@ -5,25 +5,48 @@ import {
   notifications,
   rsvps,
 } from "@cego/db";
-import { and, eq, sql } from "@cego/db";
+import { and, asc, eq, sql } from "@cego/db";
 import { sendTelegramMessage, telegramHtmlBold } from "@cego/telegram";
 import { formatDateWithTime } from "@/lib/format-date";
 import { getSiteSettings } from "@/lib/settings";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
-type NotificationTemplate =
-  | "rsvp_confirmed"
-  | "rsvp_confirmed_plusone_waitlisted"
-  | "rsvp_waitlisted"
-  | "rsvp_promoted"
-  | "rsvp_cancelled"
-  | "rsvp_expired"
-  | "payment_confirmed"
-  | "payment_waived"
-  | "payment_reminder"
-  | "new_event"
-  | "checked_in";
+const notificationTemplates = [
+  "rsvp_confirmed",
+  "rsvp_confirmed_plusone_waitlisted",
+  "rsvp_waitlisted",
+  "rsvp_promoted",
+  "rsvp_cancelled",
+  "rsvp_expired",
+  "payment_confirmed",
+  "payment_waived",
+  "payment_reminder",
+  "new_event",
+  "checked_in",
+] as const;
+
+type NotificationTemplate = typeof notificationTemplates[number];
+
+const rsvpNotificationTemplates = [
+  "rsvp_confirmed",
+  "rsvp_confirmed_plusone_waitlisted",
+  "rsvp_waitlisted",
+  "rsvp_promoted",
+  "rsvp_cancelled",
+  "rsvp_expired",
+  "payment_confirmed",
+  "payment_waived",
+  "payment_reminder",
+  "checked_in",
+] satisfies NotificationTemplate[];
+
+type NotificationDeliveryPayload = {
+  chatId: string;
+  text: string;
+};
+
+type NotificationDeliveryStatus = "sent" | "failed";
 
 function buildMessage(
   template: NotificationTemplate,
@@ -82,6 +105,113 @@ export async function sendNotification({
   if (!BOT_TOKEN) return;
 
   const db = getDb();
+  const payload = await buildNotificationPayload(db, { memberId, eventId, template });
+  if (!payload) return;
+
+  const [row] = await db
+    .insert(notifications)
+    .values({
+      memberId,
+      eventId,
+      telegramChatId: payload.chatId,
+      templateKey: template,
+      status: "queued",
+    })
+    .onConflictDoNothing()
+    .returning({ id: notifications.id });
+
+  if (!row) return;
+
+  await deliverNotification(db, row.id, payload);
+}
+
+export async function retryFailedNotifications(limit = 25): Promise<{
+  retriedNotificationCount: number;
+  sentNotificationCount: number;
+  failedNotificationCount: number;
+}> {
+  if (!BOT_TOKEN) {
+    return {
+      retriedNotificationCount: 0,
+      sentNotificationCount: 0,
+      failedNotificationCount: 0,
+    };
+  }
+
+  const db = getDb();
+  const candidates = await db
+    .select({
+      id: notifications.id,
+      memberId: notifications.memberId,
+      eventId: notifications.eventId,
+      templateKey: notifications.templateKey,
+    })
+    .from(notifications)
+    .where(eq(notifications.status, "failed"))
+    .orderBy(asc(notifications.createdAt))
+    .limit(limit);
+
+  let retriedNotificationCount = 0;
+  let sentNotificationCount = 0;
+  let failedNotificationCount = 0;
+
+  for (const candidate of candidates) {
+    if (
+      !candidate.memberId ||
+      !candidate.eventId ||
+      !isNotificationTemplate(candidate.templateKey)
+    ) {
+      await markNotificationFailed(db, candidate.id, "Notification payload is invalid.");
+      failedNotificationCount++;
+      continue;
+    }
+
+    const [claimed] = await db
+      .update(notifications)
+      .set({ status: "queued", errorMessage: null })
+      .where(and(eq(notifications.id, candidate.id), eq(notifications.status, "failed")))
+      .returning({ id: notifications.id });
+
+    if (!claimed) continue;
+
+    const payload = await buildNotificationPayload(db, {
+      memberId: candidate.memberId,
+      eventId: candidate.eventId,
+      template: candidate.templateKey,
+    });
+
+    if (!payload) {
+      await markNotificationFailed(db, candidate.id, "Notification payload is unavailable.");
+      failedNotificationCount++;
+      continue;
+    }
+
+    retriedNotificationCount++;
+    const status = await deliverNotification(db, candidate.id, payload);
+    if (status === "sent") sentNotificationCount++;
+    if (status === "failed") failedNotificationCount++;
+  }
+
+  return {
+    retriedNotificationCount,
+    sentNotificationCount,
+    failedNotificationCount,
+  };
+}
+
+async function buildNotificationPayload(
+  db: ReturnType<typeof getDb>,
+  {
+    memberId,
+    eventId,
+    template,
+  }: {
+    memberId: string;
+    eventId: string;
+    template: NotificationTemplate;
+  },
+): Promise<NotificationDeliveryPayload | null> {
+  if (!isNotificationTemplate(template)) return null;
 
   const memberRows = await db
     .select({ telegramId: members.telegramId, notifyPrefs: members.notifyPrefs })
@@ -90,24 +220,13 @@ export async function sendNotification({
     .limit(1);
 
   const member = memberRows[0];
-  if (!member) return;
+  if (!member) return null;
 
   const prefs = member.notifyPrefs ?? { rsvpUpdates: true, newEvents: true };
-  const isRsvpNotification = [
-    "rsvp_confirmed",
-    "rsvp_confirmed_plusone_waitlisted",
-    "rsvp_waitlisted",
-    "rsvp_promoted",
-    "rsvp_cancelled",
-    "rsvp_expired",
-    "payment_confirmed",
-    "payment_waived",
-    "payment_reminder",
-    "checked_in",
-  ].includes(template);
+  const isRsvpNotification = (rsvpNotificationTemplates as readonly NotificationTemplate[]).includes(template);
 
-  if (isRsvpNotification && !prefs.rsvpUpdates) return;
-  if (template === "new_event" && !prefs.newEvents) return;
+  if (isRsvpNotification && !prefs.rsvpUpdates) return null;
+  if (template === "new_event" && !prefs.newEvents) return null;
 
   const eventRows = await db
     .select({
@@ -121,7 +240,7 @@ export async function sendNotification({
     .limit(1);
 
   const event = eventRows[0];
-  if (!event) return;
+  if (!event) return null;
 
   const rsvpRows = await db
     .select({ paymentDeadlineAt: rsvps.paymentDeadlineAt })
@@ -135,24 +254,23 @@ export async function sendNotification({
     ...event,
     paymentDueDate: rsvpRows[0]?.paymentDeadlineAt ?? event.paymentDueDate,
   }, tz);
-  const chatId = member.telegramId;
 
-  const [row] = await db
-    .insert(notifications)
-    .values({
-      memberId,
-      eventId,
-      telegramChatId: chatId,
-      templateKey: template,
-      status: "queued",
-    })
-    .returning({ id: notifications.id });
+  return {
+    chatId: member.telegramId,
+    text,
+  };
+}
 
+async function deliverNotification(
+  db: ReturnType<typeof getDb>,
+  notificationId: string,
+  payload: NotificationDeliveryPayload,
+): Promise<NotificationDeliveryStatus> {
   try {
     const messageId = await sendTelegramMessage({
       botToken: BOT_TOKEN,
-      chatId,
-      text,
+      chatId: payload.chatId,
+      text: payload.text,
       parseMode: "HTML",
     });
 
@@ -160,17 +278,40 @@ export async function sendNotification({
       .update(notifications)
       .set({
         status: "sent",
+        telegramChatId: payload.chatId,
         telegramMessageId: messageId,
         sentAt: new Date(),
       })
-      .where(eq(notifications.id, row.id));
+      .where(eq(notifications.id, notificationId));
+
+    return "sent";
   } catch (err) {
-    await db
-      .update(notifications)
-      .set({
-        status: "failed",
-        errorMessage: err instanceof Error ? err.message : "Unknown error",
-      })
-      .where(eq(notifications.id, row.id));
+    await markNotificationFailed(
+      db,
+      notificationId,
+      err instanceof Error ? err.message : "Unknown error",
+      payload.chatId,
+    );
+    return "failed";
   }
+}
+
+async function markNotificationFailed(
+  db: ReturnType<typeof getDb>,
+  notificationId: string,
+  errorMessage: string,
+  chatId?: string,
+): Promise<void> {
+  await db
+    .update(notifications)
+    .set({
+      status: "failed",
+      ...(chatId ? { telegramChatId: chatId } : {}),
+      errorMessage,
+    })
+    .where(eq(notifications.id, notificationId));
+}
+
+function isNotificationTemplate(value: string): value is NotificationTemplate {
+  return notificationTemplates.includes(value as NotificationTemplate);
 }

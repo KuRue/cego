@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type AnchorHTMLAttributes, useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
 export default function AppLink({
   href,
@@ -9,43 +9,45 @@ export default function AppLink({
   children,
   ...props
 }: React.ComponentProps<typeof Link>) {
-  const [isMiniApp, setIsMiniApp] = useState(false);
+  const isMiniApp = useSyncExternalStore(
+    subscribeMiniAppStatus,
+    getMiniAppStatus,
+    getServerMiniAppStatus,
+  );
   const navigated = useRef(false);
-
-  useEffect(() => {
-    setIsMiniApp(!!window.Telegram?.WebApp?.initData);
-  }, []);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e as unknown as React.MouseEvent<HTMLAnchorElement>);
+      if (e.defaultPrevented) return;
       if (navigated.current) return;
       navigated.current = true;
 
       const url = href.toString();
       window.location.replace(url);
     },
-    [href],
+    [href, onClick],
   );
 
   if (isMiniApp) {
-    const {
-      prefetch,
-      replace,
-      scroll,
-      onMouseEnter,
-      onTouchStart,
-      className,
-      style,
-      ...rest
-    } = props;
+    const buttonProps = { ...(props as Record<string, unknown>) };
+    const className = buttonProps.className as string | undefined;
+    const style = buttonProps.style as React.CSSProperties | undefined;
+    delete buttonProps.className;
+    delete buttonProps.style;
+    delete buttonProps.prefetch;
+    delete buttonProps.replace;
+    delete buttonProps.scroll;
+    delete buttonProps.onMouseEnter;
+    delete buttonProps.onTouchStart;
 
     return (
       <button
         type="button"
         onClick={handleClick}
-        className={className as string | undefined}
-        style={style as React.CSSProperties | undefined}
-        {...(rest as Record<string, unknown>)}
+        className={className}
+        style={style}
+        {...buttonProps}
       >
         {children}
       </button>
@@ -57,4 +59,16 @@ export default function AppLink({
       {children}
     </Link>
   );
+}
+
+function subscribeMiniAppStatus() {
+  return () => {};
+}
+
+function getMiniAppStatus() {
+  return typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
+}
+
+function getServerMiniAppStatus() {
+  return false;
 }

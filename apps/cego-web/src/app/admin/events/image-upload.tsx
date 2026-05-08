@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-export default function EventImageUpload({ currentUrl, fieldName = "imageUrl" }: { currentUrl: string | null; fieldName?: string }) {
+export default function EventImageUpload({ fieldName = "imageUrl", fieldId }: { fieldName?: string; fieldId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +36,8 @@ export default function EventImageUpload({ currentUrl, fieldName = "imageUrl" }:
       }
 
       setSuccess("Image uploaded.");
-      const hiddenInput = document.querySelector<HTMLInputElement>(`input[name="${fieldName}"]`);
-      if (hiddenInput) {
+      const hiddenInput = document.getElementById(fieldId) as HTMLInputElement | null;
+      if (hiddenInput?.name === fieldName) {
         hiddenInput.setAttribute("value", body.url);
       }
     } catch (err) {

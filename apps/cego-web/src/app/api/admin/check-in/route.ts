@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb, events, rsvps, members } from "@cego/db";
-import { and, eq } from "@cego/db";
+import { and, eq, sql } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
 import { sendNotification } from "@/lib/notifications";
 
@@ -85,16 +85,7 @@ export async function POST(request: Request) {
   }
 
   if (rsvpRow.checkedInAt) {
-    const [memberRow] = await db
-      .select({
-        telegramDisplayName: members.telegramDisplayName,
-        telegramUsername: members.telegramUsername,
-        telegramPhotoUrl: members.telegramPhotoUrl,
-        email: members.email,
-      })
-      .from(members)
-      .where(eq(members.id, rsvpRow.memberId))
-      .limit(1);
+    const memberRow = await getCheckInMember(db, rsvpRow.memberId);
 
     return NextResponse.json({
       ok: false,
@@ -111,30 +102,38 @@ export async function POST(request: Request) {
 
   const now = new Date();
 
-  await db
+  const checkedInRows = await db
     .update(rsvps)
     .set({ checkedInAt: now, updatedAt: now })
-    .where(eq(rsvps.id, rsvpRow.id));
+    .where(and(eq(rsvps.id, rsvpRow.id), sql`${rsvps.checkedInAt} IS NULL`))
+    .returning({ id: rsvps.id });
+
+  if (checkedInRows.length === 0) {
+    const memberRow = await getCheckInMember(db, rsvpRow.memberId);
+
+    return NextResponse.json({
+      ok: false,
+      error: "Already checked in",
+      displayName: memberRow?.telegramDisplayName,
+      username: memberRow?.telegramUsername,
+      photoUrl: memberRow?.telegramPhotoUrl,
+      email: memberRow?.email,
+      plusOneName: rsvpRow.plusOneName,
+      rsvpTags: rsvpRow.tags,
+      rsvpNotes: rsvpRow.notes,
+    });
+  }
 
   for (const po of plusOneRows) {
     if (!po.checkedInAt) {
       await db
         .update(rsvps)
         .set({ checkedInAt: now, updatedAt: now })
-        .where(eq(rsvps.id, po.id));
+        .where(and(eq(rsvps.id, po.id), sql`${rsvps.checkedInAt} IS NULL`));
     }
   }
 
-  const [memberRow] = await db
-    .select({
-      telegramDisplayName: members.telegramDisplayName,
-      telegramUsername: members.telegramUsername,
-      telegramPhotoUrl: members.telegramPhotoUrl,
-      email: members.email,
-    })
-    .from(members)
-    .where(eq(members.id, rsvpRow.memberId))
-    .limit(1);
+  const memberRow = await getCheckInMember(db, rsvpRow.memberId);
 
   sendNotification({
     memberId: rsvpRow.memberId,
@@ -152,4 +151,19 @@ export async function POST(request: Request) {
     rsvpTags: rsvpRow.tags,
     rsvpNotes: rsvpRow.notes,
   });
+}
+
+async function getCheckInMember(db: ReturnType<typeof getDb>, memberId: string) {
+  const [memberRow] = await db
+    .select({
+      telegramDisplayName: members.telegramDisplayName,
+      telegramUsername: members.telegramUsername,
+      telegramPhotoUrl: members.telegramPhotoUrl,
+      email: members.email,
+    })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+
+  return memberRow;
 }

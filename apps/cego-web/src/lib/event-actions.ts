@@ -176,19 +176,19 @@ export async function updateEventAction(formData: FormData) {
         .where(eq(events.id, eventId));
 
       if (previousEvent && !sameDate(previousEvent.paymentDueDate, parsedEvent.paymentDueDate)) {
-        const previousDeadlineCondition = previousEvent.paymentDueDate
-          ? sql`(${rsvps.paymentDeadlineAt} IS NULL OR ${rsvps.paymentDeadlineAt} = ${previousEvent.paymentDueDate.toISOString()})`
-          : sql`${rsvps.paymentDeadlineAt} IS NULL`;
+        const nextPaymentDeadline =
+          parsedEvent.paymentRequired && parsedEvent.paymentDueDate
+            ? capDeadlineAtRsvpDeadline(parsedEvent.paymentDueDate, parsedEvent)
+            : null;
 
         await tx
           .update(rsvps)
-          .set({ paymentDeadlineAt: parsedEvent.paymentDueDate, updatedAt: now })
+          .set({ paymentDeadlineAt: nextPaymentDeadline, updatedAt: now })
           .where(
             and(
               eq(rsvps.eventId, eventId),
               eq(rsvps.status, "confirmed"),
               eq(rsvps.paymentStatus, "unpaid"),
-              previousDeadlineCondition,
             ),
           );
       }

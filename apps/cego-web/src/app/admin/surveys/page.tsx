@@ -257,7 +257,12 @@ function SurveyForm({
 
 function surveyQuestionsToText(schema: SurveySchema): string {
   return schema.questions
-    .map((question) => `${question.required ? "*" : ""}${question.label}`)
+    .map((question) => {
+      const options = question.type === "select" && question.options?.length
+        ? ` [${question.options.join(", ")}]`
+        : "";
+      return `${question.required ? "*" : ""}${question.label}${options}`;
+    })
     .join("\n");
 }
 

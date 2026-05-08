@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "crypto";
 import { createSocket } from "dgram";
 import { NextResponse } from "next/server";
 import { expirePastDeadlineRsvps } from "@/lib/event-actions";
+import { retryFailedNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -74,12 +75,16 @@ export async function POST(request: Request) {
     console.warn(`[cron] clock drift detected: ${ntpOffset}ms offset from NTP`);
   }
 
-  const result = await expirePastDeadlineRsvps();
+  const [deadlineResult, notificationRetryResult] = await Promise.all([
+    expirePastDeadlineRsvps(),
+    retryFailedNotifications(),
+  ]);
 
   return NextResponse.json({
     ok: true,
     processedAt: new Date().toISOString(),
     ...(ntpOffset !== null ? { clockOffsetMs: ntpOffset } : {}),
-    ...result,
+    ...deadlineResult,
+    notificationRetries: notificationRetryResult,
   });
 }

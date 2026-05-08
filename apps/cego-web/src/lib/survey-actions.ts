@@ -14,7 +14,7 @@ import {
   type SurveyStatus,
 } from "@cego/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
-import { parseSurveySchema, type SurveyQuestion } from "@/lib/surveys";
+import { parseSurveySchema, type SurveyQuestion, type SurveySchema } from "@/lib/surveys";
 
 export async function createSurveyAction(formData: FormData) {
   await requireAdminMember();
@@ -36,9 +36,16 @@ export async function updateSurveyAction(formData: FormData) {
   }
 
   const db = getDb();
+  const surveyRows = await db
+    .select({ schemaJson: surveys.schemaJson })
+    .from(surveys)
+    .where(eq(surveys.id, surveyId))
+    .limit(1);
+  const previousSchema = surveyRows[0] ? parseSurveySchema(surveyRows[0].schemaJson) : undefined;
+
   await db
     .update(surveys)
-    .set({ ...parseSurveyForm(formData), updatedAt: new Date() })
+    .set({ ...parseSurveyForm(formData, previousSchema), updatedAt: new Date() })
     .where(eq(surveys.id, surveyId));
 
   revalidatePath("/admin");
@@ -143,8 +150,8 @@ export async function submitSurveyResponseAction(formData: FormData) {
   redirect(returnTo);
 }
 
-function parseSurveyForm(formData: FormData) {
-  const questions = parseQuestions(readText(formData, "questions"));
+function parseSurveyForm(formData: FormData, previousSchema?: SurveySchema) {
+  const questions = parseQuestions(readText(formData, "questions"), previousSchema);
 
   if (questions.length === 0) {
     throw new Error("At least one survey question is required.");
@@ -161,12 +168,14 @@ function parseSurveyForm(formData: FormData) {
   };
 }
 
-function parseQuestions(value: string): SurveyQuestion[] {
-  return value
+function parseQuestions(value: string, previousSchema?: SurveySchema): SurveyQuestion[] {
+  const previousQuestions = previousSchema?.questions ?? [];
+  const usedPreviousIds = new Set<string>();
+  const drafts = value
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line, index) => {
+    .map((line) => {
       const required = line.startsWith("*");
       const label = required ? line.slice(1).trim() : line;
 
@@ -178,7 +187,6 @@ function parseQuestions(value: string): SurveyQuestion[] {
           .filter(Boolean);
         if (options.length >= 2) {
           return {
-            id: `q${index + 1}_${slugify(selectMatch[1]).slice(0, 32)}`,
             label: selectMatch[1].trim(),
             required,
             type: "select" as const,
@@ -188,12 +196,39 @@ function parseQuestions(value: string): SurveyQuestion[] {
       }
 
       return {
-        id: `q${index + 1}_${slugify(label).slice(0, 32)}`,
         label,
         required,
         type: "text" as const,
       };
     });
+
+  return drafts.map((draft, index) => {
+    const previousBySignature = previousQuestions.find(
+      (question) => !usedPreviousIds.has(question.id) && questionSignature(question) === questionSignature(draft),
+    );
+    const previousByIndex =
+      previousQuestions[index] && !usedPreviousIds.has(previousQuestions[index].id)
+        ? previousQuestions[index]
+        : null;
+    const previous = previousBySignature ?? previousByIndex;
+    const id = previous?.id ?? `q${index + 1}_${slugify(draft.label).slice(0, 32)}`;
+
+    usedPreviousIds.add(id);
+
+    return {
+      id,
+      ...draft,
+    };
+  });
+}
+
+function questionSignature(question: Omit<SurveyQuestion, "id">): string {
+  return JSON.stringify({
+    label: question.label.trim().toLowerCase(),
+    required: question.required,
+    type: question.type,
+    options: question.options?.map((option) => option.trim().toLowerCase()) ?? [],
+  });
 }
 
 function readText(formData: FormData, key: string): string {
