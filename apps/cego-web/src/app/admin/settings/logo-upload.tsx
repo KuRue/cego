@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export default function LogoUpload() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -25,6 +26,7 @@ export default function LogoUpload() {
 
       const res = await fetch("/api/admin/upload-logo", {
         method: "POST",
+        headers: csrfHeaders(),
         body: form,
       });
 

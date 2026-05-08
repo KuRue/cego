@@ -3,6 +3,7 @@ import { TelegramInitDataError } from "@cego/telegram";
 import { createTelegramSession } from "@/lib/telegram-session";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { setSessionCookie } from "@/lib/session";
+import { setCsrfCookie } from "@/lib/csrf";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
         id: session.member.id,
         telegramId: session.member.telegramId,
       });
+      setCsrfCookie(response.headers, session.member.id);
     }
 
     return response;

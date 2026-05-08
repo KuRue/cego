@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ImageUploadError, saveUploadedImage } from "@/lib/image-upload";
 import { getCurrentMember } from "@/lib/session";
+import { requireValidCsrf } from "@/lib/csrf";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
   if (!member || !member.isAdmin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  const csrfError = await requireValidCsrf(request);
+  if (csrfError) return csrfError;
 
   const formData = await request.formData();
   const file = formData.get("background");

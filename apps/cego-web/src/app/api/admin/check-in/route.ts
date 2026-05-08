@@ -3,6 +3,7 @@ import { getDb, events, rsvps, members } from "@cego/db";
 import { and, eq, sql } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
 import { sendNotification } from "@/lib/notifications";
+import { requireValidCsrf } from "@/lib/csrf";
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
+
+  const csrfError = await requireValidCsrf(request);
+  if (csrfError) return csrfError;
 
   let body: { rsvpId?: string; eventId?: string };
   try {

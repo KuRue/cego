@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export default function GalleryUpload({ initial, fieldId }: { initial: string[]; fieldId: string }) {
   const [images, setImages] = useState<string[]>(initial);
@@ -22,6 +23,7 @@ export default function GalleryUpload({ initial, fieldId }: { initial: string[];
 
       const res = await fetch("/api/admin/upload-event-image", {
         method: "POST",
+        headers: csrfHeaders(),
         body: form,
       });
 

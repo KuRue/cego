@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export default function SignOutButton() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,7 @@ export default function SignOutButton() {
       const response = await fetch("/api/auth/sign-out", {
         method: "POST",
         headers: {
-          "x-cego-csrf": "1",
+          ...csrfHeaders(),
         },
       });
 

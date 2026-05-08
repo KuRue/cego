@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import Avatar from "@/components/avatar";
 import { Html5Qrcode } from "html5-qrcode";
 
@@ -46,7 +47,7 @@ export default function CheckInScanner({ events }: { events: EventOption[] }) {
       try {
         const res = await fetch("/api/admin/check-in", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ rsvpId, eventId: selectedEventId }),
         });
         const data: ScanResult = await res.json();

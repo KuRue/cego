@@ -3,6 +3,7 @@ import { getPublicUrl } from "@/lib/public-url";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { setSessionCookie } from "@/lib/session";
 import { createTelegramLoginWidgetSession } from "@/lib/telegram-session";
+import { setCsrfCookie } from "@/lib/csrf";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,7 @@ export async function GET(request: Request) {
         id: session.member.id,
         telegramId: session.member.telegramId,
       });
+      setCsrfCookie(response.headers, session.member.id);
     }
 
     return response;

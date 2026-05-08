@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isValidCsrfRequest } from "@/lib/csrf";
+import { isValidCsrfRequest, clearCsrfCookie } from "@/lib/csrf";
+import { getSessionId } from "@/lib/session";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -15,7 +16,8 @@ export async function POST(request: Request) {
     return rateLimitResponse(rateLimit);
   }
 
-  if (!isValidCsrfRequest(request)) {
+  const sessionId = await getSessionId();
+  if (!sessionId || !isValidCsrfRequest(request, sessionId)) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
@@ -29,5 +31,6 @@ export async function POST(request: Request) {
     path: "/",
     maxAge: 0,
   });
+  clearCsrfCookie(response.headers);
   return response;
 }

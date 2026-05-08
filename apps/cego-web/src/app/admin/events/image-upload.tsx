@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export default function EventImageUpload({ fieldName = "imageUrl", fieldId }: { fieldName?: string; fieldId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -25,6 +26,7 @@ export default function EventImageUpload({ fieldName = "imageUrl", fieldId }: { 
 
       const res = await fetch("/api/admin/upload-event-image", {
         method: "POST",
+        headers: csrfHeaders(),
         body: form,
       });
 

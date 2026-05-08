@@ -40,6 +40,13 @@ export function setSessionCookie(
   });
 }
 
+export async function getSessionId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const payload = verifySessionToken(token);
+  return payload?.memberId ?? null;
+}
+
 export async function getCurrentMember(): Promise<Member | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
