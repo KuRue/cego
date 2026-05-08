@@ -225,6 +225,13 @@
       "when": 1780040000000,
       "tag": "0031_drop_notification_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1780120000000,
+      "tag": "0032_harden_legacy_migrations",
+      "breakpoints": true
     }
   ]
 }
