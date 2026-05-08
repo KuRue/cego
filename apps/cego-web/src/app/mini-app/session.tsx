@@ -29,6 +29,14 @@ const SESSION_RETRY_BASE_MS = 1500;
 export default function MiniAppSession() {
   const [state, setState] = useState<SessionState>({ status: "idle" });
   const [retryCount, setRetryCount] = useState(0);
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/brand")
+      .then((r) => r.json())
+      .then((d) => setBgUrl(d.backgroundUrl ?? null))
+      .catch(() => {});
+  }, []);
 
   const createSession = useCallback(async (payload: {
     initData?: string;
@@ -163,7 +171,16 @@ export default function MiniAppSession() {
   }, [createSession]);
 
   return (
-    <main className="page-shell flex min-h-screen items-center justify-center px-5 py-6">
+    <main className="page-shell relative flex min-h-screen items-center justify-center px-5 py-6">
+      {bgUrl ? (
+        <>
+          <div
+            className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url('${bgUrl}')` }}
+          />
+          <div className="fixed inset-0 -z-10" style={{ background: "rgba(0,0,0,0.5)" }} />
+        </>
+      ) : null}
       <div className="glass-lg mx-auto w-full max-w-md rounded-2xl p-6">
     {state.status === "checking" ? (
       <div className="mt-6 text-center">

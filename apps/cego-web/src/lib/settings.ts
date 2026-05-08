@@ -85,9 +85,9 @@ export function clearSettingsCache(): void {
   cachedSettings = null;
 }
 
-export async function getNavbarBrand(): Promise<{ siteName: string; logoUrl: string | null }> {
+export async function getNavbarBrand(): Promise<{ siteName: string; logoUrl: string | null; backgroundUrl: string | null }> {
   const settings = await getSiteSettings();
-  return { siteName: settings.siteName, logoUrl: settings.logoUrl };
+  return { siteName: settings.siteName, logoUrl: settings.logoUrl, backgroundUrl: settings.backgroundUrl };
 }
 
 export function normalizeTimezone(value: string | null | undefined): string {
