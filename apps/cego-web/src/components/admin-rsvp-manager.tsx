@@ -386,14 +386,10 @@ function DetailPanel({
           <input type="hidden" name="rsvpId" value={entry.id} />
           <input type="hidden" name="returnTo" value={returnTo} />
           <input type="hidden" name="checkedIn" value={entry.checkedInAt ? "0" : "1"} />
-          <button
+          <ConfirmButton
             type="submit"
+            message={entry.checkedInAt ? "Undo check-in?" : "Check in this person?"}
             className="h-8 rounded-lg px-3 text-xs font-semibold transition"
-            onClick={async (e) => {
-              if (!await confirm(entry.checkedInAt ? "Undo check-in?" : "Check in this person?")) {
-                e.preventDefault();
-              }
-            }}
             style={{
               background: entry.checkedInAt ? "var(--color-success-bg)" : "var(--color-surface-hover)",
               color: entry.checkedInAt ? "var(--color-success)" : "var(--color-muted)",
@@ -401,7 +397,7 @@ function DetailPanel({
             }}
           >
             {entry.checkedInAt ? "Checked in" : "Check in"}
-          </button>
+          </ConfirmButton>
         </form>
       </div>
 
@@ -530,17 +526,15 @@ function DetailPanel({
         >
           <input type="hidden" name="rsvpId" value={entry.id} />
           <input type="hidden" name="returnTo" value={returnTo} />
-          <button
+          <ConfirmButton
             type="submit"
+            message="Delete this cancelled RSVP?"
             disabled={pending}
             className="h-9 rounded-lg px-4 text-sm font-semibold transition"
             style={{ background: "var(--color-danger-bg)", color: "var(--color-danger)", opacity: pending ? 0.5 : 1 }}
-            onClick={async (e) => {
-              if (!await confirm("Delete this cancelled RSVP?")) e.preventDefault();
-            }}
           >
             Remove RSVP
-          </button>
+          </ConfirmButton>
         </form>
       )}
     </div>
