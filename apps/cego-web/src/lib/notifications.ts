@@ -114,7 +114,7 @@ export async function sendNotification({
         eq(notifications.memberId, memberId),
         eq(notifications.eventId, eventId),
         eq(notifications.templateKey, template),
-        inArray(notifications.status, ["queued", "sent"]),
+        inArray(notifications.status, ["queued"]),
       ),
     )
     .limit(1);
