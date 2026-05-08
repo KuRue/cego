@@ -17,9 +17,20 @@ import { formatDateRange as fmtDateRange } from "@/lib/format-date";
 import { formatPrice } from "@/lib/format-price";
 import Image from "next/image";
 import EventImageUpload from "./image-upload";
+import GalleryUpload from "./gallery-upload";
 import ConfirmButton from "@/components/confirm-button";
 import PaymentMethodsEditor from "@/components/payment-methods-editor";
 import Field from "@/components/field";
+
+function parseGalleryImages(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((u: unknown) => typeof u === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -355,6 +366,9 @@ function EventForm({
           <EventImageUpload currentUrl={event?.promoImageUrl ?? null} fieldName="promoImageUrl" />
           <input type="hidden" name="promoImageUrl" defaultValue={event?.promoImageUrl ?? ""} />
         </div>
+      </Field>
+      <Field label="Gallery images">
+        <GalleryUpload initial={parseGalleryImages(event?.galleryImages)} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-[1fr_0.7fr_auto]">
         <Field label="Price">

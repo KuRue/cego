@@ -78,6 +78,7 @@ export const events = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }),
     imageUrl: text("image_url"),
     promoImageUrl: text("promo_image_url"),
+    galleryImages: text("gallery_images"),
     locationText: text("location_text"),
     addressText: text("address_text"),
     priceCents: integer("price_cents"),

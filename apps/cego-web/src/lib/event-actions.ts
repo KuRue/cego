@@ -1580,6 +1580,7 @@ async function parseEventForm(formData: FormData) {
     organizerNotes: readOptionalText(formData, "organizerNotes"),
     imageUrl: readOptionalText(formData, "imageUrl"),
     promoImageUrl: readOptionalText(formData, "promoImageUrl"),
+    galleryImages: readOptionalText(formData, "galleryImages"),
     capacity: readCapacity(formData),
     rsvpOpensAt: readOptionalDateTz(formData, "rsvpOpensAt", tz),
     rsvpClosesAt: readOptionalDateTz(formData, "rsvpClosesAt", tz),

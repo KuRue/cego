@@ -1,4 +1,3 @@
-import Image from "next/image";
 import AppLink from "@/components/app-link";
 import { notFound } from "next/navigation";
 import { StatusBadge, eventStatusLabel, rsvpStatusLabel, paymentStatusLabel } from "@/components/badge";
@@ -13,6 +12,7 @@ import RichText from "@/components/rich-text";
 import QrCodeDisplay from "@/components/qr-code-display";
 import PaymentLink from "@/components/payment-link";
 import ParallaxImage from "@/components/parallax-image";
+import ImageCarousel from "@/components/image-carousel";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
@@ -113,6 +113,16 @@ export default async function EventDetailPage({
 
 function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState: EventWithRsvpState; isAdmin: boolean; memberName: string; timezone: string }) {
   const { event, confirmedCount, waitlistedCount, rsvp, plusOne, rsvpMembers, survey } = eventState;
+  const carouselImages = (() => {
+    const gallery: string[] = [];
+    try {
+      const parsed = event.galleryImages ? JSON.parse(event.galleryImages) : null;
+      if (Array.isArray(parsed)) gallery.push(...parsed.filter((u: unknown) => typeof u === "string"));
+    } catch {}
+    if (gallery.length > 0) return gallery;
+    if (event.imageUrl) return [event.imageUrl];
+    return [];
+  })();
   const returnTo = `/events/${event.slug}`;
   const effective = getEffectiveRsvpStatus({
     status: event.status,
@@ -153,10 +163,8 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
       </div>
 
       <section className="glass-lg overflow-hidden rounded-2xl">
-        {event.imageUrl ? (
-          <div className="relative h-64 sm:h-80">
-            <Image src={event.imageUrl} alt="" fill className="object-cover" priority />
-          </div>
+        {carouselImages.length > 0 ? (
+          <ImageCarousel images={carouselImages} />
         ) : null}
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap gap-2">
