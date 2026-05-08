@@ -162,6 +162,7 @@ export async function retryFailedNotifications(limit = 25): Promise<{
       and(
         eq(notifications.status, "queued"),
         sql`${notifications.createdAt} < now() - interval '5 minutes'`,
+        sql`${notifications.telegramMessageId} IS NULL`,
       ),
     );
 
