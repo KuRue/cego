@@ -88,7 +88,9 @@ export default function AppLink({
   );
 }
 
-(window as unknown as Record<string, unknown>).__cegoMiniAppReady = () => {
-  cachedStatus = null;
-  getStatus();
-};
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__cegoMiniAppReady = () => {
+    cachedStatus = null;
+    getStatus();
+  };
+}
