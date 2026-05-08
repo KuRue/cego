@@ -1128,6 +1128,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
   const db = getDb();
   let notification: { memberId: string; eventId: string; template: "rsvp_confirmed" | "rsvp_promoted" | "rsvp_waitlisted" | "rsvp_cancelled" | "rsvp_expired" } | null = null;
   let promoteEventId: string | null = null;
+  let actualStatus: RsvpStatus = status;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
@@ -1148,7 +1149,7 @@ export async function updateRsvpStatusAction(formData: FormData) {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${row.eventId}))`);
 
     const now = new Date();
-    let actualStatus: RsvpStatus = status;
+    actualStatus = status;
 
     if (status === "confirmed") {
       const eventRows = await tx

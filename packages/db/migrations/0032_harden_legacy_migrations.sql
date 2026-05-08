@@ -102,3 +102,15 @@ ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_event_id_events_id_fk" FOREIGN
 ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_member_id_members_id_fk" FOREIGN KEY ("member_id") REFERENCES "members"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 --> statement-breakpoint
 ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_actor_id_members_id_fk" FOREIGN KEY ("actor_id") REFERENCES "members"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+--> statement-breakpoint
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE "hi_events_webhook_logs" ADD CONSTRAINT "hi_events_webhook_logs_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+  BEGIN
+    ALTER TABLE "hi_events_webhook_logs" ADD CONSTRAINT "hi_events_webhook_logs_rsvp_id_rsvps_id_fk" FOREIGN KEY ("rsvp_id") REFERENCES "rsvps"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END;
+END $$;
