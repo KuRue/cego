@@ -75,7 +75,7 @@ export async function createMemberNoteAction(formData: FormData) {
 }
 
 export async function createAndAssignMemberTagAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const memberId = readText(formData, "memberId");
   const tagName = normalizeTagName(readText(formData, "tagName"));
   const color = readTagColor(formData);
@@ -109,12 +109,19 @@ export async function createAndAssignMemberTagAction(formData: FormData) {
       .onConflictDoNothing();
   });
 
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: "member_tag_assigned",
+    detail: tagName,
+  }).catch(() => {});
+
   revalidateMember(memberId);
   redirect(memberPath(memberId));
 }
 
 export async function assignExistingMemberTagAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const memberId = readText(formData, "memberId");
   const tagId = readText(formData, "tagId");
 
@@ -127,17 +134,30 @@ export async function assignExistingMemberTagAction(formData: FormData) {
   }
 
   const db = getDb();
+  const [tagRow] = await db
+    .select({ name: memberTags.name })
+    .from(memberTags)
+    .where(eq(memberTags.id, tagId))
+    .limit(1);
+
   await db
     .insert(memberTagAssignments)
     .values({ memberId, tagId })
     .onConflictDoNothing();
+
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: "member_tag_assigned",
+    detail: tagRow?.name ?? tagId,
+  }).catch(() => {});
 
   revalidateMember(memberId);
   redirect(memberPath(memberId));
 }
 
 export async function removeMemberTagAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const memberId = readText(formData, "memberId");
   const tagId = readText(formData, "tagId");
 
@@ -150,6 +170,12 @@ export async function removeMemberTagAction(formData: FormData) {
   }
 
   const db = getDb();
+  const [tagRow] = await db
+    .select({ name: memberTags.name })
+    .from(memberTags)
+    .where(eq(memberTags.id, tagId))
+    .limit(1);
+
   await db
     .delete(memberTagAssignments)
     .where(
@@ -158,6 +184,13 @@ export async function removeMemberTagAction(formData: FormData) {
         eq(memberTagAssignments.tagId, tagId),
       ),
     );
+
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: "member_tag_removed",
+    detail: tagRow?.name ?? tagId,
+  }).catch(() => {});
 
   revalidateMember(memberId);
   redirect(memberPath(memberId));

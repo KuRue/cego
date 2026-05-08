@@ -89,10 +89,20 @@ function capDeadlineAtRsvpDeadline(deadline: Date, event: { rsvpClosesAt: Date |
 }
 
 export async function createEventAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const db = getDb();
 
-  await db.insert(events).values(await parseEventForm(formData));
+  const parsed = await parseEventForm(formData);
+  const [row] = await db.insert(events).values(parsed).returning({ id: events.id });
+
+  if (row) {
+    audit({
+      eventId: row.id,
+      actorId: admin.id,
+      action: "event_created",
+      detail: parsed.title ?? undefined,
+    }).catch(() => {});
+  }
 
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
@@ -100,19 +110,27 @@ export async function createEventAction(formData: FormData) {
 }
 
 export async function createDraftEventAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const db = getDb();
   const now = new Date();
   const defaultType = readText(formData, "type") || "meet";
 
-  await db.insert(events).values({
+  const [row] = await db.insert(events).values({
     type: defaultType,
     title: "New event",
     slug: `event-${now.getTime()}`,
     startsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
     capacity: 12,
     status: "draft",
-  });
+  }).returning({ id: events.id });
+
+  if (row) {
+    audit({
+      eventId: row.id,
+      actorId: admin.id,
+      action: "event_draft_created",
+    }).catch(() => {});
+  }
 
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
@@ -1498,7 +1516,7 @@ export async function processRefundAction(formData: FormData) {
 }
 
 export async function deleteRsvpAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
@@ -1508,10 +1526,11 @@ export async function deleteRsvpAction(formData: FormData) {
 
   const db = getDb();
   let promoteEventId: string | null = null;
+  let auditMemberId: string | null = null;
 
   await db.transaction(async (tx) => {
     const rsvpRows = await tx
-      .select({ eventId: rsvps.eventId, parentRsvpId: rsvps.parentRsvpId, status: rsvps.status })
+      .select({ eventId: rsvps.eventId, memberId: rsvps.memberId, parentRsvpId: rsvps.parentRsvpId, status: rsvps.status })
       .from(rsvps)
       .where(eq(rsvps.id, rsvpId))
       .limit(1);
@@ -1529,6 +1548,15 @@ export async function deleteRsvpAction(formData: FormData) {
     if (row.status === "confirmed") {
       promoteEventId = row.eventId;
     }
+
+    auditMemberId = row.memberId;
+    audit({
+      eventId: row.eventId,
+      memberId: row.memberId,
+      actorId: admin.id,
+      action: "rsvp_deleted",
+      detail: rsvpId,
+    }).catch(() => {});
   });
 
   revalidatePath("/admin/events", "layout");
@@ -2086,6 +2114,13 @@ export async function dropPlusOneAction(formData: FormData) {
         .where(eq(rsvps.id, plusOneRow.id));
     });
 
+    audit({
+      eventId: row.eventId,
+      memberId: member.id,
+      actorId: member.id,
+      action: "drop_plus_one",
+    }).catch(() => {});
+
     promoteWaitlist(row.eventId).catch(() => {});
   }
 
@@ -2180,6 +2215,15 @@ export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResul
 
   for (const row of allRows.filter((r) => !r.parentRsvpId)) {
     sendNotification({ memberId: row.memberId, eventId: row.eventId, template: "rsvp_expired" }).catch(() => {});
+  }
+
+  for (const row of allRows) {
+    audit({
+      eventId: row.eventId,
+      memberId: row.memberId,
+      action: "rsvp_batch_expired",
+      detail: row.id,
+    }).catch(() => {});
   }
 
   for (const eventId of promotedEventIds) {

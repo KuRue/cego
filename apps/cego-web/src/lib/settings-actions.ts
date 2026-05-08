@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq, getDb, siteSettings } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
+import { audit } from "@/lib/audit";
 import { clearSettingsCache, normalizeBrandColor, normalizeTimezone } from "@/lib/settings";
 
 export async function updateSiteSettingsAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin#settings";
 
   const db = getDb();
@@ -36,6 +37,12 @@ export async function updateSiteSettingsAction(formData: FormData) {
   }
 
   clearSettingsCache();
+
+  audit({
+    actorId: admin.id,
+    action: "site_settings_updated",
+  }).catch(() => {});
+
   revalidatePath("/", "layout");
   revalidatePath("/admin");
   redirect(returnTo);

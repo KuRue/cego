@@ -14,6 +14,7 @@ import {
   type SurveyStatus,
 } from "@cego/db";
 import { requireAdminMember, requireCurrentMember } from "@/lib/session";
+import { audit } from "@/lib/audit";
 import { parseSurveySchema, type SurveyQuestion, type SurveySchema } from "@/lib/surveys";
 
 export async function createSurveyAction(formData: FormData) {
@@ -54,7 +55,7 @@ export async function updateSurveyAction(formData: FormData) {
 }
 
 export async function deleteSurveyAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const surveyId = readText(formData, "surveyId");
 
   if (!surveyId) {
@@ -63,7 +64,7 @@ export async function deleteSurveyAction(formData: FormData) {
 
   const db = getDb();
   const surveyRows = await db
-    .select({ status: surveys.status })
+    .select({ status: surveys.status, eventId: surveys.eventId })
     .from(surveys)
     .where(eq(surveys.id, surveyId))
     .limit(1);
@@ -73,6 +74,13 @@ export async function deleteSurveyAction(formData: FormData) {
   }
 
   await db.delete(surveys).where(eq(surveys.id, surveyId));
+
+  audit({
+    eventId: surveyRows[0].eventId ?? undefined,
+    actorId: admin.id,
+    action: "survey_deleted",
+    detail: surveyId,
+  }).catch(() => {});
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
