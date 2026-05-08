@@ -138,8 +138,8 @@ export async function submitSurveyResponseAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/admin");
 
-  const returnTo = (formData.get("returnTo") as string) || "/dashboard";
-  if (returnTo.startsWith("/")) revalidatePath(returnTo);
+  const returnTo = readReturnPath(formData, "returnTo") ?? "/dashboard";
+  revalidatePath(returnTo);
   redirect(returnTo);
 }
 
@@ -168,7 +168,7 @@ function parseQuestions(value: string): SurveyQuestion[] {
     .filter(Boolean)
     .map((line, index) => {
       const required = line.startsWith("*");
-      let label = required ? line.slice(1).trim() : line;
+      const label = required ? line.slice(1).trim() : line;
 
       const selectMatch = label.match(/^(.+?)\s*\[([^\]]+)\]$/);
       if (selectMatch) {
@@ -203,6 +203,16 @@ function readText(formData: FormData, key: string): string {
 
 function readOptionalText(formData: FormData, key: string): string | null {
   return readText(formData, key) || null;
+}
+
+function readReturnPath(formData: FormData, key: string): string | null {
+  const value = readText(formData, key);
+
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }
 
 function readEnum<T extends string>(
