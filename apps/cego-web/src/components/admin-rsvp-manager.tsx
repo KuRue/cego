@@ -208,6 +208,7 @@ export default function AdminRsvpManager({ rsvps, eventId, paymentRequired, surv
               {entry.id === selectedId && selected && (
                 <div className="rounded-lg p-3" style={{ background: "var(--color-surface-hover)" }}>
                   <DetailPanel
+                    key={selected.id}
                     entry={selected}
                     eventId={eventId}
                     paymentRequired={paymentRequired}

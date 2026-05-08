@@ -1,10 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
-import { join, normalize } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const UPLOAD_DIR = normalize(process.env.UPLOAD_DIR || "/data/uploads");
+const UPLOAD_DIR = resolve(process.env.UPLOAD_DIR || "/data/uploads");
 
 const CONTENT_TYPES: Record<string, string> = {
   png: "image/png",
@@ -23,15 +23,16 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const filename = segments[segments.length - 1];
-  const ext = filename.split(".").pop()?.toLowerCase();
+  const ext = extname(segments[segments.length - 1] ?? "")
+    .slice(1)
+    .toLowerCase();
 
   if (!ext || !CONTENT_TYPES[ext]) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const filePath = normalize(join(UPLOAD_DIR, filename));
-  if (!filePath.startsWith(UPLOAD_DIR + "/") && filePath !== UPLOAD_DIR) {
+  const filePath = resolve(UPLOAD_DIR, ...segments);
+  if (!isPathInside(filePath, UPLOAD_DIR)) {
     return new NextResponse("Not found", { status: 404 });
   }
 
@@ -53,4 +54,11 @@ export async function GET(
       "cache-control": "public, max-age=86400",
     },
   });
+}
+
+function isPathInside(filePath: string, parentPath: string): boolean {
+  const normalizedFile = process.platform === "win32" ? filePath.toLowerCase() : filePath;
+  const normalizedParent = process.platform === "win32" ? parentPath.toLowerCase() : parentPath;
+
+  return normalizedFile.startsWith(`${normalizedParent}${sep}`);
 }

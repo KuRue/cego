@@ -491,6 +491,7 @@ export async function rsvpForEventAction(formData: FormData) {
               eq(rsvps.memberId, member.id),
               sql`${rsvps.parentRsvpId} IS NOT NULL`,
               ne(rsvps.status, "cancelled"),
+              ne(rsvps.status, "expired"),
             ),
           );
       }
@@ -533,7 +534,7 @@ export async function rsvpForEventAction(formData: FormData) {
   } catch (err) {
     if (isNextRedirect(err)) throw err;
     console.error("RSVP action failed:", err);
-    redirect(returnTo + "?rsvp_error=1");
+    redirect(appendReturnParam(returnTo, "rsvp_error", "1"));
   }
 
   revalidatePath("/dashboard");
@@ -767,6 +768,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
             eq(rsvps.memberId, member.id),
             sql`${rsvps.parentRsvpId} IS NOT NULL`,
             ne(rsvps.status, "cancelled"),
+            ne(rsvps.status, "expired"),
           ),
         );
     }
@@ -809,7 +811,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
   } catch (err) {
     if (isNextRedirect(err)) throw err;
     console.error("Admin RSVP action failed:", err);
-    redirect(returnTo + "?rsvp_error=1");
+    redirect(appendReturnParam(returnTo, "rsvp_error", "1"));
   }
 
   revalidatePath("/dashboard");
@@ -971,7 +973,7 @@ export async function cancelRsvpAction(formData: FormData) {
       await tx
         .update(rsvps)
         .set({ status: "cancelled", updatedAt: now })
-        .where(eq(rsvps.parentRsvpId, parentRsvp.id));
+        .where(and(eq(rsvps.parentRsvpId, parentRsvp.id), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")));
 
       await tx
         .delete(surveyResponses)
@@ -1047,7 +1049,7 @@ export async function cancelRsvpAction(formData: FormData) {
 }
 
 export async function deleteEventAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const eventId = readText(formData, "eventId");
 
   if (!eventId) {
@@ -1061,13 +1063,19 @@ export async function deleteEventAction(formData: FormData) {
     .set({ status: "deleted", updatedAt: new Date() })
     .where(eq(events.id, eventId));
 
+  audit({
+    eventId,
+    actorId: admin.id,
+    action: "event_deleted",
+  }).catch(() => {});
+
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
   redirect("/admin/events");
 }
 
 export async function undeleteEventAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const eventId = readText(formData, "eventId");
 
   if (!eventId) {
@@ -1080,6 +1088,12 @@ export async function undeleteEventAction(formData: FormData) {
     .update(events)
     .set({ status: "draft", updatedAt: new Date() })
     .where(eq(events.id, eventId));
+
+  audit({
+    eventId,
+    actorId: admin.id,
+    action: "event_undeleted",
+  }).catch(() => {});
 
   revalidatePath("/admin/events", "layout");
   revalidatePath("/dashboard");
@@ -1516,7 +1530,7 @@ export async function checkInRsvpAction(formData: FormData) {
 }
 
 export async function addEventExpenseAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const eventId = readText(formData, "eventId");
   const description = readText(formData, "description");
   const category = readText(formData, "category") || "other";
@@ -1528,20 +1542,27 @@ export async function addEventExpenseAction(formData: FormData) {
   }
 
   const db = getDb();
-  await db.insert(eventExpenses).values({
+  const [expense] = await db.insert(eventExpenses).values({
     id: crypto.randomUUID(),
     eventId,
     description,
     amountCents,
     category,
-  });
+  }).returning({ id: eventExpenses.id });
+
+  audit({
+    eventId,
+    actorId: admin.id,
+    action: "event_expense_added",
+    detail: `${category}: ${amountCents} cents - ${description}${expense ? ` (${expense.id})` : ""}`,
+  }).catch(() => {});
 
   revalidatePath(returnTo);
   redirect(returnTo);
 }
 
 export async function deleteEventExpenseAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const expenseId = readText(formData, "expenseId");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
 
@@ -1550,7 +1571,27 @@ export async function deleteEventExpenseAction(formData: FormData) {
   }
 
   const db = getDb();
+  const [expense] = await db
+    .select({
+      eventId: eventExpenses.eventId,
+      description: eventExpenses.description,
+      category: eventExpenses.category,
+      amountCents: eventExpenses.amountCents,
+    })
+    .from(eventExpenses)
+    .where(eq(eventExpenses.id, expenseId))
+    .limit(1);
+
   await db.delete(eventExpenses).where(eq(eventExpenses.id, expenseId));
+
+  if (expense) {
+    audit({
+      eventId: expense.eventId,
+      actorId: admin.id,
+      action: "event_expense_deleted",
+      detail: `${expense.category}: ${expense.amountCents} cents - ${expense.description} (${expenseId})`,
+    }).catch(() => {});
+  }
 
   revalidatePath(returnTo);
   redirect(returnTo);
@@ -1686,6 +1727,15 @@ function readReturnPath(formData: FormData, key: string): string | null {
   return value;
 }
 
+function appendReturnParam(returnTo: string, key: string, value: string): string {
+  const hashIndex = returnTo.indexOf("#");
+  const base = hashIndex >= 0 ? returnTo.slice(0, hashIndex) : returnTo;
+  const hash = hashIndex >= 0 ? returnTo.slice(hashIndex) : "";
+  const separator = base.includes("?") ? "&" : "?";
+
+  return `${base}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}${hash}`;
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -1789,7 +1839,7 @@ async function promoteWaitlist(eventId: string): Promise<void> {
 }
 
 export async function updateRsvpNotesAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const notes = readOptionalText(formData, "notes") ?? null;
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
@@ -1797,16 +1847,27 @@ export async function updateRsvpNotesAction(formData: FormData) {
   if (!rsvpId) return;
 
   const db = getDb();
-  await db
+  const [row] = await db
     .update(rsvps)
     .set({ notes, updatedAt: new Date() })
-    .where(eq(rsvps.id, rsvpId));
+    .where(eq(rsvps.id, rsvpId))
+    .returning({ eventId: rsvps.eventId, memberId: rsvps.memberId });
+
+  if (row) {
+    audit({
+      eventId: row.eventId,
+      memberId: row.memberId,
+      actorId: admin.id,
+      action: "rsvp_notes_updated",
+      detail: notes ? "notes updated" : "notes cleared",
+    }).catch(() => {});
+  }
 
   revalidatePath(returnTo);
 }
 
 export async function addRsvpTagAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const tag = readText(formData, "tag")?.trim();
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
@@ -1814,19 +1875,30 @@ export async function addRsvpTagAction(formData: FormData) {
   if (!rsvpId || !tag) return;
 
   const db = getDb();
-  await db
+  const [row] = await db
     .update(rsvps)
     .set({
       tags: sql`array_append(COALESCE(${rsvps.tags}, '{}'), ${tag})`,
       updatedAt: new Date(),
     })
-    .where(eq(rsvps.id, rsvpId));
+    .where(and(eq(rsvps.id, rsvpId), sql`NOT (${tag} = ANY(COALESCE(${rsvps.tags}, '{}')))`))
+    .returning({ eventId: rsvps.eventId, memberId: rsvps.memberId });
+
+  if (row) {
+    audit({
+      eventId: row.eventId,
+      memberId: row.memberId,
+      actorId: admin.id,
+      action: "rsvp_tag_added",
+      detail: tag,
+    }).catch(() => {});
+  }
 
   revalidatePath(returnTo);
 }
 
 export async function removeRsvpTagAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const rsvpId = readText(formData, "rsvpId");
   const tag = readText(formData, "tag");
   const returnTo = readReturnPath(formData, "returnTo") ?? "/admin/events";
@@ -1834,13 +1906,24 @@ export async function removeRsvpTagAction(formData: FormData) {
   if (!rsvpId || !tag) return;
 
   const db = getDb();
-  await db
+  const [row] = await db
     .update(rsvps)
     .set({
       tags: sql`array_remove(COALESCE(${rsvps.tags}, '{}'), ${tag})`,
       updatedAt: new Date(),
     })
-    .where(eq(rsvps.id, rsvpId));
+    .where(and(eq(rsvps.id, rsvpId), sql`${tag} = ANY(COALESCE(${rsvps.tags}, '{}'))`))
+    .returning({ eventId: rsvps.eventId, memberId: rsvps.memberId });
+
+  if (row) {
+    audit({
+      eventId: row.eventId,
+      memberId: row.memberId,
+      actorId: admin.id,
+      action: "rsvp_tag_removed",
+      detail: tag,
+    }).catch(() => {});
+  }
 
   revalidatePath(returnTo);
 }
@@ -1940,7 +2023,7 @@ export async function dropPlusOneAction(formData: FormData) {
   const [plusOneRow] = await db
     .select({ id: rsvps.id })
     .from(rsvps)
-    .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled")))
+    .where(and(eq(rsvps.parentRsvpId, rsvpId), ne(rsvps.status, "cancelled"), ne(rsvps.status, "expired")))
     .limit(1);
 
   if (plusOneRow) {

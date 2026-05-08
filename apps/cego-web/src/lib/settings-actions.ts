@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq, getDb, siteSettings } from "@cego/db";
 import { requireAdminMember } from "@/lib/session";
-import { clearSettingsCache, normalizeTimezone } from "@/lib/settings";
+import { clearSettingsCache, normalizeBrandColor, normalizeTimezone } from "@/lib/settings";
 
 export async function updateSiteSettingsAction(formData: FormData) {
   await requireAdminMember();
@@ -47,9 +47,7 @@ function readText(formData: FormData, key: string): string {
 }
 
 function readColor(formData: FormData, key: string, fallback: string): string {
-  const value = readText(formData, key);
-  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value;
-  return fallback;
+  return normalizeBrandColor(readText(formData, key), fallback);
 }
 
 function readReturnPath(formData: FormData, key: string): string | null {

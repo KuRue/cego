@@ -11,12 +11,13 @@ import {
   memberTagAssignments,
   memberTags,
 } from "@cego/db";
+import { audit } from "@/lib/audit";
 import { requireAdminMember } from "@/lib/session";
 
 const tagColors = ["gray", "green", "gold", "red", "blue"] as const;
 
 export async function updateMemberEmailAction(formData: FormData) {
-  await requireAdminMember();
+  const admin = await requireAdminMember();
   const memberId = readText(formData, "memberId");
 
   if (!memberId) {
@@ -27,10 +28,16 @@ export async function updateMemberEmailAction(formData: FormData) {
   await db
     .update(members)
     .set({
-      email: readOptionalText(formData, "email"),
+      email: normalizeEmail(readText(formData, "email")),
       updatedAt: new Date(),
     })
     .where(eq(members.id, memberId));
+
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: "member_email_updated",
+  }).catch(() => {});
 
   revalidateMember(memberId);
   redirect(memberPath(memberId));
@@ -55,6 +62,13 @@ export async function createMemberNoteAction(formData: FormData) {
     authorMemberId: admin.id,
     body,
   });
+
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: "note_added",
+    detail: `${body.slice(0, 80)}${body.length > 80 ? "..." : ""}`,
+  }).catch(() => {});
 
   revalidateMember(memberId);
   redirect(memberPath(memberId));
@@ -164,10 +178,6 @@ function readText(formData: FormData, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readOptionalText(formData: FormData, key: string): string | null {
-  return readText(formData, key) || null;
-}
-
 function readTagColor(formData: FormData): (typeof tagColors)[number] {
   const value = readText(formData, "color");
 
@@ -196,10 +206,21 @@ export async function toggleMemberStatusAction(formData: FormData) {
   const db = getDb();
   await db
     .update(members)
-    .set({ groupStatus: targetStatus as "member" | "not_member" })
+    .set({ groupStatus: targetStatus as "member" | "not_member", updatedAt: new Date() })
     .where(eq(members.id, memberId));
+
+  audit({
+    memberId,
+    actorId: admin.id,
+    action: targetStatus === "member" ? "member_reactivated" : "member_deactivated",
+    detail: `groupStatus=${targetStatus}`,
+  }).catch(() => {});
 
   revalidatePath(`/admin/members/${memberId}`);
   revalidatePath("/admin/members");
   redirect(`/admin/members/${memberId}`);
+}
+
+function normalizeEmail(value: string): string | null {
+  return value ? value.toLowerCase() : null;
 }

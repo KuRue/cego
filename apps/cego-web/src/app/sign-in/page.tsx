@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/navbar";
-import { getNavbarBrand } from "@/lib/settings";
 
 type AuthState =
   | { status: "checking" }

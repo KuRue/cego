@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect } from "react";
 
 export default function AutoTextarea({
   defaultValue,
@@ -22,14 +22,6 @@ export default function AutoTextarea({
 
   useLayoutEffect(() => {
     if (ref.current) resize(ref.current);
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new MutationObserver(() => resize(el));
-    observer.observe(el, { attributes: true, attributeFilter: ["value"] });
-    return () => observer.disconnect();
   }, []);
 
   return (

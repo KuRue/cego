@@ -106,13 +106,26 @@ export function normalizeTimezone(value: string | null | undefined): string {
   return defaults.timezone;
 }
 
+export function normalizeBrandColor(
+  value: string | null | undefined,
+  fallback: string,
+): string {
+  const trimmed = value?.trim();
+
+  if (trimmed && /^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  return fallback;
+}
+
 function rowToSettings(row: SiteSettings): BrandSettings {
   return {
     siteName: row.siteName || defaults.siteName,
     tagline: row.tagline || defaults.tagline,
-    accentColor: row.accentColor || defaults.accentColor,
-    accentColorDark: row.accentColorDark || defaults.accentColorDark,
-    highlightColor: row.highlightColor || defaults.highlightColor,
+    accentColor: normalizeBrandColor(row.accentColor, defaults.accentColor),
+    accentColorDark: normalizeBrandColor(row.accentColorDark, defaults.accentColorDark),
+    highlightColor: normalizeBrandColor(row.highlightColor, defaults.highlightColor),
     logoUrl: stripQueryString(row.logoUrl),
     backgroundUrl: stripQueryString(row.backgroundUrl),
     eventTypes: parseEventTypes(row.eventTypes),
