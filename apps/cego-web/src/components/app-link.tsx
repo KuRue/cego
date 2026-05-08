@@ -6,24 +6,30 @@ import { useCallback, useRef, useSyncExternalStore } from "react";
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
-let cachedStatus: boolean | null = null;
+let cachedStatus = false;
 
-function getStatus(): boolean {
-  const current = typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
+function readMiniAppStatus(): boolean {
+  return typeof window !== "undefined" && !!window.Telegram?.WebApp?.initData;
+}
+
+function refreshStatus(): void {
+  const current = readMiniAppStatus();
   if (cachedStatus !== current) {
     cachedStatus = current;
     for (const l of listeners) l();
   }
-  return current;
 }
 
 function subscribe(cb: Listener): () => void {
   listeners.add(cb);
+  if (typeof window !== "undefined") {
+    queueMicrotask(refreshStatus);
+  }
   return () => { listeners.delete(cb); };
 }
 
 function getSnapshot(): boolean {
-  return getStatus();
+  return cachedStatus;
 }
 
 function getServerSnapshot(): boolean {
@@ -90,7 +96,6 @@ export default function AppLink({
 
 if (typeof window !== "undefined") {
   (window as unknown as Record<string, unknown>).__cegoMiniAppReady = () => {
-    cachedStatus = null;
-    getStatus();
+    refreshStatus();
   };
 }
