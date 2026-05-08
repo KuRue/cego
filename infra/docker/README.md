@@ -77,6 +77,8 @@ The production stack uses a remotely-managed Cloudflare Tunnel token. Configure 
 - `cego.example.com` -> `http://cego-web:3000`
 - `api.cego.example.com` -> `http://cego-web:3000`
 
+The web container defaults `TRUSTED_PROXY_HEADER` to `cf-connecting-ip` for Cloudflare Tunnel. Keep that value for the bundled cloudflared path; if another trusted reverse proxy is used, change it to that proxy's sanitized client-IP header.
+
 The cego Compose file creates the shared `cego_edge` network. Event registration
 is owned by the cego app for the MVP, so no separate event-service hostname is
 required.

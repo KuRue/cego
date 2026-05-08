@@ -39,6 +39,7 @@ cego app:
 - `REDIS_URL`
 - `SESSION_SECRET`
 - `CEGO_TASK_SECRET`
+- `TRUSTED_PROXY_HEADER` (`cf-connecting-ip` for Cloudflare Tunnel)
 - `CEGO_DEADLINE_WORKER_INTERVAL_SECONDS`
 - `CEGO_WEB_IMAGE`
 - `CEGO_MIGRATOR_IMAGE`
@@ -73,6 +74,10 @@ Minimum backup behavior:
 - Restore instructions tested before major event launch.
 
 The current Compose scaffold includes a manual cego Postgres backup tool profile. Scheduled encrypted backups and restore drills are still launch-readiness work.
+
+## Rate Limiting
+
+Production rate limiting requires a trusted proxy header so buckets are per visitor instead of global. The Docker production and Unraid Compose files default `TRUSTED_PROXY_HEADER` to `cf-connecting-ip`, which is the expected header for Cloudflare Tunnel. If cego is deployed behind a different trusted reverse proxy, set this to the sanitized client-IP header that proxy provides.
 
 ## Build Strategy
 

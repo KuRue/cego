@@ -66,14 +66,43 @@ export function rateLimitResponse(result: Extract<RateLimitResult, { ok: false }
 }
 
 function readClientAddress(request: Request): string {
-  if (!TRUSTED_HEADER) return "unknown";
+  if (!TRUSTED_HEADER) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "TRUSTED_PROXY_HEADER is required in production for rate limiting.",
+      );
+    }
+
+    return "dev:unknown";
+  }
 
   const value = request.headers.get(TRUSTED_HEADER)?.trim();
-  if (!value) return "unknown";
+  if (!value) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        `Trusted proxy header "${TRUSTED_HEADER}" was not present on a rate-limited request.`,
+      );
+    }
 
-  return TRUSTED_HEADER === "x-forwarded-for"
-    ? value.split(",")[0]?.trim() || "unknown"
-    : value;
+    return `dev:missing:${TRUSTED_HEADER}`;
+  }
+
+  const address =
+    TRUSTED_HEADER === "x-forwarded-for"
+      ? value.split(",")[0]?.trim()
+      : value;
+
+  if (!address) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        `Trusted proxy header "${TRUSTED_HEADER}" did not contain a client address.`,
+      );
+    }
+
+    return `dev:empty:${TRUSTED_HEADER}`;
+  }
+
+  return address;
 }
 
 function pruneExpiredBuckets(now: number): void {
