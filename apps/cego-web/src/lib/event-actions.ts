@@ -388,6 +388,7 @@ export async function rsvpForEventAction(formData: FormData) {
             tags: sql`ARRAY[]::text[]`,
             paymentStatus: "unpaid",
             paymentDeadlineAt: paymentDeadline,
+            createdAt: now,
             updatedAt: now,
           })
           .where(eq(rsvps.id, cancelledRsvp.id));
@@ -409,6 +410,7 @@ export async function rsvpForEventAction(formData: FormData) {
               tags: sql`ARRAY[]::text[]`,
               paymentStatus: "unpaid",
               paymentDeadlineAt: paymentDeadline,
+              createdAt: now,
               updatedAt: now,
             })
             .where(eq(rsvps.id, expiredRsvp.id));
@@ -446,6 +448,7 @@ export async function rsvpForEventAction(formData: FormData) {
               tags: sql`ARRAY[]::text[]`,
               paymentStatus: "unpaid",
               paymentDeadlineAt: plusOnePaymentDeadline,
+              createdAt: now,
               updatedAt: now,
             })
             .where(eq(rsvps.id, cancelledPlusOne.id));
@@ -466,6 +469,7 @@ export async function rsvpForEventAction(formData: FormData) {
                 tags: sql`ARRAY[]::text[]`,
                 paymentStatus: "unpaid",
                 paymentDeadlineAt: plusOnePaymentDeadline,
+                createdAt: now,
                 updatedAt: now,
               })
               .where(eq(rsvps.id, expiredPlusOne.id));
@@ -542,7 +546,7 @@ export async function rsvpForEventAction(formData: FormData) {
   revalidatePath("/admin");
 
   if (shouldRunWaitlist) {
-    await promoteWaitlist(eventId);
+    await promoteWaitlist(eventId).catch(() => {});
   }
 
   if (rsvpStatus) {
@@ -665,6 +669,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
           tags: sql`ARRAY[]::text[]`,
           paymentStatus: "unpaid",
           paymentDeadlineAt: paymentDeadline,
+          createdAt: now,
           updatedAt: now,
         })
         .where(eq(rsvps.id, cancelledRsvp.id));
@@ -686,6 +691,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
             tags: sql`ARRAY[]::text[]`,
             paymentStatus: "unpaid",
             paymentDeadlineAt: paymentDeadline,
+            createdAt: now,
             updatedAt: now,
           })
           .where(eq(rsvps.id, expiredRsvp.id));
@@ -723,6 +729,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
             tags: sql`ARRAY[]::text[]`,
             paymentStatus: "unpaid",
             paymentDeadlineAt: plusOnePaymentDeadline,
+            createdAt: now,
             updatedAt: now,
           })
           .where(eq(rsvps.id, cancelledPlusOne.id));
@@ -743,6 +750,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
               tags: sql`ARRAY[]::text[]`,
               paymentStatus: "unpaid",
               paymentDeadlineAt: plusOnePaymentDeadline,
+              createdAt: now,
               updatedAt: now,
             })
             .where(eq(rsvps.id, expiredPlusOne.id));
@@ -818,7 +826,7 @@ export async function adminRsvpForEventAction(formData: FormData) {
   revalidatePath(returnTo);
   revalidatePath("/admin");
   if (shouldRunWaitlist) {
-    await promoteWaitlist(eventId);
+    await promoteWaitlist(eventId).catch(() => {});
   }
 
   audit({
@@ -872,6 +880,7 @@ export async function adminRsvpForMemberAction(formData: FormData) {
           tags: sql`ARRAY[]::text[]`,
           paymentStatus: "waived",
           paymentDeadlineAt: paymentDeadline,
+          createdAt: now,
           updatedAt: now,
         })
         .where(eq(rsvps.id, cancelled.id));
@@ -888,6 +897,7 @@ export async function adminRsvpForMemberAction(formData: FormData) {
           tags: sql`ARRAY[]::text[]`,
           paymentStatus: "waived",
           paymentDeadlineAt: paymentDeadline,
+          createdAt: now,
           updatedAt: now,
         })
         .where(eq(rsvps.id, expired.id));

@@ -10,6 +10,7 @@ import {
   members,
   ne,
   rsvps,
+  sql,
   surveyResponses,
   surveys,
   type Event,
@@ -135,6 +136,7 @@ export async function getDashboardEvents(
         and(
           inArray(rsvps.eventId, eventIds),
           inArray(rsvps.status, ["confirmed"]),
+          sql`${rsvps.parentRsvpId} IS NULL`,
         ),
       ),
   ]);
@@ -205,6 +207,7 @@ export async function getDashboardEventBySlug(
         and(
           eq(rsvps.eventId, event.id),
           inArray(rsvps.status, ["confirmed"]),
+          sql`${rsvps.parentRsvpId} IS NULL`,
         ),
       ),
     db
@@ -340,6 +343,7 @@ export async function getPublicEvents(): Promise<{
         and(
           inArray(rsvps.eventId, eventIds),
           inArray(rsvps.status, ["confirmed"]),
+          sql`${rsvps.parentRsvpId} IS NULL`,
         ),
       ),
   ]);
