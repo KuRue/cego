@@ -137,6 +137,8 @@ export async function updateEventAction(formData: FormData) {
     let previousStatus: string | null = null;
 
     await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
+
       const [previousEvent] = await tx
         .select({
           paymentDueDate: events.paymentDueDate,
@@ -194,8 +196,6 @@ export async function updateEventAction(formData: FormData) {
       }
 
       if (parsedEvent.status === "closed" && previousStatus !== "closed") {
-        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`);
-
         const unpaidRows = await tx
           .update(rsvps)
           .set({ status: "expired", updatedAt: now })
@@ -2127,7 +2127,7 @@ export async function expirePastDeadlineRsvps(): Promise<DeadlineProcessingResul
   }
 
   const expiredIds = expiredRows.map((r) => r.id);
-  const eventIds = [...new Set(expiredRows.map((r) => r.eventId))];
+  const eventIds = [...new Set(expiredRows.map((r) => r.eventId))].sort();
 
   const allRows = await db.transaction(async (tx) => {
     for (const eventId of eventIds) {
