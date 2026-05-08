@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { TelegramInitDataError } from "@cego/telegram";
+import { TelegramInitDataError, verifyTelegramInitData } from "@cego/telegram";
 import { createTelegramSession } from "@/lib/telegram-session";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { setSessionCookie } from "@/lib/session";
@@ -35,19 +35,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await createTelegramSession(body);
+    const telegramId = readVerifiedTelegramIdForRateLimit(body);
 
-    if (session.member.telegramId) {
+    if (telegramId) {
       const userRateLimit = checkRateLimit(request, {
         key: "telegram-session-user",
         limit: 30,
         windowMs: 60_000,
-        identity: `tg:${session.member.telegramId}`,
+        identity: `tg:${telegramId}`,
       });
       if (!userRateLimit.ok) {
         return rateLimitResponse(userRateLimit);
       }
     }
+
+    const session = await createTelegramSession(body);
 
     const response = NextResponse.json(session);
 
@@ -77,4 +79,25 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+function readVerifiedTelegramIdForRateLimit(
+  body: TelegramSessionRequest,
+): string | null {
+  if (
+    body.useDevMock === true &&
+    process.env.NODE_ENV !== "production" &&
+    process.env.CEGO_DEV_TELEGRAM_MOCK === "true"
+  ) {
+    return "dev_mock";
+  }
+
+  if (!body.initData) return null;
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    throw new TelegramInitDataError("TELEGRAM_BOT_TOKEN is not configured.");
+  }
+
+  return String(verifyTelegramInitData(body.initData, botToken).user.id);
 }
