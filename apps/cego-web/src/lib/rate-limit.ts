@@ -22,14 +22,12 @@ const buckets = new Map<string, Bucket>();
 
 const TRUSTED_HEADER = process.env.TRUSTED_PROXY_HEADER?.trim().toLowerCase() || null;
 
-// Fail fast at module load so a misconfigured production deploy can't boot.
-// Without a trusted proxy header we cannot identify the per-IP origin, which
-// would either lock everyone out (shared bucket) or skip throttling entirely.
-if (process.env.NODE_ENV === "production" && !TRUSTED_HEADER) {
-  throw new Error(
-    "TRUSTED_PROXY_HEADER must be configured in production (e.g. 'cf-connecting-ip' or 'x-forwarded-for').",
-  );
-}
+// Note: we DON'T throw at module load even if TRUSTED_HEADER is missing in
+// production, because Next.js imports this module during `next build` (where
+// NODE_ENV=production but the runtime env vars haven't been provided yet) and
+// throwing would break the build. The per-request throw inside readClientAddress
+// catches misconfiguration on the first real rate-limited request instead — loud
+// enough that the operator notices immediately.
 
 export function checkRateLimit(
   request: Request,
