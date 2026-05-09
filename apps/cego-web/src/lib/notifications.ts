@@ -5,7 +5,7 @@ import {
   notifications,
   rsvps,
 } from "@cego/db";
-import { and, asc, eq, inArray, sql } from "@cego/db";
+import { and, asc, eq, sql } from "@cego/db";
 import { sendTelegramMessage, telegramHtmlBold } from "@cego/telegram";
 import { formatDateWithTime } from "@/lib/format-date";
 import { getSiteSettings } from "@/lib/settings";
@@ -106,6 +106,10 @@ export async function sendNotification({
 
   const db = getDb();
 
+  // Dedupe only against in-flight ("queued") rows to prevent races between
+  // near-simultaneous callers. Past "sent" rows must NOT block legitimate re-fires
+  // (e.g. RSVP -> cancel -> re-RSVP should produce a second rsvp_confirmed).
+  // Stale queued rows older than 5 min are flipped to "failed" by retryFailedNotifications().
   const [existing] = await db
     .select({ id: notifications.id })
     .from(notifications)
@@ -114,7 +118,7 @@ export async function sendNotification({
         eq(notifications.memberId, memberId),
         eq(notifications.eventId, eventId),
         eq(notifications.templateKey, template),
-        inArray(notifications.status, ["queued"]),
+        eq(notifications.status, "queued"),
       ),
     )
     .limit(1);

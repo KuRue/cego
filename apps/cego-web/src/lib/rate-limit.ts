@@ -22,6 +22,15 @@ const buckets = new Map<string, Bucket>();
 
 const TRUSTED_HEADER = process.env.TRUSTED_PROXY_HEADER?.trim().toLowerCase() || null;
 
+// Fail fast at module load so a misconfigured production deploy can't boot.
+// Without a trusted proxy header we cannot identify the per-IP origin, which
+// would either lock everyone out (shared bucket) or skip throttling entirely.
+if (process.env.NODE_ENV === "production" && !TRUSTED_HEADER) {
+  throw new Error(
+    "TRUSTED_PROXY_HEADER must be configured in production (e.g. 'cf-connecting-ip' or 'x-forwarded-for').",
+  );
+}
+
 export function checkRateLimit(
   request: Request,
   options: RateLimitOptions,
