@@ -3,7 +3,7 @@ import AppLink from "@/components/app-link";
 import Navbar from "@/components/navbar";
 import { StatusBadge, eventStatusLabel } from "@/components/badge";
 import { getSiteSettings } from "@/lib/settings";
-import { formatDateRange as fmtDateRange } from "@/lib/format-date";
+import { formatDateRangeShort as fmtPublicDate } from "@/lib/format-date";
 import { getPublicEvents, type PublicEvent } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import TelegramMiniAppRedirect from "./telegram-mini-app-redirect";
@@ -99,7 +99,7 @@ export default async function Home() {
   );
 }
 
-function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers, tz }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number; rsvpMembers: Array<{ telegramDisplayName: string; telegramPhotoUrl: string | null }>; tz: string }) {
+function PublicEventCard({ event, confirmedCount, tz }: { event: import("@cego/db").Event; confirmedCount: number; waitlistedCount: number; rsvpMembers: Array<{ telegramDisplayName: string; telegramPhotoUrl: string | null }>; tz: string }) {
   const spotsLeft = event.capacity - confirmedCount;
   const isFull = spotsLeft <= 0;
 
@@ -154,7 +154,7 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers, 
                 <dt className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
                   Date
                 </dt>
-                <dd className="mt-1 leading-6">{fmtDateRange(event.startsAt, event.endsAt, tz)}</dd>
+                <dd className="mt-1 leading-6">{fmtPublicDate(event.startsAt, event.endsAt, tz)}</dd>
               </div>
               {event.locationText ? (
                 <div>
@@ -165,37 +165,6 @@ function PublicEventCard({ event, confirmedCount, waitlistedCount, rsvpMembers, 
                 </div>
               ) : null}
             </dl>
-
-            {rsvpMembers.length > 0 ? (
-              <div className="mt-4 flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {rsvpMembers.slice(0, 8).map((m, i) => (
-                    m.telegramPhotoUrl ? (
-                      <Image
-                        key={i}
-                        src={m.telegramPhotoUrl}
-                        alt={m.telegramDisplayName}
-                        width={28}
-                        height={28}
-                        className="h-7 w-7 rounded-full object-cover"
-                        style={{ border: "2px solid var(--color-background)" }}
-                      />
-                    ) : (
-                      <span
-                        key={i}
-                        className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-semibold"
-                        style={{ background: "var(--color-surface-hover)", border: "2px solid var(--color-background)", color: "var(--color-muted)" }}
-                      >
-                        {m.telegramDisplayName.charAt(0).toUpperCase()}
-                      </span>
-                    )
-                  ))}
-                </div>
-                <span className="text-xs" style={{ color: "var(--color-muted)" }}>
-                  {confirmedCount}{waitlistedCount > 0 ? ` +${waitlistedCount} waitlisted` : ""}
-                </span>
-              </div>
-            ) : null}
           </div>
           <div className="mt-4">
             <AppLink
@@ -235,7 +204,7 @@ function PastEventCard({ event, confirmedCount, tz }: { event: import("@cego/db"
         <div className="min-w-0">
           <p className="truncate font-title">{event.title}</p>
           <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
-            {fmtDateRange(event.startsAt, event.endsAt, tz)}
+            {fmtPublicDate(event.startsAt, event.endsAt, tz)}
           </p>
           <p className="mt-0.5 text-xs" style={{ color: "var(--color-muted)" }}>
             {confirmedCount} attended
