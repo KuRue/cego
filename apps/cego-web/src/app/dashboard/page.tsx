@@ -382,9 +382,9 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
               {!canRsvp && !isCancelableRsvp ? (
                 <p className="text-sm" style={{ color: "var(--color-muted)" }}>
                   {effective === "before"
-                    ? "RSVPs not open yet."
+                    ? "RSVP not open yet."
                     : effective === "closed" || effective === "past"
-                      ? "RSVPs closed."
+                      ? "RSVP closed."
                       : refundRequested
                         ? "Your cancellation request is pending."
                         : "Your RSVP is recorded."}

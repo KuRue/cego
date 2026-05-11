@@ -57,7 +57,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
  *   "RSVP opens in 2 days 8 hours"
  *   "RSVP closes in 6 hours 30 minutes"
  *   "Event in 5 days"
- *   "RSVPs closed"
+ *   "RSVP closed"
  *   "Draft"
  */
 export function eventStatusLabel(
@@ -78,7 +78,7 @@ export function eventStatusLabel(
     case "deleted":
       return "Deleted";
     case "closed":
-      return "RSVPs closed";
+      return "RSVP closed";
   }
 
   if (event.status !== "show") return event.status;

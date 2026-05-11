@@ -121,7 +121,7 @@ export default async function RsvpPage({
           <RsvpForm data={data} slug={slug} action={canRsvp ? rsvpForEventAction : adminRsvpForEventAction} adminBypass={adminCanRsvp && !canRsvp} spotsLeft={data.event.capacity - data.confirmedCount} />
         ) : (
           <div className="glass-lg mt-8 rounded-2xl p-6 text-center">
-            <p className="text-lg font-semibold">RSVPs are not open yet</p>
+            <p className="text-lg font-semibold">RSVP not open yet</p>
             <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
               {effective === "closed" || effective === "past"
                 ? "Registration for this event has closed."

@@ -41,7 +41,7 @@ export default function RsvpOpensCountdown({ rsvpOpensAtMs, slug }: RsvpOpensCou
         style={{ background: "var(--color-surface-hover)" }}
       >
         <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-          RSVPs open in
+          RSVP opens in
         </p>
         <p className="mt-1 text-base font-semibold">&nbsp;</p>
       </div>
@@ -50,7 +50,7 @@ export default function RsvpOpensCountdown({ rsvpOpensAtMs, slug }: RsvpOpensCou
 
   const remaining = rsvpOpensAtMs - now;
 
-  // Timer hit zero — RSVPs are open, swap to the action button.
+  // Timer hit zero — RSVP is open, swap to the action button.
   if (remaining <= 0) {
     return (
       <AppLink
@@ -69,7 +69,7 @@ export default function RsvpOpensCountdown({ rsvpOpensAtMs, slug }: RsvpOpensCou
       style={{ background: "var(--color-surface-hover)" }}
     >
       <p className="text-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-muted)" }}>
-        RSVPs open in
+        RSVP opens in
       </p>
       <p className="mt-1 text-base font-semibold tabular-nums">
         {formatLiveCountdown(remaining)}

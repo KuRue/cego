@@ -299,7 +299,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
             ) : !canRsvp && !isCancelableRsvp && !adminCanRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
                 {effective === "closed" || effective === "past"
-                  ? "RSVPs are closed."
+                  ? "RSVP closed."
                   : refundRequested
                     ? "Your cancellation request is pending."
                     : "Your RSVP is recorded."}
