@@ -13,6 +13,7 @@ import QrCodeDisplay from "@/components/qr-code-display";
 import PaymentLink from "@/components/payment-link";
 import ParallaxImage from "@/components/parallax-image";
 import ImageCarousel from "@/components/image-carousel";
+import RsvpOpensCountdown from "@/components/rsvp-opens-countdown";
 import { getDashboardEventBySlug, getEffectiveRsvpStatus, type EventWithRsvpState } from "@/lib/events";
 import { getCurrentMember } from "@/lib/session";
 import { getNavbarBrand, getSiteSettings } from "@/lib/settings";
@@ -290,15 +291,18 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
               </AppLink>
             ) : null}
 
-            {!canRsvp && !isCancelableRsvp && !adminCanRsvp ? (
+            {!canRsvp && !isCancelableRsvp && !adminCanRsvp && effective === "before" && event.rsvpOpensAt ? (
+              <RsvpOpensCountdown
+                rsvpOpensAtMs={event.rsvpOpensAt.getTime()}
+                slug={event.slug}
+              />
+            ) : !canRsvp && !isCancelableRsvp && !adminCanRsvp ? (
               <p className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--color-surface-hover)" }}>
-                {effective === "before"
-                  ? "RSVPs are not open yet."
-                  : effective === "closed" || effective === "past"
-                    ? "RSVPs are closed."
-                    : refundRequested
-                      ? "Your cancellation request is pending."
-                      : "Your RSVP is recorded."}
+                {effective === "closed" || effective === "past"
+                  ? "RSVPs are closed."
+                  : refundRequested
+                    ? "Your cancellation request is pending."
+                    : "Your RSVP is recorded."}
               </p>
             ) : null}
           </div>
