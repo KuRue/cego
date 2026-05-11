@@ -141,6 +141,10 @@ function CreateEventButton({ defaultType }: { defaultType: string }) {
 
 function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: AdminEventWithRsvps; eventTypes: string[]; allMembers: { id: string; telegramDisplayName: string }[]; timezone: string }) {
   const { event, confirmedCount, waitlistedCount, rsvps } = overview;
+  // Count only primary RSVPs (exclude plus-ones); the expandable section and
+  // the dedicated manage page both use the same filter, so the header count
+  // here must match.
+  const parentRsvpCount = rsvps.filter((r) => !r.rsvp.parentRsvpId).length;
 
   return (
     <article className="glass-lg rounded-2xl p-5">
@@ -170,7 +174,7 @@ function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: Ad
           </div>
         </div>
     <span className="text-sm" style={{ color: "var(--color-muted)" }}>
-      {rsvps.length} RSVP{rsvps.length === 1 ? "" : "s"}
+      {parentRsvpCount} RSVP{parentRsvpCount === 1 ? "" : "s"}
     </span>
     {event.status === "deleted" ? (
     <form action={undeleteEventAction} className="ml-2">
@@ -208,7 +212,7 @@ function EventRow({ overview, eventTypes, allMembers, timezone }: { overview: Ad
       {rsvps.length > 0 ? (
           <details className="mt-4 pt-4" style={{ borderTop: "1px solid var(--color-surface-border)" }}>
             <summary className="cursor-pointer text-sm font-semibold" style={{ color: "var(--color-accent)" }}>
-              RSVPs ({rsvps.filter((r) => !r.rsvp.parentRsvpId).length})
+              RSVPs ({parentRsvpCount})
             </summary>
             <div className="mt-4 grid gap-3">
               {rsvps
