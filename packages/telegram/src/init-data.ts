@@ -32,7 +32,10 @@ export class TelegramInitDataError extends Error {
 export function verifyTelegramInitData(
   initData: string,
   botToken: string,
-  maxAgeSeconds = 60 * 60,
+  // 24 hours — matches Telegram's documented validity window. The previous 1-hour
+  // limit caused frequent "init data is expired" errors when users reopened a
+  // backgrounded Mini App, because Telegram does not refresh initData on reload.
+  maxAgeSeconds = 60 * 60 * 24,
 ): VerifiedTelegramInitData {
   if (!initData) {
     throw new TelegramInitDataError("Telegram init data is required.");

@@ -7,6 +7,7 @@ type SessionState =
   | { status: "checking" }
   | { status: "accepted"; member: SessionMember; mode: "telegram" | "dev" }
   | { status: "blocked"; member: SessionMember }
+  | { status: "expired" }
   | { status: "error"; message: string };
 
 interface SessionMember {
@@ -90,6 +91,14 @@ async function fetchSessionWithRetry(
   }
 
   if (!response.ok) {
+    // Detect the specific "init data is expired" case — retrying is pointless
+    // because window.Telegram.WebApp.initData doesn't refresh on reload. The user
+    // has to fully close and reopen the Mini App to get a new auth_date.
+    if (response.status === 401 && /expired/i.test(body.error ?? "")) {
+      onStateChange({ status: "expired" });
+      return;
+    }
+
     const isRetryable = response.status >= 500 || response.status === 429;
 
     if (isRetryable && attempt < MAX_SESSION_RETRIES - 1) {
@@ -225,6 +234,35 @@ export default function MiniAppSession() {
           </div>
         ) : null}
 
+    {state.status === "expired" ? (
+      <div className="mt-6 text-center">
+        <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Session expired.</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>
+          Telegram needs a fresh login token. Tap the button below to close the
+          Mini App, then reopen it from your chat with the bot.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            const wa = window.Telegram?.WebApp;
+            if (typeof wa?.close === "function") {
+              wa.close();
+            } else {
+              // Fallback for non-WebApp contexts: try to close the tab.
+              window.close();
+            }
+          }}
+          className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
+          style={{
+            background: "var(--color-accent)",
+            color: "var(--color-on-accent)",
+          }}
+        >
+          Close & reopen Mini App
+        </button>
+      </div>
+    ) : null}
+
     {state.status === "error" ? (
       <div className="mt-6 text-center">
         <p className="font-semibold" style={{ color: "var(--color-danger)" }}>Session unavailable.</p>
@@ -238,10 +276,10 @@ export default function MiniAppSession() {
             const initData = window.Telegram?.WebApp?.initData;
             const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param ?? parseStartParam(initData ?? "");
             if (initData) {
-      void createSession({ initData, startParam });
-      } else {
-      void createSession({ useDevMock: true });
-      }
+              void createSession({ initData, startParam });
+            } else {
+              void createSession({ useDevMock: true });
+            }
           }}
           className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-semibold transition"
           style={{
@@ -251,9 +289,9 @@ export default function MiniAppSession() {
         >
           Retry
         </button>
-<DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }); }} />
-</div>
-) : null}
+        <DevMockButton onDevMock={() => { setRetryCount(0); createSession({ useDevMock: true }); }} />
+      </div>
+    ) : null}
 
 {state.status === "idle" ? (
 <div className="mt-6 text-center">
@@ -274,6 +312,11 @@ Open this page inside Telegram to sign in automatically.
 }
 
 function DevMockButton({ onDevMock }: { onDevMock: () => void }) {
+  // Server only honours useDevMock when NODE_ENV !== "production" AND
+  // CEGO_DEV_TELEGRAM_MOCK === "true". In a production build the button can
+  // never succeed and would just produce another error, so hide it entirely.
+  if (process.env.NODE_ENV === "production") return null;
+
   return (
     <button
       type="button"
