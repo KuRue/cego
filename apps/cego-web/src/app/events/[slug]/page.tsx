@@ -176,7 +176,7 @@ function EventDetail({ eventState, isAdmin, memberName, timezone }: { eventState
                 ) : null}
               </>
             ) : (
-              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, timezone)} />
+              <StatusBadge status={event.status} label={eventStatusLabel(event, timezone)} />
             )}
           </div>
           {rsvpMembers.length > 0 ? (

@@ -46,37 +46,95 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   );
 }
 
+/**
+ * Unified status label for an event. Returns the same human-readable phrasing
+ * everywhere the event status is shown (public landing, dashboard cards,
+ * detail page, RSVP page, mobile pills). When the event is "show" status we
+ * surface a live countdown to the next milestone (open / close / start);
+ * otherwise we surface the literal status.
+ *
+ * Examples:
+ *   "RSVP opens in 2 days 8 hours"
+ *   "RSVP closes in 6 hours 30 minutes"
+ *   "Event in 5 days"
+ *   "RSVPs closed"
+ *   "Draft"
+ */
 export function eventStatusLabel(
-  status: string,
-  startsAt?: Date | null,
-  rsvpOpensAt?: Date | null,
-  tz?: string,
+  event: {
+    status: string;
+    startsAt?: Date | null;
+    rsvpOpensAt?: Date | null;
+    rsvpClosesAt?: Date | null;
+  },
+  // tz reserved for future locale-aware formatting; durations are tz-agnostic
+  _tz?: string,
 ): string {
-  const now = Date.now();
-
-  switch (status) {
-    case "show": {
-      if (rsvpOpensAt && rsvpOpensAt.getTime() > now) {
-        const date = new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          ...(tz ? { timeZone: tz } : {}),
-        }).format(rsvpOpensAt);
-        return `RSVPs open ${date}`;
-      }
-      return "Accepting RSVPs";
-    }
-    case "closed":
-      return "RSVPs closed";
+  switch (event.status) {
     case "draft":
       return "Draft";
     case "archived":
       return "Archived";
     case "deleted":
       return "Deleted";
-    default:
-      return status;
+    case "closed":
+      return "RSVPs closed";
   }
+
+  if (event.status !== "show") return event.status;
+
+  const now = Date.now();
+
+  if (event.rsvpOpensAt && event.rsvpOpensAt.getTime() > now) {
+    return `RSVP opens in ${formatCountdown(event.rsvpOpensAt.getTime() - now)}`;
+  }
+
+  if (event.rsvpClosesAt && event.rsvpClosesAt.getTime() > now) {
+    return `RSVP closes in ${formatCountdown(event.rsvpClosesAt.getTime() - now)}`;
+  }
+
+  if (event.startsAt && event.startsAt.getTime() > now) {
+    return `Event in ${formatCountdown(event.startsAt.getTime() - now)}`;
+  }
+
+  return "Past";
+}
+
+/**
+ * Human-readable duration: "2 days 8 hours", "6 hours 30 minutes", "45 minutes".
+ * Always rounds up to the nearest minute so a fresh countdown never reads "0 minutes".
+ */
+export function formatCountdown(ms: number): string {
+  if (ms <= 0) return "soon";
+
+  const totalMinutes = Math.ceil(ms / 60_000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  // > 1 week — drop the hours, the precision isn't useful
+  if (days >= 7) return plural(days, "day");
+
+  // 1+ day — show days, optionally hours
+  if (days >= 1) {
+    return hours > 0
+      ? `${plural(days, "day")} ${plural(hours, "hour")}`
+      : plural(days, "day");
+  }
+
+  // < 1 day, 1+ hour — show hours, optionally minutes
+  if (hours >= 1) {
+    return minutes > 0
+      ? `${plural(hours, "hour")} ${plural(minutes, "minute")}`
+      : plural(hours, "hour");
+  }
+
+  // < 1 hour
+  return plural(totalMinutes, "minute");
+}
+
+function plural(n: number, unit: string): string {
+  return `${n} ${unit}${n === 1 ? "" : "s"}`;
 }
 
 export function rsvpStatusLabel(status: string): string {

@@ -104,7 +104,7 @@ export default async function RsvpPage({
 
         <h1 className="font-title text-3xl">Register for {data.event.title}</h1>
         <div className="mt-2 flex flex-wrap gap-2">
-          <StatusBadge status={data.event.status} label={eventStatusLabel(data.event.status, data.event.startsAt, undefined, settings.timezone)} />
+          <StatusBadge status={data.event.status} label={eventStatusLabel(data.event, settings.timezone)} />
           {alreadyRsvpd ? (
             <StatusBadge status={data.rsvp!.status} label={rsvpStatusLabel(data.rsvp!.status)} />
           ) : null}

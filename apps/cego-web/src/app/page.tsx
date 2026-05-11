@@ -131,7 +131,7 @@ function PublicEventCard({ event, confirmedCount, tz }: { event: import("@cego/d
         <div className="flex flex-1 flex-col justify-between p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, undefined, tz)} />
+              <StatusBadge status={event.status} label={eventStatusLabel(event, tz)} />
               {isFull ? (
                 <span
                   className="rounded-lg px-2.5 py-0.5 text-xs font-medium"

@@ -194,7 +194,7 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
               className="inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
               style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(8px)" }}
             >
-              {getCountdownLabel(event)}
+              {eventStatusLabel(event)}
             </span>
             {rsvp && rsvp.status !== "cancelled" && rsvp.status !== "expired" ? (
               <span
@@ -277,7 +277,7 @@ function EventCard({ eventState, settings }: { eventState: EventWithRsvpState; s
           <div className="flex flex-1 flex-col justify-between p-5">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge status={event.status} label={eventStatusLabel(event.status, event.startsAt, event.rsvpOpensAt, settings.timezone)} />
+                <StatusBadge status={event.status} label={eventStatusLabel(event, settings.timezone)} />
                 {rsvp ? <StatusBadge status={rsvp.status} label={rsvpStatusLabel(rsvp.status)} /> : null}
               </div>
               <h3 className="font-title mt-3 text-2xl">{event.title}</h3>
@@ -496,49 +496,6 @@ function SurveyCard({ surveyState, settings }: { surveyState: DashboardSurvey; s
       </form>
     </article>
   );
-}
-
-function getCountdownLabel(event: {
-  status: string;
-  startsAt: Date;
-  rsvpOpensAt: Date | null;
-  rsvpClosesAt: Date | null;
-}, _tz?: string): string {
-  const now = Date.now();
-  const fmtDuration = (ms: number) => {
-    if (ms <= 0) return "soon";
-    const totalMin = Math.ceil(ms / 60000);
-    const d = Math.floor(totalMin / 1440);
-    if (d > 1) return `${d} days`;
-    if (d === 1) {
-      const remH = Math.floor((totalMin - 1440) / 60);
-      return remH > 0 ? `1 day ${remH}h` : "1 day";
-    }
-    const h = Math.floor(totalMin / 60);
-    if (h > 0) {
-      const remM = totalMin - h * 60;
-      return remM > 0 ? `${h}h ${remM}m` : `${h}h`;
-    }
-    return `${totalMin}m`;
-  };
-
-  if (event.status === "archived") return "Archived";
-  if (event.status === "closed") return "RSVPs closed";
-
-  if (event.rsvpOpensAt) {
-    const diff = event.rsvpOpensAt.getTime() - now;
-    if (diff > 0) return `RSVP opens in ${fmtDuration(diff)}`;
-  }
-
-  if (event.rsvpClosesAt) {
-    const diff = event.rsvpClosesAt.getTime() - now;
-    if (diff > 0) return `RSVP closes in ${fmtDuration(diff)}`;
-  }
-
-  const diff = event.startsAt.getTime() - now;
-  if (diff > 0) return `Event in ${fmtDuration(diff)}`;
-
-  return "Past";
 }
 
 function readAnswer(answersJson: unknown, questionId: string): string {
