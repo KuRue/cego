@@ -178,7 +178,25 @@ export async function getTelegramGroupStatus({
     );
   }
 
-  return isActiveChatMember(payload.result) ? "member" : "not_member";
+  const isActive = isActiveChatMember(payload.result);
+
+  // Surface the raw Telegram status when we mark someone as not_member, so
+  // operators can diagnose cases where a user appears to be in the group from
+  // their own client but the bot can't see them. Common causes:
+  //   - bot is not an admin and Telegram only returns "member" for users it
+  //     has interacted with — fix by promoting the bot to admin
+  //   - join-request not yet approved — Telegram returns "left"
+  //   - user left and rejoined within Telegram's cache window
+  if (!isActive) {
+    console.warn("Telegram getChatMember returned non-active status", {
+      chatId,
+      userId,
+      status: payload.result.status,
+      isMember: payload.result.is_member,
+    });
+  }
+
+  return isActive ? "member" : "not_member";
 }
 
 function isActiveChatMember(member: TelegramChatMember): boolean {
