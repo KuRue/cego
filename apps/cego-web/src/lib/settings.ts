@@ -7,6 +7,8 @@ export interface BrandSettings {
   accentColorDark: string;
   highlightColor: string;
   logoUrl: string | null;
+  /** Stylized wordmark shown in place of the navbar's siteName text. */
+  wordmarkUrl: string | null;
   backgroundUrl: string | null;
   eventTypes: string[];
   heroTitle: string;
@@ -50,6 +52,7 @@ export const defaults: BrandSettings = {
   accentColorDark: "#5bbcb4",
   highlightColor: "#d8b35a",
   logoUrl: null,
+  wordmarkUrl: null,
   backgroundUrl: null,
   eventTypes: ["retreat", "meet"],
   heroTitle: "Run community events without turning the group chat into a spreadsheet.",
@@ -85,9 +88,14 @@ export function clearSettingsCache(): void {
   cachedSettings = null;
 }
 
-export async function getNavbarBrand(): Promise<{ siteName: string; logoUrl: string | null; backgroundUrl: string | null }> {
+export async function getNavbarBrand(): Promise<{ siteName: string; logoUrl: string | null; wordmarkUrl: string | null; backgroundUrl: string | null }> {
   const settings = await getSiteSettings();
-  return { siteName: settings.siteName, logoUrl: settings.logoUrl, backgroundUrl: settings.backgroundUrl };
+  return {
+    siteName: settings.siteName,
+    logoUrl: settings.logoUrl,
+    wordmarkUrl: settings.wordmarkUrl,
+    backgroundUrl: settings.backgroundUrl,
+  };
 }
 
 export function normalizeTimezone(value: string | null | undefined): string {
@@ -127,6 +135,7 @@ function rowToSettings(row: SiteSettings): BrandSettings {
     accentColorDark: normalizeBrandColor(row.accentColorDark, defaults.accentColorDark),
     highlightColor: normalizeBrandColor(row.highlightColor, defaults.highlightColor),
     logoUrl: stripQueryString(row.logoUrl),
+    wordmarkUrl: stripQueryString(row.wordmarkUrl),
     backgroundUrl: stripQueryString(row.backgroundUrl),
     eventTypes: parseEventTypes(row.eventTypes),
     heroTitle: row.heroTitle || defaults.heroTitle,

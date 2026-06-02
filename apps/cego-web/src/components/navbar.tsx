@@ -15,6 +15,7 @@ interface NavbarProps {
   brand?: {
     siteName: string;
     logoUrl: string | null;
+    wordmarkUrl?: string | null;
   } | null;
   showQrCheckIn?: boolean;
 }
@@ -29,6 +30,7 @@ export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const siteName = brand?.siteName || "cego";
   const logoUrl = brand?.logoUrl;
+  const wordmarkUrl = brand?.wordmarkUrl;
 
   // The tall, narrow Mini App layout only makes sense when Telegram has hidden
   // its own header bar (fullscreen mode, Bot API 8.0+). Otherwise the page sits
@@ -169,9 +171,23 @@ export default function Navbar({ member, brand, showQrCheckIn }: NavbarProps) {
             )}
           </AppLink>
 
-          <span className="font-title text-lg tracking-wide absolute left-1/2 -translate-x-1/2">
-            {siteName}
-          </span>
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
+            {wordmarkUrl ? (
+              <Image
+                src={wordmarkUrl}
+                alt={siteName}
+                width={160}
+                height={28}
+                priority
+                className={useFullscreenMiniAppNav ? "h-6 w-auto object-contain" : "h-7 w-auto object-contain"}
+                style={{ maxWidth: useFullscreenMiniAppNav ? "120px" : "240px" }}
+              />
+            ) : (
+              <span className="font-title text-lg tracking-wide">
+                {siteName}
+              </span>
+            )}
+          </div>
 
           <div className="flex-1" />
 

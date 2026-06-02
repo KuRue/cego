@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar";
 import { Badge } from "@/components/badge";
 
 import LogoUpload from "./logo-upload";
+import WordmarkUpload from "./wordmark-upload";
 import BackgroundUpload from "./background-upload";
 import EventTypeEditor from "./event-type-editor";
 import Field from "@/components/field";
@@ -20,7 +21,7 @@ export const metadata = {
 export default async function AdminSettingsPage() {
   const member = await requireAdminMember();
   const settings = await getSiteSettings();
-  const brand = { siteName: settings.siteName, logoUrl: settings.logoUrl };
+  const brand = { siteName: settings.siteName, logoUrl: settings.logoUrl, wordmarkUrl: settings.wordmarkUrl };
 
   return (
     <>
@@ -84,6 +85,34 @@ export default async function AdminSettingsPage() {
               )}
               <LogoUpload />
               <input type="hidden" name="logoUrl" defaultValue={settings.logoUrl ?? ""} />
+            </div>
+          </section>
+
+          <section className="glass-lg rounded-2xl p-5">
+            <h2 className="text-lg font-semibold">Wordmark</h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+              Optional stylized image (PNG with transparent background works best) shown in the
+              navbar instead of the site name. Under 2 MB. If not set, the site name text is shown.
+            </p>
+            <div className="mt-4">
+              {settings.wordmarkUrl ? (
+                <div className="flex items-center gap-4">
+                  <Image
+                    src={settings.wordmarkUrl}
+                    alt="Site wordmark"
+                    width={160}
+                    height={32}
+                    className="h-8 w-auto object-contain"
+                  />
+                  <Badge>Current wordmark</Badge>
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                  No wordmark uploaded. The site name text is shown.
+                </p>
+              )}
+              <WordmarkUpload />
+              <input type="hidden" name="wordmarkUrl" defaultValue={settings.wordmarkUrl ?? ""} />
             </div>
           </section>
 

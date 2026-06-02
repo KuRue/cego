@@ -232,6 +232,13 @@
       "when": 1780120000000,
       "tag": "0032_harden_legacy_migrations",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1780200000000,
+      "tag": "0033_site_settings_wordmark",
+      "breakpoints": true
     }
   ]
 }

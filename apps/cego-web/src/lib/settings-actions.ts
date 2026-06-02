@@ -19,6 +19,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
     accentColorDark: readColor(formData, "accentColorDark", "#5bbcb4"),
     highlightColor: readColor(formData, "highlightColor", "#d8b35a"),
     logoUrl: readText(formData, "logoUrl") || null,
+    wordmarkUrl: readText(formData, "wordmarkUrl") || null,
     backgroundUrl: readText(formData, "backgroundUrl") || null,
     heroTitle: readText(formData, "heroTitle") || "",
     heroBody: readText(formData, "heroBody") || "",

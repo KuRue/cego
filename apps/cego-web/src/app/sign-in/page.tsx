@@ -12,9 +12,10 @@ type AuthState =
 
 export default function SignInPage() {
   const [state, setState] = useState<AuthState>({ status: "checking" });
-  const [brand, setBrand] = useState<{ siteName: string; logoUrl: string | null; backgroundUrl: string | null }>({
+  const [brand, setBrand] = useState<{ siteName: string; logoUrl: string | null; wordmarkUrl: string | null; backgroundUrl: string | null }>({
     siteName: "",
     logoUrl: null,
+    wordmarkUrl: null,
     backgroundUrl: null,
   });
   const [botUsername, setBotUsername] = useState<string | null>(null);

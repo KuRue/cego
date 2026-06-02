@@ -309,6 +309,7 @@ export const siteSettings = pgTable("site_settings", {
   accentColorDark: text("accent_color_dark").default("#5bbcb4").notNull(),
   highlightColor: text("highlight_color").default("#d8b35a").notNull(),
   logoUrl: text("logo_url"),
+  wordmarkUrl: text("wordmark_url"),
   backgroundUrl: text("background_url"),
   heroTitle: text("hero_title").default("Run community events without turning the group chat into a spreadsheet.").notNull(),
   heroBody: text("hero_body").default("cego is the self-hosted planning surface for communities that need Telegram identity, capacity-aware RSVPs, built-in surveys, organizer review, and room to add cego-native payment steps when paid registration is ready.").notNull(),
