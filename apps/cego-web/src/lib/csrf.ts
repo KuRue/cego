@@ -18,39 +18,66 @@ export function generateCsrfToken(session: CsrfSession): string {
     .digest("base64url");
 }
 
+export type CsrfFailureReason =
+  | "missing_header"
+  | "token_length_mismatch"
+  | "token_mismatch"
+  | "origin_disallowed";
+
 export function isValidCsrfRequest(
   request: Request,
   session: CsrfSession,
-): boolean {
+): { ok: true } | { ok: false; reason: CsrfFailureReason } {
   const headerToken = request.headers.get(CSRF_HEADER);
-  if (!headerToken) return false;
+  if (!headerToken) return { ok: false, reason: "missing_header" };
 
   const expected = generateCsrfToken(session);
 
   const a = Buffer.from(headerToken);
   const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) return { ok: false, reason: "token_length_mismatch" };
 
-  if (!timingSafeEqual(a, b)) return false;
+  if (!timingSafeEqual(a, b)) return { ok: false, reason: "token_mismatch" };
 
   const origin = request.headers.get("origin");
   if (origin) {
     const allowed = readAllowedOrigins(request);
-    if (!allowed.has(origin)) return false;
+    if (!allowed.has(origin)) return { ok: false, reason: "origin_disallowed" };
   }
 
-  return true;
+  return { ok: true };
 }
 
 export async function requireValidCsrf(request: Request): Promise<Response | null> {
   const session = await getSessionPayload();
-  if (!session || !isValidCsrfRequest(request, session)) {
-    return new Response(JSON.stringify({ error: "Forbidden." }), {
-      status: 403,
-      headers: { "content-type": "application/json" },
-    });
+
+  if (!session) {
+    console.warn("[csrf] reject: no session payload", { url: request.url });
+    return forbidden();
   }
+
+  const result = isValidCsrfRequest(request, session);
+
+  if (!result.ok) {
+    console.warn("[csrf] reject", {
+      url: request.url,
+      reason: result.reason,
+      origin: request.headers.get("origin"),
+      hasHeaderToken: !!request.headers.get(CSRF_HEADER),
+      headerTokenLength: request.headers.get(CSRF_HEADER)?.length,
+      allowedOrigins: Array.from(readAllowedOrigins(request)),
+    });
+    return forbidden();
+  }
+
   return null;
+}
+
+function forbidden(): Response {
+  return new Response(JSON.stringify({ error: "Forbidden." }), {
+    status: 403,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 export function setCsrfCookie(response: Headers, session: CsrfSession): void {

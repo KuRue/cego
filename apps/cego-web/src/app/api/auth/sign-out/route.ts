@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   const session = await getSessionPayload();
-  if (!session || !isValidCsrfRequest(request, session)) {
+  if (!session || !isValidCsrfRequest(request, session).ok) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
