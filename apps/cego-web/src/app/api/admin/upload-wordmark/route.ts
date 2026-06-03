@@ -47,6 +47,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    console.error("[upload-wordmark] save failed", {
+      uploadDir: UPLOAD_DIR,
+      fileSize: file.size,
+      fileType: file.type,
+      error: error instanceof Error ? { name: error.name, message: error.message, code: (error as NodeJS.ErrnoException).code } : error,
+    });
+
     return NextResponse.json(
       { error: "Could not save file." },
       { status: 500 },
