@@ -5,9 +5,11 @@ import { csrfHeaders } from "@/lib/csrf-client";
 
 export default function SignOutButton() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSignOut() {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/auth/sign-out", {
         method: "POST",
@@ -16,13 +18,21 @@ export default function SignOutButton() {
         },
       });
 
-      if (!response.ok) {
-        setLoading(false);
+      if (response.ok) {
+        window.location.href = "/";
         return;
       }
 
-      window.location.href = "/";
-    } catch {
+      // 403 here usually means the CSRF cookie is missing. The middleware
+      // re-issues it on every page load; refreshing the page once will fix it.
+      if (response.status === 403) {
+        setError("Session needs a refresh. Reload this page and click Sign out again.");
+      } else {
+        setError(`Sign out failed (${response.status}). Try reloading the page.`);
+      }
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign out failed.");
       setLoading(false);
     }
   }
@@ -47,6 +57,11 @@ export default function SignOutButton() {
       >
         {loading ? "Signing out..." : "Sign out"}
       </button>
+      {error ? (
+        <p className="mt-3 text-sm" style={{ color: "var(--color-danger)" }}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
